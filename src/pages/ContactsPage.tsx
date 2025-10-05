@@ -1,4 +1,4 @@
-import * as React from "react"
+ import * as React from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { CircleFlag } from "react-circle-flags"
 import { 
@@ -50,47 +50,12 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TableSkeleton } from "@/components/ui/table"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardSkeleton } from "@/components/ui/card"
+import { Empty } from "@/components/ui/empty"
 import { usePageTitle } from "@/hooks/use-dynamic-title"
 import { motion, AnimatePresence } from "framer-motion"
 import { directionalTabVariants, smoothTransition, initialTabContentVariants } from "@/lib/transitions"
 import { mockContacts, type Contact, conversationStatusConfig } from "@/data/mock-data"
 
-// Simple EmptyState component replacement
-function SimpleEmptyState({ 
-  title = "No items found",
-  description = "No data to display.",
-  icon = <Search className="h-8 w-8 text-black" />,
-  isLoading = false
-}) {
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 px-4">
-        <CardSkeleton />
-      </div>
-    )
-  }
-
-  return (
-    <div className="px-4 md:px-6">
-      <Card>
-        <CardHeader className="gap-6">
-          <div className="flex justify-center">
-            <div className="bg-gray-100 rounded-full p-6">
-              {icon}
-            </div>
-          </div>
-          
-          <div className="text-center">
-            <CardTitle className="text-base font-semibold tracking-tight">{title}</CardTitle>
-            <CardDescription className="text-sm text-muted-foreground mt-1 w-80 mx-auto">
-              {description}
-            </CardDescription>
-          </div>
-        </CardHeader>
-      </Card>
-    </div>
-  );
-}
 
 const ContactsPageContent = (): React.JSX.Element => {
   const navigate = useNavigate()
@@ -676,12 +641,15 @@ const ContactsPageContent = (): React.JSX.Element => {
                   className="w-full"
                 >
                   <TabsContent value="archived" className="mt-0">
-                    <SimpleEmptyState
-                      title="No Archived Contacts"
-                      description="Archived contacts will appear here when you archive them."
-                      icon={<Archive className="h-8 w-8 text-black" />}
-                      isLoading={isDataLoading}
-                    />
+                    <div className="px-4 md:px-6">
+                      <Empty
+                        title="No Archived Contacts"
+                        description="Archived contacts will appear here when you archive them."
+                        icon={<Archive className="h-8 w-8" />}
+                        isLoading={isDataLoading}
+                        variant="default"
+                      />
+                    </div>
                   </TabsContent>
                 </motion.div>
               )}
@@ -697,12 +665,15 @@ const ContactsPageContent = (): React.JSX.Element => {
                   className="w-full"
                 >
                   <TabsContent value="activities" className="mt-0">
-                    <SimpleEmptyState
-                      title="No Recent Activities"
-                      description="Contact activities and interactions will appear here."
-                      icon={<Clock className="h-8 w-8 text-black" />}
-                      isLoading={isDataLoading}
-                    />
+                    <div className="px-4 md:px-6">
+                      <Empty
+                        title="No Recent Activities"
+                        description="Contact activities and interactions will appear here."
+                        icon={<Clock className="h-8 w-8" />}
+                        isLoading={isDataLoading}
+                        variant="default"
+                      />
+                    </div>
                   </TabsContent>
                 </motion.div>
               )}

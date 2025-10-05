@@ -1,4 +1,5 @@
-import ComingSoon from "@/components/coming-soon";
+import { Empty } from "@/components/ui/empty";
+import { Construction } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { TimeFilter } from "@/components/time-filter";
 import { TableSkeleton } from "@/components/ui/table";
@@ -57,7 +58,15 @@ export default function AnalyticsPage() {
               <TableSkeleton rows={4} columns={4} />
             </>
           ) : (
-            <ComingSoon isLoading={isDataLoading} />
+            <div className="px-4 md:px-6">
+              <Empty
+                title="Coming Soon"
+                description="We are working on this feature. Check back shortly for updates."
+                icon={<Construction className="h-8 w-8" />}
+                isLoading={isDataLoading}
+                variant="default"
+              />
+            </div>
           )}
         </div>
       </div>

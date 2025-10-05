@@ -2,6 +2,7 @@ import * as React from "react"
 import { type DateRange } from "react-day-picker"
 import { SectionCards } from "@/components/section-cards"
 import { DashboardChart } from "@/components/dashboard-chart"
+import { DashboardPieChart } from "@/components/dashboard-pie-chart"
 import { TableSkeleton } from "@/components/ui/table"
 import { PageHeader } from "@/components/page-header"
 import { TimeFilter } from "@/components/time-filter"
@@ -82,7 +83,10 @@ export default function DashboardPage() {
           ) : (
             <>
               <SectionCards timeRange={timeRange} isLoading={isDataLoading} />
-              <DashboardChart timeRange={timeRange} isLoading={isDataLoading} />
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 px-4 lg:px-6">
+                <DashboardChart timeRange={timeRange} isLoading={isDataLoading} className="lg:col-span-2" />
+                <DashboardPieChart timeRange={timeRange} isLoading={isDataLoading} />
+              </div>
             </>
           )}
         </div>

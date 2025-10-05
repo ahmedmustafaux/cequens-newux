@@ -19,9 +19,10 @@ import { getDashboardChartData } from "@/data/mock-data"
 interface DashboardChartProps {
   timeRange: string
   isLoading?: boolean
+  className?: string
 }
 
-export function DashboardChart({ timeRange, isLoading = false }: DashboardChartProps) {
+export function DashboardChart({ timeRange, isLoading = false, className }: DashboardChartProps) {
   const [activeMetric, setActiveMetric] = React.useState<"messages" | "senders">("messages")
   
   // Get chart data from mock data
@@ -45,11 +46,11 @@ export function DashboardChart({ timeRange, isLoading = false }: DashboardChartP
       variants={loadingVariants}
       animate={isLoading ? "loading" : "animate"}
       transition={smoothTransition}
-      className="px-4 lg:px-6"
+      className={`${className || ""}`}
     >
       <Card className="py-0">
         <CardHeader className="flex flex-col items-stretch border-b !p-0 sm:flex-row">
-          <div className="flex flex-1 flex-col justify-center gap-1 px-6 pt-4 pb-3 sm:!py-0">
+          <div className="flex flex-1 flex-col justify-center gap-1 px-6 pt-4 pb-3 sm:!py-6">
             <CardTitle>Performance Metrics</CardTitle>
             <CardDescription>
               Showing total messages and active senders
@@ -62,13 +63,13 @@ export function DashboardChart({ timeRange, isLoading = false }: DashboardChartP
                 <button
                   key={metric}
                   data-active={activeMetric === metric}
-                  className="data-[active=true]:bg-muted/50 relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l sm:border-t-0 sm:border-l sm:px-8 sm:py-6"
+                  className="data-[active=true]:bg-muted/50 relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l sm:border-t-0 sm:border-l sm:px-8 sm:py-6 min-w-[120px]"
                   onClick={() => setActiveMetric(metric)}
                 >
-                  <span className="text-muted-foreground text-xs">
+                  <span className="text-muted-foreground text-xs whitespace-nowrap">
                     {metric === "messages" ? "Messages Sent" : "Active Senders"}
                   </span>
-                  <span className="text-lg leading-none font-bold sm:text-3xl">
+                  <span className="text-lg leading-none font-bold sm:text-xl">
                     {totals[metric].toLocaleString()}
                   </span>
                 </button>
@@ -136,7 +137,7 @@ export function DashboardChart({ timeRange, isLoading = false }: DashboardChartP
                 />
                 <Bar 
                   dataKey={activeMetric} 
-                  fill="#3b82f6" 
+                  fill="#1d4ed8" 
                   radius={[4, 4, 0, 0]} 
                 />
               </BarChart>
