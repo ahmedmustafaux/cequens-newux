@@ -375,21 +375,25 @@ export function PageHeader({
             {!isMobile && (
               <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg px-4 lg:px-6 pointer-events-none">
                 {showSearch ? (
-                  <div className="relative w-full pointer-events-auto">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <div className="w-full pointer-events-auto">
                     <Input
                       type="text"
                       placeholder={searchPlaceholder}
                       value={searchValue}
                       onChange={(e) => onSearchChange?.(e.target.value)}
                       onFocus={onSearchFocus}
-                      className="pl-9 pr-3 h-8 text-sm bg-muted/50 border-muted-foreground/20 focus-visible:bg-background focus-visible:border-ring transition-all duration-200 w-full cursor-pointer"
+                      leftIcon={<Search className="h-4 w-4" />}
+                      className="pr-3 h-8 text-sm bg-muted/50 border-muted-foreground/20 focus-visible:bg-background focus-visible:border-ring transition-all duration-200 w-full cursor-pointer"
                     />
                   </div>
                 ) : (
-                  <div className="relative w-full pointer-events-auto">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Skeleton className="h-8 w-full rounded-md" />
+                  <div className="w-full pointer-events-auto">
+                    <div className="relative">
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                        <Search className="h-4 w-4" />
+                      </div>
+                      <Skeleton className="h-8 w-full rounded-md" />
+                    </div>
                   </div>
                 )}
               </div>
@@ -643,5 +647,3 @@ export function PageHeaderProfile({
     </div>
   )
 }
-
-

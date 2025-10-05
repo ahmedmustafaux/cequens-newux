@@ -1,7 +1,7 @@
 import * as React from "react"
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useNavigate, Link, useLocation } from "react-router-dom"
-import { Eye, EyeOff, Mail, Lock, User } from "lucide-react"
+import { Eye, EyeOff, Mail, Lock, User, Building, CheckCircle2, AlertCircle, ArrowRight, Shield } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -14,12 +14,22 @@ import { ErrorMessage } from "@/components/ui/error-message"
 import { PasswordStrength } from "@/components/ui/password-strength"
 import { motion } from "framer-motion"
 import { getLogoAltText, getWelcomeMessage, getJoinMessage, getDemoCredentials } from "@/lib/config"
-import { smoothTransition } from "@/lib/transitions"
+import { smoothTransition, fadeVariants, pageVariants } from "@/lib/transitions"
+import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp"
 
 export default function SignupPage() {
+  // Signup steps
+  enum SignupStep {
+    FORM,
+    VERIFICATION,
+    SUCCESS
+  }
+
+  const [currentStep, setCurrentStep] = useState<SignupStep>(SignupStep.FORM)
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
+    companyName: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -30,12 +40,45 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<FieldValidation>({})
   const [touched, setTouched] = useState<{[key: string]: boolean}>({})
+  const [passwordFocused, setPasswordFocused] = useState(false)
+  const [verificationCode, setVerificationCode] = useState("")
+  const [verificationAttempts, setVerificationAttempts] = useState(0)
+  const [resendCountdown, setResendCountdown] = useState(0)
+  const passwordInputRef = useRef<HTMLInputElement>(null)
+  const passwordStrengthRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
   const location = useLocation()
   const { login } = useAuth()
   
   // Get the intended redirect path
   const from = location.state?.from?.pathname || "/"
+  
+  // Generate a random verification code for simulation
+  const generatedCode = React.useMemo(() => {
+    return Math.floor(100000 + Math.random() * 900000).toString()
+  }, [])
+
+  // Countdown effect for resend code
+  React.useEffect(() => {
+    let interval: NodeJS.Timeout | null = null
+    
+    if (resendCountdown > 0) {
+      interval = setInterval(() => {
+        setResendCountdown((prev) => {
+          if (prev <= 1) {
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval)
+      }
+    }
+  }, [resendCountdown])
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -63,8 +106,15 @@ export default function SignupPage() {
       case 'lastName':
         validation = validateName(value, "Last name")
         break
+      case 'companyName':
+        if (!value.trim()) {
+          validation = { isValid: false, message: "Company name is required" }
+        } else if (value.trim().length < 2) {
+          validation = { isValid: false, message: "Company name must be at least 2 characters long" }
+        }
+        break
       case 'email':
-        validation = validateEmail(value)
+        validation = validateEmail(value, true) // true = require business email
         break
       case 'password':
         validation = validatePassword(value)
@@ -91,44 +141,128 @@ export default function SignupPage() {
   const handleBlur = (field: string) => {
     setTouched(prev => ({ ...prev, [field]: true }))
     validateField(field, formData[field as keyof typeof formData])
+    
+    if (field === 'password') {
+      // Small delay to allow clicking on the strength indicator
+      setTimeout(() => {
+        if (document.activeElement !== passwordInputRef.current && 
+            !passwordStrengthRef.current?.contains(document.activeElement)) {
+          setPasswordFocused(false);
+        }
+      }, 100);
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    console.log("Current step:", currentStep)
 
-    // Mark all fields as touched
-    const allFields = ['firstName', 'lastName', 'email', 'password', 'confirmPassword', 'agreeToTerms']
-    const newTouched = allFields.reduce((acc, field) => ({ ...acc, [field]: true }), {})
-    setTouched(newTouched)
+    if (currentStep === SignupStep.FORM) {
+      console.log("Processing form step")
+      // Mark all fields as touched
+      const allFields = ['firstName', 'lastName', 'companyName', 'email', 'password', 'confirmPassword', 'agreeToTerms']
+      const newTouched = allFields.reduce((acc, field) => ({ ...acc, [field]: true }), {})
+      setTouched(newTouched)
 
-    // Validate entire form
-    const formErrors = validateSignupForm(formData)
-    setErrors(formErrors)
+      // Validate entire form
+      const formErrors = validateSignupForm(formData)
+      setErrors(formErrors)
 
-    if (!isFormValid(formErrors)) {
-      toast.error("Please fix the errors below", {
-        description: "Check the highlighted fields and correct any validation errors before continuing.",
-        duration: 5000,
+      if (!isFormValid(formErrors)) {
+        toast.error("Please fix the errors below", {
+          description: "Check the highlighted fields and correct any validation errors before continuing.",
+          duration: 5000,
+        })
+        setIsLoading(false)
+        return
+      }
+
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1500))
+
+      // Show verification code in toast for demo purposes
+      toast.info("Verification code sent", {
+        description: `For demo purposes, your verification code is: ${generatedCode}`,
+        duration: 10000,
       })
-      setIsLoading(false)
-      return
-    }
 
+      console.log("Moving to verification step")
+      // Move to verification step
+      setCurrentStep(SignupStep.VERIFICATION)
+      setIsLoading(false)
+      // Start countdown for resend code
+      setResendCountdown(30)
+    } 
+    else if (currentStep === SignupStep.VERIFICATION) {
+      console.log("Verifying code:", verificationCode, "Expected:", generatedCode);
+      
+      // Verify the code - ensure it's a string comparison
+      const enteredCode = verificationCode.toString();
+      const expectedCode = generatedCode.toString();
+      
+      if (enteredCode === expectedCode) {
+        console.log("Verification successful");
+        // Simulate API call delay
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        setCurrentStep(SignupStep.SUCCESS)
+        
+        toast.success(getWelcomeMessage(), {
+          description: "Your account has been verified successfully. Redirecting to your dashboard...",
+          duration: 4000,
+        })
+        
+        // Simulate final account creation
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        
+        // Use auth context to login
+        login(formData.email, `${formData.firstName} ${formData.lastName}`, from)
+        
+        // Redirect to overview page
+        navigate("/")
+      } else {
+        console.log("Verification failed");
+        setVerificationAttempts(prev => prev + 1)
+        
+        if (verificationAttempts >= 2) {
+          toast.error("Too many failed attempts", {
+            description: "Please request a new verification code or contact support.",
+            duration: 5000,
+          })
+        } else {
+          toast.error("Invalid verification code", {
+            description: "Please check the code and try again.",
+            duration: 3000,
+          })
+        }
+      }
+      
+      setIsLoading(false)
+    }
+  }
+  
+  const resendVerificationCode = async () => {
+    setIsLoading(true)
+    
+    // Clear current verification code
+    setVerificationCode("")
+    
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1500))
-
-    toast.success(getWelcomeMessage(), {
-      description: "Your account has been created successfully. Redirecting to your dashboard...",
-      duration: 4000,
+    
+    // Reset verification attempts
+    setVerificationAttempts(0)
+    
+    // Reset countdown
+    setResendCountdown(30)
+    
+    // Show verification code in toast for demo purposes
+    toast.info("New verification code sent", {
+      description: `For demo purposes, your verification code is: ${generatedCode}`,
+      duration: 10000,
     })
     
-    // Use auth context to login
-    login(formData.email, `${formData.firstName} ${formData.lastName}`, from)
-    
-    // Redirect to overview page
-    navigate("/")
-
     setIsLoading(false)
   }
 
@@ -137,6 +271,7 @@ export default function SignupPage() {
     setFormData({
       firstName: "John",
       lastName: "Doe",
+      companyName: "Acme Corporation",
       email: demoCredentials.email,
       password: demoCredentials.password,
       confirmPassword: demoCredentials.password,
@@ -148,16 +283,9 @@ export default function SignupPage() {
     })
   }
 
-  const handleOAuthSignup = (provider: string) => {
-    toast.info(`${provider} Sign-up Coming Soon`, {
-      description: `We're working on ${provider} integration. For now, please use email sign-up.`, 
-      duration: 4000,
-    })
-  }
-
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden w-full max-w-6xl mx-auto h-full max-h-[calc(100vh-2rem)]">
-      <div className="grid grid-cols-1 lg:grid-cols-2 h-full">
+      <div className="grid grid-cols-1 lg:grid-cols-2 h-full min-h-[700px]">
           {/* Left Panel - White Background with Form */}
           <motion.div 
             className="bg-white flex items-center justify-center p-6"
@@ -180,67 +308,37 @@ export default function SignupPage() {
             <p className="text-sm text-muted-foreground">{getJoinMessage()}</p>
           </div>
 
-          {/* OAuth Buttons */}
-          <div className="grid gap-3 mb-4 sm:mb-6">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={() => handleOAuthSignup("Google")}
-            >
-              <svg className="mr-3 h-5 w-5" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
-              Continue with Google
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={() => handleOAuthSignup("GitHub")}
-            >
-              <svg className="mr-3 h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-              </svg>
-              Continue with GitHub
-            </Button>
-          </div>
-
-          <div className="relative mb-4 sm:mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <Separator className="w-full" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-3 text-muted-foreground">Or continue with email</span>
-            </div>
-          </div>
 
           {/* Signup Form */}
           <form onSubmit={handleSubmit} className="grid gap-3 sm:gap-4">
+            {currentStep === SignupStep.FORM && (
+              <motion.div
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                variants={pageVariants}
+                transition={smoothTransition}
+                className="grid gap-3 sm:gap-4"
+              >
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start content-start">
                   <div className="grid gap-1">
                     <Label htmlFor="firstName">First name</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-3.5 sm:top-3 h-4 w-4 text-slate-400" />
-                      <Input
-                        id="firstName"
-                        type="text"
-                        placeholder="John"
-                        value={formData.firstName}
-                        onChange={(e) => handleInputChange("firstName", e.target.value)}
-                        onBlur={() => handleBlur("firstName")}
-                        className={`pl-10 ${touched.firstName && errors.firstName ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
-                        autoComplete="off"
-                        autoCorrect="off"
-                        autoCapitalize="off"
-                        spellCheck="false"
-                        required
-                      />
-                      {touched.firstName && <ErrorMessage message={errors.firstName?.message} />}
-                    </div>
+                    <Input
+                      id="firstName"
+                      type="text"
+                      placeholder="John"
+                      value={formData.firstName}
+                      onChange={(e) => handleInputChange("firstName", e.target.value)}
+                      onBlur={() => handleBlur("firstName")}
+                      leftIcon={<User className="h-4 w-4" />}
+                      className={`${touched.firstName && errors.firstName ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck="false"
+                      required
+                    />
+                    {touched.firstName && <ErrorMessage message={errors.firstName?.message} />}
                   </div>
                   <div className="grid gap-1">
                     <Label htmlFor="lastName">Last name</Label>
@@ -263,90 +361,131 @@ export default function SignupPage() {
                 </div>
 
                 <div className="grid gap-1">
-                  <Label htmlFor="email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3.5 sm:top-3 h-4 w-4 text-slate-400" />
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="john@example.com"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange("email", e.target.value)}
-                      onBlur={() => handleBlur("email")}
-                      className={`pl-10 ${touched.email && errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
-                      autoComplete="email"
-                      autoCorrect="off"
-                      autoCapitalize="off"
-                      spellCheck="false"
-                      required
-                    />
-                    {touched.email && <ErrorMessage message={errors.email?.message} />}
-                  </div>
+                  <Label htmlFor="companyName">Company name</Label>
+                  <Input
+                    id="companyName"
+                    type="text"
+                    placeholder="Acme Corporation"
+                    value={formData.companyName}
+                    onChange={(e) => handleInputChange("companyName", e.target.value)}
+                    onBlur={() => handleBlur("companyName")}
+                    leftIcon={<Building className="h-4 w-4" />}
+                    className={`${touched.companyName && errors.companyName ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
+                    autoComplete="organization"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck="false"
+                    required
+                  />
+                  {touched.companyName && <ErrorMessage message={errors.companyName?.message} />}
                 </div>
 
                 <div className="grid gap-1">
+                  <Label htmlFor="email">Business email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="john@company.com"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    onBlur={() => handleBlur("email")}
+                    leftIcon={<Mail className="h-4 w-4" />}
+                    className={`${touched.email && errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
+                    autoComplete="email"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck="false"
+                    required
+                  />
+                  {touched.email && <ErrorMessage message={errors.email?.message} />}
+                </div>
+
+                <div className="grid gap-1 relative">
                   <Label htmlFor="password">Password</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-3.5 sm:top-3 h-4 w-4 text-slate-400" />
                     <Input
                       id="password"
+                      ref={passwordInputRef}
                       type={showPassword ? "text" : "password"}
                       placeholder="Create a password"
                       value={formData.password}
                       onChange={(e) => handleInputChange("password", e.target.value)}
+                      onFocus={() => setPasswordFocused(true)}
                       onBlur={() => handleBlur("password")}
-                      className={`pl-10 pr-10 ${touched.password && errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
+                      leftIcon={<Lock className="h-4 w-4" />}
+                      rightIcon={
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="h-auto w-auto p-1 hover:text-slate-600"
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      }
+                      className={`${touched.password && errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
                       autoComplete="new-password"
                       autoCorrect="off"
                       autoCapitalize="off"
                       spellCheck="false"
                       required
                     />
-                    {touched.password && <ErrorMessage message={errors.password?.message} />}
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-3.5 sm:top-3 text-slate-400 hover:text-slate-600 h-auto w-auto p-1"
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
+                    
+                    {/* Password Strength Tooltip - Fixed to prevent clipping */}
+                    {passwordFocused && (
+                      <div 
+                        ref={passwordStrengthRef}
+                        className="bg-white p-3 rounded-md shadow-md border border-gray-200 z-50 w-auto"
+                        style={{ 
+                          position: 'fixed',
+                          left: passwordInputRef.current ? 
+                            passwordInputRef.current.getBoundingClientRect().left + 
+                            passwordInputRef.current.getBoundingClientRect().width + 10 : 'auto',
+                          top: passwordInputRef.current ? 
+                            passwordInputRef.current.getBoundingClientRect().top : 'auto'
+                        }}
+                      >
+                        <PasswordStrength password={formData.password} />
+                      </div>
+                    )}
+                    
+                    {/* Display password errors inline */}
+                    {touched.password && errors.password && (
+                      <ErrorMessage message={errors.password?.message} />
+                    )}
                   </div>
-                  {formData.password && (
-                    <PasswordStrength password={formData.password} className="mt-2" />
-                  )}
                 </div>
 
                 <div className="grid gap-1">
                   <Label htmlFor="confirmPassword">Confirm password</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3.5 sm:top-3 h-4 w-4 text-slate-400" />
-                    <Input
-                      id="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      placeholder="Confirm your password"
-                      value={formData.confirmPassword}
-                      onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                      onBlur={() => handleBlur("confirmPassword")}
-                      className={`pl-10 pr-10 ${touched.confirmPassword && errors.confirmPassword ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
-                      autoComplete="new-password"
-                      autoCorrect="off"
-                      autoCapitalize="off"
-                      spellCheck="false"
-                      required
-                    />
-                    {touched.confirmPassword && <ErrorMessage message={errors.confirmPassword?.message} />}
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-3.5 sm:top-3 text-slate-400 hover:text-slate-600 h-auto w-auto p-1"
-                    >
-                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
-                  </div>
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Confirm your password"
+                    value={formData.confirmPassword}
+                    onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+                    onBlur={() => handleBlur("confirmPassword")}
+                    leftIcon={<Lock className="h-4 w-4" />}
+                    rightIcon={
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="h-auto w-auto p-1 hover:text-slate-600"
+                      >
+                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    }
+                    className={`${touched.confirmPassword && errors.confirmPassword ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
+                    autoComplete="new-password"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck="false"
+                    required
+                  />
+                  {touched.confirmPassword && <ErrorMessage message={errors.confirmPassword?.message} />}
                 </div>
 
                 <div className="flex items-start space-x-2">
@@ -370,32 +509,168 @@ export default function SignupPage() {
                 </div>
                 {touched.agreeToTerms && <ErrorMessage message={errors.agreeToTerms?.message} />}
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading || !isFormValid(errors)}
-            >
-              {isLoading ? (
-                <div className="flex items-center space-x-2">
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  <span>Creating account...</span>
-                </div>
-              ) : (
-                "Create account"
-              )}
-            </Button>
-
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">
-                Already have an account?{" "}
-                <Link
-                  to="/login"
-                  className="font-medium text-foreground hover:text-foreground/80"
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isLoading || !isFormValid(errors)}
                 >
-                  Sign in
-                </Link>
-              </p>
-            </div>
+                  {isLoading ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      <span>Submitting...</span>
+                    </div>
+                  ) : (
+                    "Continue"
+                  )}
+                </Button>
+              </motion.div>
+            )}
+
+            {currentStep === SignupStep.VERIFICATION && (
+              <motion.div
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                variants={pageVariants}
+                transition={smoothTransition}
+                className="grid gap-4"
+              >
+                <div className="text-left mb-6">
+                  <div className="flex items-center mb-4">
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                      <Shield className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold text-foreground mb-1">Verify your identity</h2>
+                      <p className="text-sm text-muted-foreground">
+                        We've sent a 6-digit code to <span className="font-medium">{formData.email}</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="otp" className="text-sm font-medium">Verification Code</Label>
+                    <InputOTP
+                      maxLength={6}
+                      value={verificationCode}
+                      onChange={setVerificationCode}
+                    >
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                      </InputOTPGroup>
+                      <InputOTPSeparator />
+                      <InputOTPGroup>
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm text-muted-foreground">
+                      Didn't receive a code?{" "}
+                      <Button
+                        type="button"
+                        variant="link"
+                        onClick={resendVerificationCode}
+                        disabled={resendCountdown > 0 || isLoading}
+                        className={`font-medium transition-colors ${
+                          resendCountdown > 0 || isLoading
+                            ? 'text-muted-foreground'
+                            : 'text-foreground hover:text-foreground/80'
+                        }`}
+                      >
+                        {isLoading ? (
+                          'Sending...'
+                        ) : resendCountdown > 0 ? (
+                          `Resend code (${resendCountdown}s)`
+                        ) : (
+                          'Resend code'
+                        )}
+                      </Button>
+                    </p>
+                  </div>
+                  {verificationAttempts > 0 && verificationCode !== generatedCode && (
+                    <p className="text-sm text-red-500 mt-1 flex items-center">
+                      <AlertCircle className="h-3.5 w-3.5 mr-1.5" />
+                      Invalid verification code. Please try again.
+                    </p>
+                  )}
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isLoading || verificationCode.length !== 6}
+                >
+                  {isLoading ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      <span>Verifying...</span>
+                    </div>
+                  ) : (
+                    "Verify & Create Account"
+                  )}
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => setCurrentStep(SignupStep.FORM)}
+                  disabled={isLoading}
+                >
+                  Back to signup
+                </Button>
+              </motion.div>
+            )}
+
+            {currentStep === SignupStep.SUCCESS && (
+              <motion.div
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                variants={pageVariants}
+                transition={smoothTransition}
+                className="grid gap-4 text-center"
+              >
+                <div className="mx-auto">
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-50 text-green-500 mb-4">
+                    <CheckCircle2 className="h-6 w-6" />
+                  </div>
+                  <h2 className="text-xl font-semibold mb-1">Account verified!</h2>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Your account has been successfully verified. Redirecting to dashboard...
+                  </p>
+                  <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full bg-blue-500"
+                      initial={{ width: "0%" }}
+                      animate={{ width: "100%" }}
+                      transition={{ duration: 2, ease: "easeInOut" }}
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {currentStep === SignupStep.FORM && (
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground">
+                  Already have an account?{" "}
+                  <Link
+                    to="/login"
+                    className="font-medium text-foreground hover:text-foreground/80"
+                  >
+                    Sign in
+                  </Link>
+                </p>
+              </div>
+            )}
           </form>
 
             </div>
@@ -415,7 +690,7 @@ export default function SignupPage() {
             
             {/* Partners Section */}
             <div className="relative z-10 text-gray-800">
-              <h3 className="text-base sm:text-lg lg:text-xl font-medium mb-6">Our partners</h3>
+              <h3 className="text-xs uppercase text-gray-400 font-medium mb-6 text-center">OUR PARTNERS</h3>
               <div className="relative overflow-hidden">
                 {/* Gradient overlays for smooth edges */}
                 <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-100 to-transparent z-10"></div>

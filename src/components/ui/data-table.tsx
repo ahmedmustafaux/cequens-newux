@@ -148,8 +148,7 @@ function DataTable({
                 {/* Search Bar with Controls on Small Screens */}
                 {searchConfig && (
                   <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <div className="relative flex-1 sm:w-auto sm:min-w-[320px]">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <div className="flex-1 sm:w-auto sm:min-w-[320px]">
                       <Input
                         placeholder={searchConfig.placeholder || "Search..."}
                         value={searchConfig.table.getState().globalFilter ?? ""}
@@ -158,7 +157,7 @@ function DataTable({
                           // Use global filter for OR logic across multiple columns
                           searchConfig.table.setGlobalFilter(searchValue)
                         }}
-                        className="pl-10"
+                        leftIcon={<Search className="h-4 w-4" />}
                       />
                     </div>
                     

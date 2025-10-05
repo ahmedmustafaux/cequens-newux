@@ -367,7 +367,6 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
         {/* 1. Searchbar with reduced padding and bottom border */}
         <div className="p-3 border-b border-border/50 flex-shrink-0">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               ref={inputRef}
               type="text"
@@ -375,7 +374,8 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="pl-9 pr-18 h-10 text-sm border-0 bg-transparent focus-visible:bg-transparent focus-visible:ring-0 shadow-none"
+              leftIcon={<Search className="h-4 w-4" />}
+              className="pr-18 h-10 text-sm border-0 bg-transparent focus-visible:bg-transparent focus-visible:ring-0 shadow-none"
             />
             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
               <Button
@@ -595,5 +595,3 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
     </Dialog>
   )
 }
-
-

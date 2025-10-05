@@ -138,13 +138,13 @@ export function FilterSelect({
             {/* Search input at the top */}
             {searchable && onSearchChange ? (
               <div className="flex flex-col">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-3 w-3" />
+                <div>
                   <Input
                     placeholder={searchPlaceholder}
                     value={searchQuery}
                     onChange={(e) => onSearchChange(e.target.value)}
-                    className="pl-9 h-6 text-sm border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+                    leftIcon={<Search className="h-3 w-3" />}
+                    className="h-6 text-sm border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
                   />
                 </div>
                 <div className="border-t border-border" />

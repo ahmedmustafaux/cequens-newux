@@ -10,7 +10,7 @@ export interface FieldValidation {
 }
 
 // Email validation
-export const validateEmail = (email: string): ValidationResult => {
+export const validateEmail = (email: string, requireBusinessEmail: boolean = false): ValidationResult => {
   if (!email.trim()) {
     return { isValid: false, message: "Email is required" }
   }
@@ -18,6 +18,23 @@ export const validateEmail = (email: string): ValidationResult => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailRegex.test(email)) {
     return { isValid: false, message: "Please enter a valid email address" }
+  }
+  
+  if (requireBusinessEmail) {
+    // Check for common personal email domains
+    const personalDomains = [
+      'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com', 
+      'icloud.com', 'mail.com', 'protonmail.com', 'zoho.com', 'yandex.com',
+      'gmx.com', 'live.com', 'me.com', 'inbox.com'
+    ]
+    
+    const domain = email.split('@')[1].toLowerCase()
+    if (personalDomains.includes(domain)) {
+      return { 
+        isValid: false, 
+        message: "Please use your business email address instead of a personal email" 
+      }
+    }
   }
   
   return { isValid: true }
@@ -115,6 +132,7 @@ export const validateLoginForm = (email: string, password: string): FieldValidat
 export const validateSignupForm = (formData: {
   firstName: string
   lastName: string
+  companyName: string
   email: string
   password: string
   confirmPassword: string
@@ -132,7 +150,14 @@ export const validateSignupForm = (formData: {
     errors.lastName = lastNameValidation
   }
   
-  const emailValidation = validateEmail(formData.email)
+  // Company name validation
+  if (!formData.companyName.trim()) {
+    errors.companyName = { isValid: false, message: "Company name is required" }
+  } else if (formData.companyName.trim().length < 2) {
+    errors.companyName = { isValid: false, message: "Company name must be at least 2 characters long" }
+  }
+  
+  const emailValidation = validateEmail(formData.email, true) // true = require business email
   if (!emailValidation.isValid) {
     errors.email = emailValidation
   }

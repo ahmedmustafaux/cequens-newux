@@ -29,8 +29,6 @@ export function PasswordStrength({ password, className }: PasswordStrengthProps)
   
   const strength = getPasswordStrength(password)
   
-  if (!password) return null
-  
   return (
     <div className={cn("space-y-2", className)}>
       <div className="flex items-center justify-between text-xs">
