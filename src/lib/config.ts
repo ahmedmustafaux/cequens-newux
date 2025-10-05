@@ -51,11 +51,6 @@ export function getAppName(): string {
   return appConfig.name
 }
 
-// Helper function to get app description
-export function getAppDescription(): string {
-  return appConfig.description
-}
-
 // Helper function to get demo email
 export function getDemoEmail(): string {
   return appConfig.demo.email
