@@ -1,6 +1,7 @@
 import * as React from "react"
 import { type DateRange } from "react-day-picker"
 import { SectionCards } from "@/components/section-cards"
+import { DashboardChart } from "@/components/dashboard-chart"
 import { TableSkeleton } from "@/components/ui/table"
 import { PageHeader } from "@/components/page-header"
 import { TimeFilter } from "@/components/time-filter"
@@ -16,8 +17,22 @@ export default function DashboardPage() {
   })
   const [isDataLoading, setIsDataLoading] = React.useState(true)
 
+  // Convert DateRange to timeRange string for components
+  const getTimeRangeFromDateRange = (range: DateRange | undefined): string => {
+    if (!range || !range.from || !range.to) return "30d"
+    
+    const diffTime = Math.abs(range.to.getTime() - range.from.getTime())
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    
+    if (diffDays <= 7) return "7d"
+    if (diffDays <= 30) return "30d"
+    return "90d"
+  }
+  
+  const timeRange = getTimeRangeFromDateRange(dateRange)
+  
   // Dynamic title based on date range
-  useTimeRangeTitle("30d") // Keep using the hook for now
+  useTimeRangeTitle(timeRange)
 
   // Simulate initial data loading from server
   React.useEffect(() => {
@@ -60,9 +75,15 @@ export default function DashboardPage() {
 
         <div className="flex flex-col gap-4 pb-4">
           {isDataLoading ? (
-            <TableSkeleton rows={4} columns={4} />
+            <>
+              <TableSkeleton rows={4} columns={4} />
+              <TableSkeleton rows={1} columns={1} className="h-[400px]" />
+            </>
           ) : (
-            <SectionCards timeRange="30d" isLoading={isDataLoading} />
+            <>
+              <SectionCards timeRange={timeRange} isLoading={isDataLoading} />
+              <DashboardChart timeRange={timeRange} isLoading={isDataLoading} />
+            </>
           )}
         </div>
       </div>

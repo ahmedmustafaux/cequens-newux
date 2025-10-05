@@ -120,6 +120,12 @@ import {
 - Implement proper loading and error states
 - Use proper TypeScript types for API responses
 
+### **Mock Data**
+- Use centralized mock data from `src/data/mock-data.ts`
+- Keep data generation logic in the mock data file, not in components
+- Components should import and use mock data functions
+- This separation makes it easier to replace with real API calls later
+
 ### **Form Handling**
 - Use react-hook-form for form management
 - Implement proper validation with Zod

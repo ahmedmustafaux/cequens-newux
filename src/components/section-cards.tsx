@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { CardSkeleton } from "@/components/ui/card"
+import { getDashboardMetrics } from "@/data/mock-data"
 
 interface SectionCardsProps {
   timeRange: string
@@ -30,41 +31,17 @@ export function SectionCards({ timeRange, isLoading = false }: SectionCardsProps
     }
   }
 
-  const getMetricsData = (range: string) => {
-    switch (range) {
-      case "7d":
-        return {
-          messagesSent: { value: "28,420", change: "+8.2%", trend: "up" },
-          deliveryRate: { value: "99.1%", change: "+0.3%", trend: "up" },
-          activeSenders: { value: "456", change: "+5.1%", trend: "up" },
-          responseRate: { value: "35.2%", change: "+2.1%", trend: "up" }
-        }
-      case "30d":
-        return {
-          messagesSent: { value: "128,420", change: "+12.5%", trend: "up" },
-          deliveryRate: { value: "98.7%", change: "-0.2%", trend: "down" },
-          activeSenders: { value: "1,246", change: "+12.5%", trend: "up" },
-          responseRate: { value: "32.4%", change: "+4.5%", trend: "up" }
-        }
-      case "90d":
-        return {
-          messagesSent: { value: "384,250", change: "+18.3%", trend: "up" },
-          deliveryRate: { value: "97.9%", change: "-0.8%", trend: "down" },
-          activeSenders: { value: "3,892", change: "+22.1%", trend: "up" },
-          responseRate: { value: "29.8%", change: "+1.2%", trend: "up" }
-        }
-      default:
-        return {
-          messagesSent: { value: "128,420", change: "+12.5%", trend: "up" },
-          deliveryRate: { value: "98.7%", change: "-0.2%", trend: "down" },
-          activeSenders: { value: "1,246", change: "+12.5%", trend: "up" },
-          responseRate: { value: "32.4%", change: "+4.5%", trend: "up" }
-        }
-    }
+  /**
+   * Get metrics data from mock data
+   * This function is a wrapper around getDashboardMetrics to maintain the same interface
+   * while delegating the actual data generation to the mock data module
+   */
+  const getMetricsData = () => {
+    return getDashboardMetrics()
   }
 
   const timePeriodText = getTimePeriodText(timeRange)
-  const metrics = getMetricsData(timeRange)
+  const metrics = getMetricsData()
 
   if (isLoading) {
     return (

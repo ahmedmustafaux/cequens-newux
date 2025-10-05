@@ -37,6 +37,20 @@ export type ChartDataPoint = {
   sms: number;
 };
 
+export type DashboardChartDataPoint = {
+  date: string;      // ISO format date (YYYY-MM-DD)
+  period: string;    // Formatted date (e.g., "Jan 15")
+  messages: number;  // Number of messages sent
+  senders: number;   // Number of active senders
+};
+
+export type DashboardMetrics = {
+  messagesSent: { value: string; change: string; trend: "up" | "down" };
+  deliveryRate: { value: string; change: string; trend: "up" | "down" };
+  activeSenders: { value: string; change: string; trend: "up" | "down" };
+  responseRate: { value: string; change: string; trend: "up" | "down" };
+};
+
 export type Notification = {
   id: string;
   title: string;
@@ -772,6 +786,120 @@ export const mockNotifications: Notification[] = [
     priority: "high",
   },
 ];
+
+// ============================================================================
+// DASHBOARD DATA
+// ============================================================================
+
+/**
+ * Generates random dashboard chart data based on the specified time range
+ * 
+ * This function creates an array of data points with random values for messages and senders
+ * that can be used for dashboard visualizations. The data is completely randomized
+ * to avoid sequential patterns.
+ * 
+ * @param range - Time range string ("7d", "30d", or "90d")
+ * @returns Array of data points with date, period, messages, and senders properties
+ */
+export const getDashboardChartData = (range: string): DashboardChartDataPoint[] => {
+  const today = new Date()
+  let numDays: number
+  
+  switch (range) {
+    case "7d":
+      numDays = 7
+      break
+    case "30d":
+      numDays = 30
+      break
+    case "90d":
+      numDays = 90
+      break
+    default:
+      numDays = 30
+  }
+  
+  // Generate data for each day in the range
+  const dataPoints = Array.from({ length: numDays }, (_, i) => {
+    const date = new Date(today)
+    date.setDate(today.getDate() - (numDays - 1 - i))
+    
+    // Format the day as "MMM DD" (e.g., "Jan 15")
+    const formattedDate = date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric"
+    })
+    
+    return { 
+      date,
+      period: formattedDate
+    }
+  })
+
+  // Generate completely random data for each time period
+  return dataPoints.map((point) => {
+    // Random values within reasonable ranges
+    const randomMessagesSent = Math.floor(Math.random() * 80000) + 10000 // Random between 10,000 and 90,000
+    const randomActiveSenders = Math.floor(Math.random() * 800) + 200 // Random between 200 and 1,000
+
+    return {
+      date: point.date.toISOString().split('T')[0], // Format as YYYY-MM-DD
+      period: point.period,
+      messages: randomMessagesSent,
+      senders: randomActiveSenders,
+    }
+  })
+}
+
+/**
+ * Generates random dashboard metrics data
+ * 
+ * This function creates random metrics for the dashboard cards including
+ * message counts, delivery rates, active senders, and response rates.
+ * Values are completely randomized to avoid sequential patterns.
+ * 
+ * @returns Dashboard metrics object with random values
+ */
+export const getDashboardMetrics = (): DashboardMetrics => {
+  // Generate random metrics data
+  
+  // Random message count between 20,000 and 500,000
+  const randomMessages = Math.floor(Math.random() * 480000) + 20000
+  const formattedMessages = randomMessages.toLocaleString()
+  
+  // Random delivery rate between 95% and 99.9%
+  const randomDelivery = (95 + Math.random() * 4.9).toFixed(1)
+  
+  // Random active senders between 300 and 5,000
+  const randomSenders = Math.floor(Math.random() * 4700) + 300
+  const formattedSenders = randomSenders.toLocaleString()
+  
+  // Random response rate between 25% and 40%
+  const randomResponse = (25 + Math.random() * 15).toFixed(1)
+  
+  // Random change percentages between -5% and +25%
+  const getRandomChange = () => {
+    const changeValue = Math.random() * 30 - 5
+    const changeFormatted = changeValue.toFixed(1)
+    return (changeValue > 0 ? "+" : "") + changeFormatted + "%"
+  }
+  
+  // Determine trend based on change value
+  const getTrend = (change: string): "up" | "down" => 
+    change.startsWith("+") ? "up" : "down"
+  
+  const messagesChange = getRandomChange()
+  const deliveryChange = getRandomChange()
+  const sendersChange = getRandomChange()
+  const responseChange = getRandomChange()
+  
+  return {
+    messagesSent: { value: formattedMessages, change: messagesChange, trend: getTrend(messagesChange) },
+    deliveryRate: { value: randomDelivery + "%", change: deliveryChange, trend: getTrend(deliveryChange) },
+    activeSenders: { value: formattedSenders, change: sendersChange, trend: getTrend(sendersChange) },
+    responseRate: { value: randomResponse + "%", change: responseChange, trend: getTrend(responseChange) }
+  }
+}
 
 // ============================================================================
 // CONFIGURATION DATA
