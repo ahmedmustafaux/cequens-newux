@@ -1,6 +1,5 @@
 import * as React from "react"
 import { type DateRange } from "react-day-picker"
-import { ChartAreaInteractive } from "@/components/chart-area-interactive"
 import { SectionCards } from "@/components/section-cards"
 import { TableSkeleton } from "@/components/ui/table"
 import { PageHeader } from "@/components/page-header"
@@ -64,14 +63,6 @@ export default function DashboardPage() {
             <TableSkeleton rows={4} columns={4} />
           ) : (
             <SectionCards timeRange="30d" isLoading={isDataLoading} />
-          )}
-          
-          {isDataLoading ? (
-            <TableSkeleton rows={4} columns={4} />
-          ) : (
-            <div className="px-4 lg:px-6">
-              <ChartAreaInteractive timeRange="30d" isLoading={isDataLoading} />
-            </div>
           )}
         </div>
       </div>

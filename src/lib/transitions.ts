@@ -16,7 +16,6 @@
  * - smoothTransition: Ultra-smooth cubic-bezier easing
  * - modalVariants: For modals and dialogs
  * - loadingVariants: For loading states
- * - pageWrapperLoadingVariants: For page wrapper loading states
  * - skeletonVariants: For skeleton loading animations
  * - skeletonStaggerVariants: For staggered skeleton loading
  * - skeletonItemVariants: For individual skeleton items
@@ -209,24 +208,6 @@ export const loadingVariants: Variants = {
     opacity: 0.7,
     y: 4,
     transition: quickTransition,
-  },
-};
-
-// Page wrapper loading transition (matches CSS .sidebar-content-transition.loading)
-export const pageWrapperLoadingVariants: Variants = {
-  initial: {
-    opacity: 1,
-    y: 0,
-  },
-  loading: {
-    opacity: 0.7,
-    y: 4,
-    transition: quickTransition,
-  },
-  loaded: {
-    opacity: 1,
-    y: 0,
-    transition: smoothTransition,
   },
 };
 
