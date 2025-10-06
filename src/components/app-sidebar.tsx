@@ -83,11 +83,6 @@ const data = {
       icon: IconSettings,
     },
     {
-      title: "UI Components",
-      url: "/components-demo",
-      icon: IconComponents,
-    },
-    {
       title: "Get Help",
       url: "#",
       icon: IconHelp,

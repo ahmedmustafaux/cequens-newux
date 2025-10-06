@@ -27,7 +27,6 @@ import ContactDetailPage from '@/pages/ContactDetailPage'
 import MessagesPage from '@/pages/MessagesPage'
 import NotificationsPage from '@/pages/NotificationsPage'
 import SettingsPage from '@/pages/SettingsPage'
-import ShadcnComponentsDemo from '@/pages/ShadcnComponentsDemo'
 
 function App() {
   return (
@@ -177,15 +176,6 @@ function App() {
             <RootLayout>
               <DashboardLayout>
                 <SettingsPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/components-demo" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <ShadcnComponentsDemo />
               </DashboardLayout>
             </RootLayout>
           </ProtectedRoute>
