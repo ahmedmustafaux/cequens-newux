@@ -67,19 +67,16 @@ export default function EmailConfirmationPage() {
     
     setCurrentStep(ConfirmationStep.SUCCESS)
     
-    toast.success(getWelcomeMessage(), {
-      description: "Your email has been verified successfully. Redirecting to your dashboard...",
+    toast.success("Email verified successfully!", {
+      description: "Your email has been verified. Now we need to verify your phone number.",
       duration: 4000,
     })
     
-    // Simulate final account creation
+    // Simulate final email verification
     await new Promise(resolve => setTimeout(resolve, 2000))
     
-    // Use auth context to login
-    login(userData.email, `${userData.firstName} ${userData.lastName}`, from)
-    
-    // Redirect to overview page
-    navigate("/")
+    // Redirect to phone verification page with user data
+    navigate("/phone-verification", { state: { userData, from } })
     
     setIsLoading(false)
   }
@@ -198,9 +195,9 @@ export default function EmailConfirmationPage() {
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-50 text-green-500 mb-4">
                   <CheckCircle2 className="h-6 w-6" />
                 </div>
-                <h2 className="text-xl font-semibold mb-1">Account verified!</h2>
+                <h2 className="text-xl font-semibold mb-1">Email verified!</h2>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Your account has been successfully verified. Redirecting to dashboard...
+                  Your email has been successfully verified. Redirecting to phone verification...
                 </p>
                 <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
                   <motion.div

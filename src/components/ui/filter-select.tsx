@@ -141,7 +141,11 @@ export function FilterSelect({
           </div>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className={cn("p-0", contentWidth)} align="start">
+      <PopoverContent 
+        className={cn("p-0", contentWidth)} 
+        align="start"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <div className="flex flex-col">
             {/* Search input at the top */}
             {searchable && onSearchChange ? (
@@ -158,6 +162,7 @@ export function FilterSelect({
                           value={searchQuery}
                           onChange={(e) => onSearchChange(e.target.value)}
                           className="h-6 text-sm"
+                          autoFocus={false}
                         />
                       </InputGroup>
                     </FieldContent>

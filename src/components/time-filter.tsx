@@ -355,6 +355,7 @@ export function TimeFilter({
           alignOffset={-200}
           avoidCollisions={true}
           collisionPadding={16}
+          onOpenAutoFocus={(e) => e.preventDefault()}
         >
           <div className="flex">
             {/* Shortcuts Sidebar */}

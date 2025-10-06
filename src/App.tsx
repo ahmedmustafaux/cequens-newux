@@ -13,6 +13,7 @@ import DashboardLayout from '@/layouts/DashboardLayout'
 import LoginPage from '@/pages/LoginPage'
 import SignupPage from '@/pages/SignupPage'
 import EmailConfirmationPage from '@/pages/EmailConfirmationPage'
+import PhoneVerificationPage from '@/pages/PhoneVerificationPage'
 import DashboardPage from '@/pages/DashboardPage'
 import AnalyticsPage from '@/pages/AnalyticsPage'
 import CampaignsPage from '@/pages/CampaignsPage'
@@ -51,6 +52,13 @@ function App() {
           <PublicRoute>
             <LoginLayout>
               <EmailConfirmationPage />
+            </LoginLayout>
+          </PublicRoute>
+        } />
+        <Route path="/phone-verification" element={
+          <PublicRoute>
+            <LoginLayout>
+              <PhoneVerificationPage />
             </LoginLayout>
           </PublicRoute>
         } />

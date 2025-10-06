@@ -9,6 +9,23 @@ export interface FieldValidation {
   [key: string]: ValidationResult
 }
 
+// Phone number validation
+export const validatePhoneNumber = (phoneNumber: string): ValidationResult => {
+  if (!phoneNumber.trim()) {
+    return { isValid: false, message: "Phone number is required" }
+  }
+  
+  // Remove spaces, dashes, and parentheses for validation
+  const cleanedNumber = phoneNumber.replace(/[\s\-\(\)]/g, '')
+  
+  // Basic phone number validation (digits only, reasonable length)
+  if (!/^\+?\d{8,15}$/.test(cleanedNumber)) {
+    return { isValid: false, message: "Please enter a valid phone number" }
+  }
+  
+  return { isValid: true }
+}
+
 // Email validation
 export const validateEmail = (email: string, requireBusinessEmail: boolean = false): ValidationResult => {
   if (!email.trim()) {
