@@ -40,7 +40,7 @@ const itemVariants = cva(
         muted: "bg-muted/50",
       },
       size: {
-        default: "p-4 gap-4 ",
+        default: "gap-4 p-0.5",
         sm: "py-3 px-4 gap-2.5",
       },
     },

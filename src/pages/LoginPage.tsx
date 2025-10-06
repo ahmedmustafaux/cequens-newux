@@ -2,6 +2,7 @@ import * as React from "react"
 import { useState, useEffect } from "react"
 import { useNavigate, Link, useLocation } from "react-router-dom"
 import { Eye, EyeOff, Mail, Lock, ArrowLeft, Shield, MessageSquare, Phone, Smartphone, AlertTriangle } from "lucide-react"
+import { Item, ItemMedia, ItemContent, ItemTitle, ItemDescription } from "@/components/ui/item"
 import { Button } from "@/components/ui/button"
 import { 
   Field, 
@@ -476,19 +477,17 @@ export default function LoginPage() {
                 </div>
 
                 {/* OTP Section */}
-                <div className="text-left mb-6">
-                  <div className="flex items-center mb-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
-                      <Shield className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-semibold text-foreground mb-1">Verify your identity</h2>
-                      <p className="text-sm text-muted-foreground">
-                        We've sent a 6-digit code to {getDemoEmail()}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                <Item className="mb-6">
+                  <ItemMedia variant="icon">
+                    <Shield className="h-6 w-6" />
+                  </ItemMedia>
+                  <ItemContent>
+                    <ItemTitle>Verify your identity</ItemTitle>
+                    <ItemDescription>
+                      We've sent a 6-digit code to {getDemoEmail()}
+                    </ItemDescription>
+                  </ItemContent>
+                </Item>
 
                 <div className="grid gap-4">
                   <Field>

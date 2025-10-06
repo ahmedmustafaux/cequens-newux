@@ -1,7 +1,9 @@
 import * as React from "react"
 import { useState, useEffect } from "react"
 import { useNavigate, Link, useLocation } from "react-router-dom"
-import { Phone, AlertCircle, CheckCircle2, Shield, ArrowLeft, Globe, Search, ChevronDown } from "lucide-react"
+import { Phone, AlertCircle, CheckCircle2, Shield, ArrowLeft, Info } from "lucide-react"
+import { Item, ItemMedia, ItemContent, ItemTitle, ItemDescription } from "@/components/ui/item"
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { useAuth } from "@/hooks/use-auth"
@@ -27,13 +29,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp"
 import { validatePhoneNumber, type FieldValidation } from "@/lib/validation"
-import { Input } from "@/components/ui/input"
-import { CircleFlag } from "react-circle-flags"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+import { PhoneInputWithCountryCode } from "@/components/ui/country-code-select"
 import { cn } from "@/lib/utils"
 
 export default function PhoneVerificationPage() {
@@ -478,19 +474,17 @@ export default function PhoneVerificationPage() {
                 transition={smoothTransition}
                 className="w-full"
               >
-                <div className="text-left mb-6">
-                  <div className="flex items-center mb-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
-                      <Phone className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-semibold text-foreground mb-1">Verify your phone number</h2>
-                      <p className="text-sm text-muted-foreground">
-                        Please enter your phone number to receive a verification code
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                <Item className="mb-6">
+                  <ItemMedia variant="icon">
+                    <Phone className="h-6 w-6" />
+                  </ItemMedia>
+                  <ItemContent>
+                    <ItemTitle>Verify your phone number</ItemTitle>
+                    <ItemDescription>
+                      Please enter your phone number to receive a verification code
+                    </ItemDescription>
+                  </ItemContent>
+                </Item>
 
                 <div className="grid gap-4">
                   <Field>
@@ -602,24 +596,6 @@ export default function PhoneVerificationPage() {
                       {touched.phoneNumber && errors.phoneNumber && <FieldError>{errors.phoneNumber.message}</FieldError>}
                     </FieldContent>
                   </Field>
-                  
-                  <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-                    <div className="flex">
-                      <div className="flex-shrink-0">
-                        <AlertCircle className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div className="ml-3">
-                        <h3 className="text-sm font-medium text-blue-800">Why we need your phone number</h3>
-                        <div className="mt-2 text-sm text-blue-700">
-                          <ul className="list-disc pl-5 space-y-1">
-                            <li>To verify your identity and secure your account</li>
-                            <li>For important account notifications</li>
-                            <li>To enable two-factor authentication</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
 
                   <Button
                     type="submit"
@@ -661,31 +637,29 @@ export default function PhoneVerificationPage() {
                 </div>
 
                 {/* OTP Section */}
-                <div className="text-left mb-6">
-                  <div className="flex items-center mb-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
-                      <Shield className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-semibold text-foreground mb-1">Enter verification code</h2>
-                      <p className="text-sm text-muted-foreground">
-                        {(() => {
-                          // Format the phone number for display
-                          try {
-                            const parsedNumber = parsePhoneNumber(countryCode + phoneNumber.replace(/^0+/, ''))
-                            if (parsedNumber.valid) {
-                              return `We've sent a 6-digit code to ${parsedNumber.number.international}`
-                            }
-                          } catch (error) {
-                            console.error("Error formatting phone number:", error)
+                <Item className="mb-6">
+                  <ItemMedia variant="icon">
+                    <Shield className="h-6 w-6" />
+                  </ItemMedia>
+                  <ItemContent>
+                    <ItemTitle>Enter verification code</ItemTitle>
+                    <ItemDescription>
+                      {(() => {
+                        // Format the phone number for display
+                        try {
+                          const parsedNumber = parsePhoneNumber(countryCode + phoneNumber.replace(/^0+/, ''))
+                          if (parsedNumber.valid) {
+                            return `We've sent a 6-digit code to ${parsedNumber.number.international}`
                           }
-                          // Fallback to basic formatting
-                          return `We've sent a 6-digit code to ${countryCode} ${phoneNumber.replace(/^0+/, '')}`
-                        })()}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                        } catch (error) {
+                          console.error("Error formatting phone number:", error)
+                        }
+                        // Fallback to basic formatting
+                        return `We've sent a 6-digit code to ${countryCode} ${phoneNumber.replace(/^0+/, '')}`
+                      })()}
+                    </ItemDescription>
+                  </ItemContent>
+                </Item>
 
                 <div className="grid gap-4">
                   <Field>
@@ -784,20 +758,24 @@ export default function PhoneVerificationPage() {
         </div>
       </div>
       
-      {/* Demo button completely outside the white container */}
-      {currentStep === VerificationStep.OTP_VERIFICATION && (
-        <div className="mt-4 text-center">
-          <Button
-            type="button"
-            variant="link"
-            onClick={() => setOtp("000000")}
-            disabled={isLoading}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            Demo: Fill OTP with "000000"
-          </Button>
-        </div>
-      )}
+      {/* Info alert and demo button outside the white container */}
+      <div className="mt-4 space-y-4 w-full max-w-lg mx-auto">
+      
+        
+        {currentStep === VerificationStep.OTP_VERIFICATION && (
+          <div className="text-center">
+            <Button
+              type="button"
+              variant="link"
+              onClick={() => setOtp("000000")}
+              disabled={isLoading}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              Demo: Fill OTP with "000000"
+            </Button>
+          </div>
+        )}
+      </div>
     </>
   )
 }
