@@ -204,10 +204,10 @@ export default function SignupPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 h-full">
           {/* Left Panel - White Background with Form */}
           <motion.div 
-            className="bg-white flex items-center justify-center p-6"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
+            className="bg-white flex items-center justify-center p-6 h-full"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
             transition={smoothTransition}
           >
             <div className="w-full max-w-md">
