@@ -42,6 +42,13 @@ import { motion } from "framer-motion"
 import { smoothTransition } from "@/lib/transitions"
 import { getLogoAltText, getAccountText, getDemoCredentials } from "@/lib/config"
 
+// Helper function to mask email addresses
+const maskEmail = (email: string) => {
+  const [username, domain] = email.split('@')
+  const maskedUsername = username.substring(0, 2) + '**' + (username.length > 4 ? username.substring(username.length - 2) : '')
+  return `${maskedUsername}@${domain}`
+}
+
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -55,6 +62,7 @@ export default function LoginPage() {
   const [isResending, setIsResending] = useState(false)
   const [showVerificationMethods, setShowVerificationMethods] = useState(false)
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null)
+  const [verificationContact, setVerificationContact] = useState<string>("+20 010 **33")
   const [generalError, setGeneralError] = useState<string>("")
   const navigate = useNavigate()
   const location = useLocation()
@@ -221,6 +229,8 @@ export default function LoginPage() {
         setErrors({})
         setTouched({})
         setGeneralError("")
+        // Set default verification contact to phone number
+        setVerificationContact("+20 010 **33")
         // Start countdown for resend code
         setResendCountdown(30)
       } else {
@@ -291,6 +301,20 @@ export default function LoginPage() {
       
       // Start countdown
       setResendCountdown(30)
+      
+      // Update verification contact based on method
+      switch (method) {
+        case 'email':
+          setVerificationContact(maskEmail(getDemoEmail()))
+          break
+        case 'sms':
+        case 'whatsapp':
+          setVerificationContact("+20 010 **33")
+          break
+        case 'call':
+          setVerificationContact("+20 010 **33")
+          break
+      }
       
       // Close popup
       setShowVerificationMethods(false)
@@ -484,7 +508,7 @@ export default function LoginPage() {
                   <ItemContent>
                     <ItemTitle>Verify your identity</ItemTitle>
                     <ItemDescription>
-                      We've sent a 6-digit code to {getDemoEmail()}
+                      We've sent a 6-digit code to {verificationContact}
                     </ItemDescription>
                   </ItemContent>
                 </Item>
@@ -706,7 +730,7 @@ export default function LoginPage() {
               </div>
               <div className="text-left">
                 <div className="font-medium text-sm text-foreground">Email</div>
-                <div className="text-xs text-muted-foreground">{getDemoEmail()}</div>
+                <div className="text-xs text-muted-foreground">{maskEmail(getDemoEmail())}</div>
               </div>
             </Button>
 
@@ -722,7 +746,7 @@ export default function LoginPage() {
               </div>
               <div className="text-left">
                 <div className="font-medium text-sm text-foreground">SMS</div>
-                <div className="text-xs text-muted-foreground">+1 (555) 123-4567</div>
+                <div className="text-xs text-muted-foreground">+20 010 **33</div>
               </div>
             </Button>
 
@@ -738,7 +762,7 @@ export default function LoginPage() {
               </div>
               <div className="text-left">
                 <div className="font-medium text-sm text-foreground">WhatsApp</div>
-                <div className="text-xs text-muted-foreground">+1 (555) 123-4567</div>
+                <div className="text-xs text-muted-foreground">+20 010 **33</div>
               </div>
             </Button>
 
@@ -754,7 +778,7 @@ export default function LoginPage() {
               </div>
               <div className="text-left">
                 <div className="font-medium text-sm text-foreground">Phone Call</div>
-                <div className="text-xs text-muted-foreground">+1 (555) 123-4567</div>
+                <div className="text-xs text-muted-foreground">+20 010 **33</div>
               </div>
             </Button>
           </div>
