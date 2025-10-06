@@ -228,14 +228,7 @@ export default function SignupPage() {
           {/* Signup Form */}
           <form onSubmit={handleSubmit} className="grid gap-3 sm:gap-4">
             {currentStep === SignupStep.FORM && (
-              <motion.div
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                variants={pageVariants}
-                transition={smoothTransition}
-                className="grid gap-3 sm:gap-4"
-              >
+              <>
                 {/* Social Login Options */}
                 <div className="grid grid-cols-2 gap-3 mb-2">
                   <Button 
@@ -520,7 +513,7 @@ export default function SignupPage() {
                     "Continue"
                   )}
                 </Button>
-              </motion.div>
+              </>
             )}
 
 
