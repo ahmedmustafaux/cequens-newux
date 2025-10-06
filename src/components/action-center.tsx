@@ -159,11 +159,7 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
   // Hide contacts before searching
   const displayedContacts = query.trim() ? filteredContacts : []
 
-  useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus()
-    }
-  }, [isOpen])
+  // Removed auto-focus behavior
 
   useEffect(() => {
     setSelectedIndex(-1)

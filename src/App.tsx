@@ -12,6 +12,7 @@ import DashboardLayout from '@/layouts/DashboardLayout'
 // Pages
 import LoginPage from '@/pages/LoginPage'
 import SignupPage from '@/pages/SignupPage'
+import EmailConfirmationPage from '@/pages/EmailConfirmationPage'
 import DashboardPage from '@/pages/DashboardPage'
 import AnalyticsPage from '@/pages/AnalyticsPage'
 import CampaignsPage from '@/pages/CampaignsPage'
@@ -43,6 +44,13 @@ function App() {
           <PublicRoute>
             <LoginLayout>
               <SignupPage />
+            </LoginLayout>
+          </PublicRoute>
+        } />
+        <Route path="/email-confirmation" element={
+          <PublicRoute>
+            <LoginLayout>
+              <EmailConfirmationPage />
             </LoginLayout>
           </PublicRoute>
         } />

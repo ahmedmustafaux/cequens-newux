@@ -24,16 +24,13 @@ import { validateSignupForm, validateEmail, validateName, validatePassword, vali
 import { ErrorMessage } from "@/components/ui/error-message"
 import { PasswordStrength } from "@/components/ui/password-strength"
 import { motion } from "framer-motion"
-import { getLogoAltText, getWelcomeMessage, getJoinMessage, getDemoCredentials } from "@/lib/config"
+import { getLogoAltText, getWelcomeMessage, getJoinMessage, getDemoCredentials, getAppName } from "@/lib/config"
 import { smoothTransition, fadeVariants, pageVariants } from "@/lib/transitions"
-import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp"
 
 export default function SignupPage() {
-  // Signup steps
+  // Signup step
   enum SignupStep {
-    FORM,
-    VERIFICATION,
-    SUCCESS
+    FORM
   }
 
   const [currentStep, setCurrentStep] = useState<SignupStep>(SignupStep.FORM)
@@ -52,9 +49,6 @@ export default function SignupPage() {
   const [errors, setErrors] = useState<FieldValidation>({})
   const [touched, setTouched] = useState<{[key: string]: boolean}>({})
   const [passwordFocused, setPasswordFocused] = useState(false)
-  const [verificationCode, setVerificationCode] = useState("")
-  const [verificationAttempts, setVerificationAttempts] = useState(0)
-  const [resendCountdown, setResendCountdown] = useState(0)
   const passwordInputRef = useRef<HTMLInputElement>(null)
   const passwordStrengthRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
@@ -64,32 +58,6 @@ export default function SignupPage() {
   // Get the intended redirect path
   const from = location.state?.from?.pathname || "/"
   
-  // Generate a random verification code for simulation
-  const generatedCode = React.useMemo(() => {
-    return Math.floor(100000 + Math.random() * 900000).toString()
-  }, [])
-
-  // Countdown effect for resend code
-  React.useEffect(() => {
-    let interval: NodeJS.Timeout | null = null
-    
-    if (resendCountdown > 0) {
-      interval = setInterval(() => {
-        setResendCountdown((prev) => {
-          if (prev <= 1) {
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
-    }
-
-    return () => {
-      if (interval) {
-        clearInterval(interval)
-      }
-    }
-  }, [resendCountdown])
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -169,113 +137,50 @@ export default function SignupPage() {
     setIsLoading(true)
     console.log("Current step:", currentStep)
 
-    if (currentStep === SignupStep.FORM) {
-      console.log("Processing form step")
-      // Mark all fields as touched
-      const allFields = ['firstName', 'lastName', 'companyName', 'email', 'password', 'confirmPassword', 'agreeToTerms']
-      const newTouched = allFields.reduce((acc, field) => ({ ...acc, [field]: true }), {})
-      setTouched(newTouched)
+    // Mark all fields as touched
+    const allFields = ['firstName', 'lastName', 'companyName', 'email', 'password', 'confirmPassword', 'agreeToTerms']
+    const newTouched = allFields.reduce((acc, field) => ({ ...acc, [field]: true }), {})
+    setTouched(newTouched)
 
-      // Validate entire form
-      const formErrors = validateSignupForm(formData)
-      setErrors(formErrors)
+    // Validate entire form
+    const formErrors = validateSignupForm(formData)
+    setErrors(formErrors)
 
-      if (!isFormValid(formErrors)) {
-        toast.error("Please fix the errors below", {
-          description: "Check the highlighted fields and correct any validation errors before continuing.",
-          duration: 5000,
-        })
-        setIsLoading(false)
-        return
-      }
-
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500))
-
-      // Show verification code in toast for demo purposes
-      toast.info("Verification code sent", {
-        description: `For demo purposes, your verification code is: ${generatedCode}`,
-        duration: 10000,
+    if (!isFormValid(formErrors)) {
+      toast.error("Please fix the errors below", {
+        description: "Check the highlighted fields and correct any validation errors before continuing.",
+        duration: 5000,
       })
-
-      console.log("Moving to verification step")
-      // Move to verification step
-      setCurrentStep(SignupStep.VERIFICATION)
       setIsLoading(false)
-      // Start countdown for resend code
-      setResendCountdown(30)
-    } 
-    else if (currentStep === SignupStep.VERIFICATION) {
-      console.log("Verifying code:", verificationCode, "Expected:", generatedCode);
-      
-      // Verify the code - ensure it's a string comparison
-      const enteredCode = verificationCode.toString();
-      const expectedCode = generatedCode.toString();
-      
-      if (enteredCode === expectedCode) {
-        console.log("Verification successful");
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        setCurrentStep(SignupStep.SUCCESS)
-        
-        toast.success(getWelcomeMessage(), {
-          description: "Your account has been verified successfully. Redirecting to your dashboard...",
-          duration: 4000,
-        })
-        
-        // Simulate final account creation
-        await new Promise(resolve => setTimeout(resolve, 2000))
-        
-        // Use auth context to login
-        login(formData.email, `${formData.firstName} ${formData.lastName}`, from)
-        
-        // Redirect to overview page
-        navigate("/")
-      } else {
-        console.log("Verification failed");
-        setVerificationAttempts(prev => prev + 1)
-        
-        if (verificationAttempts >= 2) {
-          toast.error("Too many failed attempts", {
-            description: "Please request a new verification code or contact support.",
-            duration: 5000,
-          })
-        } else {
-          toast.error("Invalid verification code", {
-            description: "Please check the code and try again.",
-            duration: 3000,
-          })
-        }
-      }
-      
-      setIsLoading(false)
+      return
     }
-  }
-  
-  const resendVerificationCode = async () => {
-    setIsLoading(true)
-    
-    // Clear current verification code
-    setVerificationCode("")
-    
+
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    // Reset verification attempts
-    setVerificationAttempts(0)
-    
-    // Reset countdown
-    setResendCountdown(30)
-    
-    // Show verification code in toast for demo purposes
-    toast.info("New verification code sent", {
-      description: `For demo purposes, your verification code is: ${generatedCode}`,
+
+    // Show confirmation email sent toast
+    toast.info("Confirmation email sent", {
+      description: `We've sent a confirmation link to ${formData.email}. Please check your inbox.`,
       duration: 10000,
+    })
+
+    console.log("Redirecting to email confirmation page")
+    
+    // Redirect to email confirmation page with user data
+    navigate("/email-confirmation", { 
+      state: { 
+        userData: {
+          email: formData.email,
+          firstName: formData.firstName,
+          lastName: formData.lastName
+        },
+        from: from
+      } 
     })
     
     setIsLoading(false)
   }
+  
 
   const fillDemoData = () => {
     const demoCredentials = getDemoCredentials()
@@ -567,136 +472,6 @@ export default function SignupPage() {
               </motion.div>
             )}
 
-            {currentStep === SignupStep.VERIFICATION && (
-              <motion.div
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                variants={pageVariants}
-                transition={smoothTransition}
-                className="grid gap-4"
-              >
-                <div className="text-left mb-6">
-                  <div className="flex items-center mb-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
-                      <Shield className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-semibold text-foreground mb-1">Verify your identity</h2>
-                      <p className="text-sm text-muted-foreground">
-                        We've sent a 6-digit code to <span className="font-medium">{formData.email}</span>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid gap-4">
-                  <Field>
-                    <FieldLabel htmlFor="otp" className="text-sm font-medium">Verification Code</FieldLabel>
-                    <FieldContent>
-                      <InputOTP
-                        maxLength={6}
-                        value={verificationCode}
-                        onChange={setVerificationCode}
-                      >
-                        <InputOTPGroup>
-                          <InputOTPSlot index={0} />
-                          <InputOTPSlot index={1} />
-                          <InputOTPSlot index={2} />
-                        </InputOTPGroup>
-                        <InputOTPSeparator />
-                        <InputOTPGroup>
-                          <InputOTPSlot index={3} />
-                          <InputOTPSlot index={4} />
-                          <InputOTPSlot index={5} />
-                        </InputOTPGroup>
-                      </InputOTP>
-                      {verificationAttempts > 0 && verificationCode !== generatedCode && (
-                        <FieldError>Invalid verification code. Please try again.</FieldError>
-                      )}
-                    </FieldContent>
-                  </Field>
-                  <div className="text-left">
-                    <p className="text-sm text-muted-foreground">
-                      Didn't receive a code?{" "}
-                      <Button
-                        type="button"
-                        variant="link"
-                        onClick={resendVerificationCode}
-                        disabled={resendCountdown > 0 || isLoading}
-                        className={`font-medium transition-colors ${
-                          resendCountdown > 0 || isLoading
-                            ? 'text-muted-foreground'
-                            : 'text-foreground hover:text-foreground/80'
-                        }`}
-                      >
-                        {isLoading ? (
-                          'Sending...'
-                        ) : resendCountdown > 0 ? (
-                          `Resend code (${resendCountdown}s)`
-                        ) : (
-                          'Resend code'
-                        )}
-                      </Button>
-                    </p>
-                  </div>
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={isLoading || verificationCode.length !== 6}
-                >
-                  {isLoading ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                      <span>Verifying...</span>
-                    </div>
-                  ) : (
-                    "Verify & Create Account"
-                  )}
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="w-full"
-                  onClick={() => setCurrentStep(SignupStep.FORM)}
-                  disabled={isLoading}
-                >
-                  Back to signup
-                </Button>
-              </motion.div>
-            )}
-
-            {currentStep === SignupStep.SUCCESS && (
-              <motion.div
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                variants={pageVariants}
-                transition={smoothTransition}
-                className="grid gap-4 text-center"
-              >
-                <div className="mx-auto">
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-50 text-green-500 mb-4">
-                    <CheckCircle2 className="h-6 w-6" />
-                  </div>
-                  <h2 className="text-xl font-semibold mb-1">Account verified!</h2>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Your account has been successfully verified. Redirecting to dashboard...
-                  </p>
-                  <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-                    <motion.div
-                      className="h-full bg-blue-500"
-                      initial={{ width: "0%" }}
-                      animate={{ width: "100%" }}
-                      transition={{ duration: 2, ease: "easeInOut" }}
-                    />
-                  </div>
-                </div>
-              </motion.div>
-            )}
 
             {currentStep === SignupStep.FORM && (
               <div className="text-center">
