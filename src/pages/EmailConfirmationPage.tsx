@@ -14,6 +14,7 @@ import { smoothTransition, pageVariants } from "@/lib/transitions"
 export default function EmailConfirmationPage() {
   enum ConfirmationStep {
     WAITING,
+    LOADING,
     SUCCESS
   }
 
@@ -64,9 +65,13 @@ export default function EmailConfirmationPage() {
   const handleConfirmation = async () => {
     setIsLoading(true)
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    // Switch to loading state first
+    setCurrentStep(ConfirmationStep.LOADING)
     
+    // Simulate API call delay - empty page with spinner
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    
+    // Switch to success state
     setCurrentStep(ConfirmationStep.SUCCESS)
     
     toast.success("Email verified successfully!", {
@@ -116,7 +121,19 @@ export default function EmailConfirmationPage() {
             </div>
           </div>
 
-          {currentStep === ConfirmationStep.WAITING ? (
+          {currentStep === ConfirmationStep.LOADING ? (
+            <motion.div
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              variants={pageVariants}
+              transition={smoothTransition}
+              className="w-full flex flex-col items-center justify-center py-12"
+            >
+              <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-blue-500 mb-4"></div>
+              <p className="text-sm text-muted-foreground">Verifying your email...</p>
+            </motion.div>
+          ) : currentStep === ConfirmationStep.WAITING ? (
             <motion.div
               initial="initial"
               animate="animate"
@@ -195,32 +212,29 @@ export default function EmailConfirmationPage() {
         </div>
       </div>
       
-      {/* Info alert and demo button outside the white container */}
-      <div className="mt-4 space-y-4 w-full max-w-lg mx-auto">
-        {currentStep === ConfirmationStep.WAITING && (
-          <>
-          
-            <div className="text-center">
-              <Button
-                type="button"
-                variant="link"
-                onClick={handleConfirmation}
-                disabled={isLoading}
-                className="text-gray-100 hover:text-gray-200"
-              >
-                {isLoading ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-500 border-t-transparent" />
-                    <span>Verifying...</span>
-                  </div>
-                ) : (
-                  "Demo: Simulate Email Confirmation"
-                )}
-              </Button>
-            </div>
-          </>
-        )}
-      </div>
+      {/* Demo button outside the white container - only shown in waiting state */}
+      {currentStep === ConfirmationStep.WAITING && (
+        <div className="mt-4 space-y-4 w-full max-w-lg mx-auto">
+          <div className="text-center">
+            <Button
+              type="button"
+              variant="link"
+              onClick={handleConfirmation}
+              disabled={isLoading}
+              className="text-gray-100 cursor-auto"
+            >
+              {isLoading ? (
+                <div className="flex items-center space-x-2">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-500 border-t-transparent" />
+                  <span>Verifying...</span>
+                </div>
+              ) : (
+                "Demo: Simulate Email Confirmation"
+              )}
+            </Button>
+          </div>
+        </div>
+      )}
     </>
   )
 }

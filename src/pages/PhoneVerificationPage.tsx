@@ -764,24 +764,6 @@ export default function PhoneVerificationPage() {
         </div>
       </div>
       
-      {/*demo button outside the white container */}
-      <div className="mt-4 space-y-4 w-full max-w-lg mx-auto">
-      
-        
-        {currentStep === VerificationStep.OTP_VERIFICATION && (
-          <div className="text-center">
-            <Button
-              type="button"
-              variant="link"
-              onClick={() => setOtp("000000")}
-              disabled={isLoading}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              Demo: Fill OTP with "000000"
-            </Button>
-          </div>
-        )}
-      </div>
     </>
   )
 }
