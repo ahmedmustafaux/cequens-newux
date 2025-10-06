@@ -14,6 +14,7 @@ import {
   IconUsers,
   IconTemplate,
   IconRobot,
+  IconComponents,
 } from "@tabler/icons-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -80,6 +81,11 @@ const data = {
       title: "Settings",
       url: "/settings",
       icon: IconSettings,
+    },
+    {
+      title: "UI Components",
+      url: "/components-demo",
+      icon: IconComponents,
     },
     {
       title: "Get Help",

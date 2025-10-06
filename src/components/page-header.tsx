@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Kbd, KbdGroup } from "@/components/ui/kbd"
 import { motion } from "framer-motion"
 import { skeletonStaggerVariants, skeletonItemVariants } from "@/lib/transitions"
 import {
@@ -25,7 +26,15 @@ import { NotificationBell } from "@/components/notification-bell"
 import { ArrowLeft, Search } from "lucide-react"
 import { mockContacts } from "@/data/mock-data"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Input } from "@/components/ui/input"
+import { 
+  Field, 
+  FieldContent 
+} from "@/components/ui/field"
+import { 
+  InputGroup, 
+  InputGroupInput, 
+  InputGroupAddon 
+} from "@/components/ui/input-group"
 import { ActionCenter } from "@/components/action-center"
 import { useIsMobile } from "@/hooks/use-mobile"
 
@@ -373,18 +382,32 @@ export function PageHeader({
 
             {/* Center - Search Bar (Hidden on mobile, absolute positioning for perfect centering on desktop) */}
             {!isMobile && (
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg px-4 lg:px-6 pointer-events-none">
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl px-4 lg:px-6 pointer-events-none">
                 {showSearch ? (
                   <div className="w-full pointer-events-auto">
-                    <Input
-                      type="text"
-                      placeholder={searchPlaceholder}
-                      value={searchValue}
-                      onChange={(e) => onSearchChange?.(e.target.value)}
-                      onFocus={onSearchFocus}
-                      leftIcon={<Search className="h-4 w-4" />}
-                      className="pr-3 h-8 text-sm bg-muted/50 border-muted-foreground/20 focus-visible:bg-background focus-visible:border-ring transition-all duration-200 w-full cursor-pointer"
-                    />
+                    <Field>
+                      <FieldContent>
+                        <InputGroup className="bg-muted/50 border-muted-foreground/20 focus-visible:bg-background focus-visible:border-ring transition-all duration-200 w-full cursor-pointer">
+                          <InputGroupAddon>
+                            <Search className="h-4 w-4" />
+                          </InputGroupAddon>
+                          <InputGroupInput
+                            type="text"
+                            placeholder={searchPlaceholder}
+                            value={searchValue}
+                            onChange={(e) => onSearchChange?.(e.target.value)}
+                            onFocus={onSearchFocus}
+                            className="pr-20 h-8 text-sm cursor-pointer"
+                          />
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
+                            <KbdGroup className="opacity-60">
+                              <Kbd className="text-xs h-5">{navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}</Kbd>
+                              <Kbd className="text-xs h-5">K</Kbd>
+                            </KbdGroup>
+                          </div>
+                        </InputGroup>
+                      </FieldContent>
+                    </Field>
                   </div>
                 ) : (
                   <div className="w-full pointer-events-auto">
@@ -454,14 +477,29 @@ export function PageHeader({
         <div className={`flex items-center gap-2 min-w-0 ${stackOnMobile ? 'flex-col items-start w-full md:flex-row md:items-center md:w-auto' : 'flex-row'}`}>
           {/* Search Bar */}
           {showSearch && (
-            <div className="relative w-full md:w-48 max-w-sm">
-              <input
-                type="text"
-                placeholder={searchPlaceholder}
-                value={searchValue}
-                onChange={(e) => onSearchChange?.(e.target.value)}
-                className="h-9 w-full rounded-md border border-input bg-background px-4 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-              />
+            <div className="relative w-full md:w-64 max-w-md">
+              <Field>
+                <FieldContent>
+                  <InputGroup className="cursor-pointer">
+                    <InputGroupAddon>
+                      <Search className="h-4 w-4" />
+                    </InputGroupAddon>
+                    <InputGroupInput
+                      type="text"
+                      placeholder={searchPlaceholder}
+                      value={searchValue}
+                      onChange={(e) => onSearchChange?.(e.target.value)}
+                      className="pr-20"
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
+                      <KbdGroup className="opacity-60">
+                        <Kbd className="text-xs h-5">{navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}</Kbd>
+                        <Kbd className="text-xs h-5">K</Kbd>
+                      </KbdGroup>
+                    </div>
+                  </InputGroup>
+                </FieldContent>
+              </Field>
             </div>
           )}
           

@@ -4,7 +4,15 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
+import { 
+  Field, 
+  FieldContent 
+} from "@/components/ui/field"
+import { 
+  InputGroup, 
+  InputGroupInput, 
+  InputGroupAddon 
+} from "@/components/ui/input-group"
 import { ChevronLeft, ChevronRight, Search, ArrowUpDownIcon, Columns3 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AutoHighlight } from "@/components/ui/highlight"
@@ -149,16 +157,24 @@ function DataTable({
                 {searchConfig && (
                   <div className="flex items-center gap-2 w-full sm:w-auto">
                     <div className="flex-1 sm:w-auto sm:min-w-[320px]">
-                      <Input
-                        placeholder={searchConfig.placeholder || "Search..."}
-                        value={searchConfig.table.getState().globalFilter ?? ""}
-                        onChange={(event) => {
-                          const searchValue = event.target.value
-                          // Use global filter for OR logic across multiple columns
-                          searchConfig.table.setGlobalFilter(searchValue)
-                        }}
-                        leftIcon={<Search className="h-4 w-4" />}
-                      />
+                      <Field>
+                        <FieldContent>
+                      <InputGroup>
+                        <InputGroupAddon>
+                          <Search className="h-4 w-4" />
+                        </InputGroupAddon>
+                        <InputGroupInput
+                          placeholder={searchConfig.placeholder || "Search..."}
+                          value={searchConfig.table.getState().globalFilter ?? ""}
+                          onChange={(event) => {
+                            const searchValue = event.target.value
+                            // Use global filter for OR logic across multiple columns
+                            searchConfig.table.setGlobalFilter(searchValue)
+                          }}
+                        />
+                      </InputGroup>
+                        </FieldContent>
+                      </Field>
                     </div>
                     
                     {/* Toggle Column and Sorting Controls - Only on Small Screens */}

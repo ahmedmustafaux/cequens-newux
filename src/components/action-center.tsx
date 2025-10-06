@@ -2,8 +2,17 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
+import { 
+  Field, 
+  FieldContent 
+} from '@/components/ui/field'
+import { 
+  InputGroup, 
+  InputGroupInput, 
+  InputGroupAddon 
+} from '@/components/ui/input-group'
 import { Button } from '@/components/ui/button'
+import { Kbd, KbdGroup } from '@/components/ui/kbd'
  
 import { Search, ArrowUp, ArrowDown, Command, X, Users, MessageSquare, BarChart3, Settings, Plus, FileText, Calendar, Bell, Mail, Phone, Globe, Zap } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -365,22 +374,28 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-xl p-0 gap-0 overflow-hidden h-[600px] flex flex-col bg-background border" showCloseButton={false}>
         {/* 1. Searchbar with reduced padding and bottom border */}
-        <div className="p-3 border-b border-border/50 flex-shrink-0">
+        <div className="p-3 border-b border flex-shrink-0">
           <div className="relative">
-            <Input
-              ref={inputRef}
-              type="text"
-              placeholder="Find contacts, create campaigns, or discover actions"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={handleKeyDown}
-              leftIcon={<Search className="h-4 w-4" />}
-              className="pr-18 h-10 text-sm border-0 bg-transparent focus-visible:bg-transparent focus-visible:ring-0 shadow-none"
-            />
+            <Field>
+              <FieldContent>
+                <InputGroup className="border-0 bg-transparent focus-visible:bg-transparent focus-visible:ring-0 shadow-none">
+                  <InputGroupAddon>
+                    <Search className="h-4 w-4" />
+                  </InputGroupAddon>
+                  <InputGroupInput
+                    ref={inputRef}
+                    type="text"
+                    placeholder="Find contacts, create campaigns, or discover actions"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    className="pr-18 h-10 text-sm"
+                  />
+                </InputGroup>
+              </FieldContent>
+            </Field>
             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-              <Button
-                variant="secondary"
-                size="sm"
+              <Kbd
                 onClick={() => {
                   const allItems = [...displayedContacts, ...filteredActions]
                   if (allItems[selectedIndex]) {
@@ -404,10 +419,10 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
                     }
                   }
                 }}
-                className="h-7 px-2 text-xs font-medium hover:bg-secondary/80"
+                className="cursor-pointer"
               >
                 ⏎
-              </Button>
+              </Kbd>
               <Button
                 variant="ghost"
                 size="sm"
@@ -549,7 +564,6 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
                           <div className="text-sm font-medium truncate">{action.title}</div>
                           <div className="text-xs text-muted-foreground truncate">{action.description}</div>
                         </div>
-                        {/* Removed shortcut badge in list as requested */}
                       </motion.div>
                     )
                   })}
@@ -567,28 +581,24 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
         </div>
 
         {/* 3. Footer with reduced padding */}
-        <div className="px-3 py-2 border-t bg-muted/30 flex items-center justify-between text-xs text-muted-foreground flex-shrink-0">
+        <div className="px-3 py-4 border-t bg-background flex items-center justify-between text-xs text-muted-foreground flex-shrink-0">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1">
-              <ArrowUp className="h-3 w-3" />
-              <ArrowDown className="h-3 w-3" />
+              <KbdGroup>
+                <Kbd><ArrowUp className="h-3 w-3" /></Kbd>
+                <Kbd><ArrowDown className="h-3 w-3" /></Kbd>
+              </KbdGroup>
               <span>Move up/down</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span>/</span>
-              <span>Command guide</span>
             </div>
           </div>
           <div className="flex items-center gap-1">
             <span>Close</span>
-            <Button
-            variant="secondary"
-            size="sm"
-            className="h-6 px-2 text-xs font-medium hover:bg-secondary/80"
-            onClick={onClose}
+            <Kbd
+              className="cursor-pointer"
+              onClick={onClose}
             >
-            ESC
-            </Button>
+              ESC
+            </Kbd>
           </div>
         </div>
       </DialogContent>

@@ -3,7 +3,18 @@ import { useState, useEffect } from "react"
 import { useNavigate, Link, useLocation } from "react-router-dom"
 import { Eye, EyeOff, Mail, Lock, ArrowLeft, Shield, MessageSquare, Phone, Smartphone, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { 
+  Field, 
+  FieldLabel, 
+  FieldContent, 
+  FieldDescription, 
+  FieldError 
+} from "@/components/ui/field"
+import { 
+  InputGroup, 
+  InputGroupInput, 
+  InputGroupAddon 
+} from "@/components/ui/input-group"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -354,52 +365,66 @@ export default function LoginPage() {
                   </Alert>
                 )}
                 
-                <div className="grid gap-1">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => handleEmailChange(e.target.value)}
-                    onBlur={() => handleBlur("email")}
-                    leftIcon={<Mail className="h-4 w-4" />}
-                    autoComplete="email"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck="false"
-                    required
-                  />
-                </div>
+                <Field>
+                  <FieldLabel htmlFor="email">Email</FieldLabel>
+                  <FieldContent>
+                    <InputGroup>
+                      <InputGroupAddon>
+                        <Mail className="h-4 w-4" />
+                      </InputGroupAddon>
+                      <InputGroupInput
+                        id="email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={email}
+                        onChange={(e) => handleEmailChange(e.target.value)}
+                        onBlur={() => handleBlur("email")}
+                        autoComplete="email"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        required
+                      />
+                    </InputGroup>
+                    {touched.email && errors.email && <FieldError>{errors.email.message}</FieldError>}
+                  </FieldContent>
+                </Field>
 
-                <div className="grid gap-1">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => handlePasswordChange(e.target.value)}
-                    onBlur={() => handleBlur("password")}
-                    leftIcon={<Lock className="h-4 w-4" />}
-                    rightIcon={
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="h-auto w-auto p-1 hover:text-slate-600"
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </Button>
-                    }
-                    autoComplete="new-password"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck="false"
-                    required
-                  />
-                </div>
+                <Field>
+                  <FieldLabel htmlFor="password">Password</FieldLabel>
+                  <FieldContent>
+                    <InputGroup>
+                      <InputGroupAddon>
+                        <Lock className="h-4 w-4" />
+                      </InputGroupAddon>
+                      <InputGroupInput
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => handlePasswordChange(e.target.value)}
+                        onBlur={() => handleBlur("password")}
+                        autoComplete="new-password"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        required
+                      />
+                      <InputGroupAddon align="inline-end">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="h-auto w-auto p-1 hover:text-slate-600"
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </InputGroupAddon>
+                    </InputGroup>
+                    {touched.password && errors.password && <FieldError>{errors.password.message}</FieldError>}
+                  </FieldContent>
+                </Field>
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
@@ -466,26 +491,29 @@ export default function LoginPage() {
                 </div>
 
                 <div className="grid gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="otp" className="text-sm font-medium">Verification Code</Label>
-                    <InputOTP
-                      maxLength={6}
-                      value={otp}
-                      onChange={handleOtpChange}
-                    >
-                      <InputOTPGroup>
-                        <InputOTPSlot index={0} />
-                        <InputOTPSlot index={1} />
-                        <InputOTPSlot index={2} />
-                      </InputOTPGroup>
-                      <InputOTPSeparator />
-                      <InputOTPGroup>
-                        <InputOTPSlot index={3} />
-                        <InputOTPSlot index={4} />
-                        <InputOTPSlot index={5} />
-                      </InputOTPGroup>
-                    </InputOTP>
-                  </div>
+                  <Field>
+                    <FieldLabel htmlFor="otp" className="text-sm font-medium">Verification Code</FieldLabel>
+                    <FieldContent>
+                      <InputOTP
+                        maxLength={6}
+                        value={otp}
+                        onChange={handleOtpChange}
+                      >
+                        <InputOTPGroup>
+                          <InputOTPSlot index={0} />
+                          <InputOTPSlot index={1} />
+                          <InputOTPSlot index={2} />
+                        </InputOTPGroup>
+                        <InputOTPSeparator />
+                        <InputOTPGroup>
+                          <InputOTPSlot index={3} />
+                          <InputOTPSlot index={4} />
+                          <InputOTPSlot index={5} />
+                        </InputOTPGroup>
+                      </InputOTP>
+                      {touched.otp && errors.otp && <FieldError>{errors.otp.message}</FieldError>}
+                    </FieldContent>
+                  </Field>
                   <div className="text-left">
                     <p className="text-sm text-muted-foreground">
                       Didn't receive the code?{" "}
@@ -510,7 +538,6 @@ export default function LoginPage() {
                       </Button>
                     </p>
                   </div>
-                  {touched.otp && errors.otp && errors.otp.message === "Invalid OTP code" && <ErrorMessage message={errors.otp?.message} />}
                 </div>
 
                 <Button

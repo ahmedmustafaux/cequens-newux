@@ -3,7 +3,15 @@
 import * as React from "react"
 import { ChevronDown, Check, Search, X, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { 
+  Field, 
+  FieldContent 
+} from "@/components/ui/field"
+import { 
+  InputGroup, 
+  InputGroupInput, 
+  InputGroupAddon 
+} from "@/components/ui/input-group"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -139,13 +147,21 @@ export function FilterSelect({
             {searchable && onSearchChange ? (
               <div className="flex flex-col">
                 <div>
-                  <Input
-                    placeholder={searchPlaceholder}
-                    value={searchQuery}
-                    onChange={(e) => onSearchChange(e.target.value)}
-                    leftIcon={<Search className="h-3 w-3" />}
-                    className="h-6 text-sm border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
-                  />
+                  <Field>
+                    <FieldContent>
+                      <InputGroup className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none">
+                        <InputGroupAddon>
+                          <Search className="h-3 w-3" />
+                        </InputGroupAddon>
+                        <InputGroupInput
+                          placeholder={searchPlaceholder}
+                          value={searchQuery}
+                          onChange={(e) => onSearchChange(e.target.value)}
+                          className="h-6 text-sm"
+                        />
+                      </InputGroup>
+                    </FieldContent>
+                  </Field>
                 </div>
                 <div className="border-t border-border" />
               </div>

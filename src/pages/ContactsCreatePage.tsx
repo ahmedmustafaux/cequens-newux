@@ -2,8 +2,18 @@ import * as React from "react"
 import { useNavigate } from "react-router-dom"
 import { usePageTitle } from "@/hooks/use-dynamic-title"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { 
+  Field, 
+  FieldLabel, 
+  FieldContent, 
+  FieldDescription 
+} from "@/components/ui/field"
+import { 
+  InputGroup, 
+  InputGroupInput, 
+  InputGroupAddon,
+  InputGroupButton
+} from "@/components/ui/input-group"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
@@ -207,53 +217,63 @@ export default function ContactsCreatePage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="firstName">First Name *</Label>
-                        <Input
-                          id="firstName"
-                          value={formData.firstName}
-                          onChange={(e) => handleInputChange("firstName", e.target.value)}
-                          placeholder="Enter first name"
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="lastName">Last Name *</Label>
-                        <Input
-                          id="lastName"
-                          value={formData.lastName}
-                          onChange={(e) => handleInputChange("lastName", e.target.value)}
-                          placeholder="Enter last name"
-                          required
-                        />
-                      </div>
+                      <Field>
+                        <FieldLabel htmlFor="firstName">First Name *</FieldLabel>
+                        <FieldContent>
+                          <InputGroup>
+                            <InputGroupInput
+                              id="firstName"
+                              value={formData.firstName}
+                              onChange={(e) => handleInputChange("firstName", e.target.value)}
+                              placeholder="Enter first name"
+                              required
+                            />
+                          </InputGroup>
+                        </FieldContent>
+                      </Field>
+                      <Field>
+                        <FieldLabel htmlFor="lastName">Last Name *</FieldLabel>
+                        <FieldContent>
+                          <InputGroup>
+                            <InputGroupInput
+                              id="lastName"
+                              value={formData.lastName}
+                              onChange={(e) => handleInputChange("lastName", e.target.value)}
+                              placeholder="Enter last name"
+                              required
+                            />
+                          </InputGroup>
+                        </FieldContent>
+                      </Field>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="profileType">Profile Type *</Label>
-                      <Select
-                        value={formData.profileType}
-                        onValueChange={(value: "Lead" | "Customer") => handleInputChange("profileType", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Lead">
-                            <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                              Lead
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="Customer">
-                            <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                              Customer
-                            </div>
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <Field>
+                      <FieldLabel htmlFor="profileType">Profile Type *</FieldLabel>
+                      <FieldContent>
+                        <Select
+                          value={formData.profileType}
+                          onValueChange={(value: "Lead" | "Customer") => handleInputChange("profileType", value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Lead">
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                                Lead
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="Customer">
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                Customer
+                              </div>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FieldContent>
+                    </Field>
                   </CardContent>
                 </Card>
 
@@ -270,64 +290,86 @@ export default function ContactsCreatePage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email Address</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          value={formData.email}
-                          onChange={(e) => handleInputChange("email", e.target.value)}
-                          placeholder="Enter email address"
-                          leftIcon={<Mail className="h-4 w-4" />}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="phone">Phone Number</Label>
-                        <Input
-                          id="phone"
-                          type="tel"
-                          value={formData.phone}
-                          onChange={(e) => handleInputChange("phone", e.target.value)}
-                          placeholder="Enter phone number"
-                          leftIcon={<Phone className="h-4 w-4" />}
-                        />
-                      </div>
+                      <Field>
+                        <FieldLabel htmlFor="email">Email Address</FieldLabel>
+                        <FieldContent>
+                          <InputGroup>
+                            <InputGroupAddon>
+                              <Mail className="h-4 w-4" />
+                            </InputGroupAddon>
+                            <InputGroupInput
+                              id="email"
+                              type="email"
+                              value={formData.email}
+                              onChange={(e) => handleInputChange("email", e.target.value)}
+                              placeholder="Enter email address"
+                            />
+                          </InputGroup>
+                        </FieldContent>
+                      </Field>
+                      <Field>
+                        <FieldLabel htmlFor="phone">Phone Number</FieldLabel>
+                        <FieldContent>
+                          <InputGroup>
+                            <InputGroupAddon>
+                              <Phone className="h-4 w-4" />
+                            </InputGroupAddon>
+                            <InputGroupInput
+                              id="phone"
+                              type="tel"
+                              value={formData.phone}
+                              onChange={(e) => handleInputChange("phone", e.target.value)}
+                              placeholder="Enter phone number"
+                            />
+                          </InputGroup>
+                        </FieldContent>
+                      </Field>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="country">Country</Label>
-                        <Input
-                          id="country"
-                          value={formData.country}
-                          onChange={(e) => handleInputChange("country", e.target.value)}
-                          placeholder="Enter country"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="region">Region</Label>
-                        <Input
-                          id="region"
-                          value={formData.region}
-                          onChange={(e) => handleInputChange("region", e.target.value)}
-                          placeholder="Enter region/state"
-                        />
-                      </div>
+                      <Field>
+                        <FieldLabel htmlFor="country">Country</FieldLabel>
+                        <FieldContent>
+                          <InputGroup>
+                            <InputGroupInput
+                              id="country"
+                              value={formData.country}
+                              onChange={(e) => handleInputChange("country", e.target.value)}
+                              placeholder="Enter country"
+                            />
+                          </InputGroup>
+                        </FieldContent>
+                      </Field>
+                      <Field>
+                        <FieldLabel htmlFor="region">Region</FieldLabel>
+                        <FieldContent>
+                          <InputGroup>
+                            <InputGroupInput
+                              id="region"
+                              value={formData.region}
+                              onChange={(e) => handleInputChange("region", e.target.value)}
+                              placeholder="Enter region/state"
+                            />
+                          </InputGroup>
+                        </FieldContent>
+                      </Field>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="address">Address</Label>
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-3 text-muted-foreground h-4 w-4" />
-                        <textarea
-                          id="address"
-                          value={formData.address}
-                          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleInputChange("address", e.target.value)}
-                          placeholder="Enter full address"
-                          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pl-10"
-                        />
-                      </div>
-                    </div>
+                    <Field>
+                      <FieldLabel htmlFor="address">Address</FieldLabel>
+                      <FieldContent>
+                        <div className="relative">
+                          <MapPin className="absolute left-3 top-3 text-muted-foreground h-4 w-4" />
+                          <textarea
+                            id="address"
+                            value={formData.address}
+                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleInputChange("address", e.target.value)}
+                            placeholder="Enter full address"
+                            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pl-10"
+                          />
+                        </div>
+                      </FieldContent>
+                    </Field>
                   </CardContent>
                 </Card>
 
@@ -344,24 +386,32 @@ export default function ContactsCreatePage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="company">Company</Label>
-                        <Input
-                          id="company"
-                          value={formData.company}
-                          onChange={(e) => handleInputChange("company", e.target.value)}
-                          placeholder="Enter company name"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="jobTitle">Job Title</Label>
-                        <Input
-                          id="jobTitle"
-                          value={formData.jobTitle}
-                          onChange={(e) => handleInputChange("jobTitle", e.target.value)}
-                          placeholder="Enter job title"
-                        />
-                      </div>
+                      <Field>
+                        <FieldLabel htmlFor="company">Company</FieldLabel>
+                        <FieldContent>
+                          <InputGroup>
+                            <InputGroupInput
+                              id="company"
+                              value={formData.company}
+                              onChange={(e) => handleInputChange("company", e.target.value)}
+                              placeholder="Enter company name"
+                            />
+                          </InputGroup>
+                        </FieldContent>
+                      </Field>
+                      <Field>
+                        <FieldLabel htmlFor="jobTitle">Job Title</FieldLabel>
+                        <FieldContent>
+                          <InputGroup>
+                            <InputGroupInput
+                              id="jobTitle"
+                              value={formData.jobTitle}
+                              onChange={(e) => handleInputChange("jobTitle", e.target.value)}
+                              placeholder="Enter job title"
+                            />
+                          </InputGroup>
+                        </FieldContent>
+                      </Field>
                     </div>
                   </CardContent>
                 </Card>
@@ -381,8 +431,8 @@ export default function ContactsCreatePage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="flex gap-2">
-                      <Input
+                    <InputGroup>
+                      <InputGroupInput
                         value={newTag}
                         onChange={(e) => setNewTag(e.target.value)}
                         placeholder="Add a tag"
@@ -393,16 +443,17 @@ export default function ContactsCreatePage() {
                           }
                         }}
                       />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={addTag}
-                        disabled={!newTag.trim()}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
+                      <InputGroupAddon align="inline-end">
+                        <InputGroupButton
+                          onClick={addTag}
+                          disabled={!newTag.trim()}
+                          variant="outline"
+                          size="xs"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </InputGroupButton>
+                      </InputGroupAddon>
+                    </InputGroup>
                     
                     {formData.tags.length > 0 && (
                       <div className="flex flex-wrap gap-2">

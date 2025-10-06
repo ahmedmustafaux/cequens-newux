@@ -3,7 +3,15 @@ import { usePageTitle } from "@/hooks/use-dynamic-title";
 import { useNotificationContext } from "@/contexts/notification-context";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { 
+  Field, 
+  FieldContent 
+} from "@/components/ui/field";
+import { 
+  InputGroup, 
+  InputGroupInput, 
+  InputGroupAddon 
+} from "@/components/ui/input-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -301,12 +309,20 @@ export default function NotificationsPage() {
           {/* Search and Filters */}
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
             <div className="flex-1 max-w-sm">
-              <Input
-                placeholder="Search notifications..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                leftIcon={<Search className="h-4 w-4" />}
-              />
+              <Field>
+                <FieldContent>
+                  <InputGroup>
+                    <InputGroupAddon>
+                      <Search className="h-4 w-4" />
+                    </InputGroupAddon>
+                    <InputGroupInput
+                      placeholder="Search notifications..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </InputGroup>
+                </FieldContent>
+              </Field>
             </div>
             
             {selectedNotifications.length > 0 && (

@@ -3,7 +3,18 @@ import { useState, useRef, useEffect } from "react"
 import { useNavigate, Link, useLocation } from "react-router-dom"
 import { Eye, EyeOff, Mail, Lock, User, Building, CheckCircle2, AlertCircle, ArrowRight, Shield } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { 
+  Field, 
+  FieldLabel, 
+  FieldContent, 
+  FieldDescription, 
+  FieldError 
+} from "@/components/ui/field"
+import { 
+  InputGroup, 
+  InputGroupInput, 
+  InputGroupAddon 
+} from "@/components/ui/input-group"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
@@ -321,172 +332,202 @@ export default function SignupPage() {
                 className="grid gap-3 sm:gap-4"
               >
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start content-start">
-                  <div className="grid gap-1">
-                    <Label htmlFor="firstName">First name</Label>
-                    <Input
-                      id="firstName"
-                      type="text"
-                      placeholder="John"
-                      value={formData.firstName}
-                      onChange={(e) => handleInputChange("firstName", e.target.value)}
-                      onBlur={() => handleBlur("firstName")}
-                      leftIcon={<User className="h-4 w-4" />}
-                      className={`${touched.firstName && errors.firstName ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
-                      autoComplete="off"
-                      autoCorrect="off"
-                      autoCapitalize="off"
-                      spellCheck="false"
-                      required
-                    />
-                    {touched.firstName && <ErrorMessage message={errors.firstName?.message} />}
-                  </div>
-                  <div className="grid gap-1">
-                    <Label htmlFor="lastName">Last name</Label>
-                    <Input
-                      id="lastName"
-                      type="text"
-                      placeholder="Doe"
-                      value={formData.lastName}
-                      onChange={(e) => handleInputChange("lastName", e.target.value)}
-                      onBlur={() => handleBlur("lastName")}
-                      className={`${touched.lastName && errors.lastName ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
-                      autoComplete="off"
-                      autoCorrect="off"
-                      autoCapitalize="off"
-                      spellCheck="false"
-                      required
-                    />
-                    {touched.lastName && <ErrorMessage message={errors.lastName?.message} />}
-                  </div>
+                  <Field>
+                    <FieldLabel htmlFor="firstName">First name</FieldLabel>
+                    <FieldContent>
+                      <InputGroup>
+                        <InputGroupAddon>
+                          <User className="h-4 w-4" />
+                        </InputGroupAddon>
+                        <InputGroupInput
+                          id="firstName"
+                          type="text"
+                          placeholder="John"
+                          value={formData.firstName}
+                          onChange={(e) => handleInputChange("firstName", e.target.value)}
+                          onBlur={() => handleBlur("firstName")}
+                          className={`${touched.firstName && errors.firstName ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
+                          autoComplete="off"
+                          autoCorrect="off"
+                          autoCapitalize="off"
+                          spellCheck="false"
+                          required
+                        />
+                      </InputGroup>
+                      {touched.firstName && errors.firstName && <FieldError>{errors.firstName.message}</FieldError>}
+                    </FieldContent>
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="lastName">Last name</FieldLabel>
+                    <FieldContent>
+                      <InputGroup>
+                        <InputGroupInput
+                          id="lastName"
+                          type="text"
+                          placeholder="Doe"
+                          value={formData.lastName}
+                          onChange={(e) => handleInputChange("lastName", e.target.value)}
+                          onBlur={() => handleBlur("lastName")}
+                          className={`${touched.lastName && errors.lastName ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
+                          autoComplete="off"
+                          autoCorrect="off"
+                          autoCapitalize="off"
+                          spellCheck="false"
+                          required
+                        />
+                      </InputGroup>
+                      {touched.lastName && errors.lastName && <FieldError>{errors.lastName.message}</FieldError>}
+                    </FieldContent>
+                  </Field>
                 </div>
 
-                <div className="grid gap-1">
-                  <Label htmlFor="companyName">Company name</Label>
-                  <Input
-                    id="companyName"
-                    type="text"
-                    placeholder="Acme Corporation"
-                    value={formData.companyName}
-                    onChange={(e) => handleInputChange("companyName", e.target.value)}
-                    onBlur={() => handleBlur("companyName")}
-                    leftIcon={<Building className="h-4 w-4" />}
-                    className={`${touched.companyName && errors.companyName ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
-                    autoComplete="organization"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck="false"
-                    required
-                  />
-                  {touched.companyName && <ErrorMessage message={errors.companyName?.message} />}
-                </div>
+                <Field>
+                  <FieldLabel htmlFor="companyName">Company name</FieldLabel>
+                  <FieldContent>
+                    <InputGroup>
+                      <InputGroupAddon>
+                        <Building className="h-4 w-4" />
+                      </InputGroupAddon>
+                      <InputGroupInput
+                        id="companyName"
+                        type="text"
+                        placeholder="Acme Corporation"
+                        value={formData.companyName}
+                        onChange={(e) => handleInputChange("companyName", e.target.value)}
+                        onBlur={() => handleBlur("companyName")}
+                        className={`${touched.companyName && errors.companyName ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
+                        autoComplete="organization"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        required
+                      />
+                    </InputGroup>
+                    {touched.companyName && errors.companyName && <FieldError>{errors.companyName.message}</FieldError>}
+                  </FieldContent>
+                </Field>
 
-                <div className="grid gap-1">
-                  <Label htmlFor="email">Business email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="john@company.com"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    onBlur={() => handleBlur("email")}
-                    leftIcon={<Mail className="h-4 w-4" />}
-                    className={`${touched.email && errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
-                    autoComplete="email"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck="false"
-                    required
-                  />
-                  {touched.email && <ErrorMessage message={errors.email?.message} />}
-                </div>
+                <Field>
+                  <FieldLabel htmlFor="email">Business email</FieldLabel>
+                  <FieldContent>
+                    <InputGroup>
+                      <InputGroupAddon>
+                        <Mail className="h-4 w-4" />
+                      </InputGroupAddon>
+                      <InputGroupInput
+                        id="email"
+                        type="email"
+                        placeholder="john@company.com"
+                        value={formData.email}
+                        onChange={(e) => handleInputChange("email", e.target.value)}
+                        onBlur={() => handleBlur("email")}
+                        className={`${touched.email && errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
+                        autoComplete="email"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        required
+                      />
+                    </InputGroup>
+                    {touched.email && errors.email && <FieldError>{errors.email.message}</FieldError>}
+                  </FieldContent>
+                </Field>
 
-                <div className="grid gap-1 relative">
-                  <Label htmlFor="password">Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      ref={passwordInputRef}
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Create a password"
-                      value={formData.password}
-                      onChange={(e) => handleInputChange("password", e.target.value)}
-                      onFocus={() => setPasswordFocused(true)}
-                      onBlur={() => handleBlur("password")}
-                      leftIcon={<Lock className="h-4 w-4" />}
-                      rightIcon={
+                <Field>
+                  <FieldLabel htmlFor="password">Password</FieldLabel>
+                  <FieldContent>
+                    <div className="relative">
+                      <InputGroup>
+                        <InputGroupAddon>
+                          <Lock className="h-4 w-4" />
+                        </InputGroupAddon>
+                        <InputGroupInput
+                          id="password"
+                          ref={passwordInputRef}
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Create a password"
+                          value={formData.password}
+                          onChange={(e) => handleInputChange("password", e.target.value)}
+                          onFocus={() => setPasswordFocused(true)}
+                          onBlur={() => handleBlur("password")}
+                          className={`${touched.password && errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
+                          autoComplete="new-password"
+                          autoCorrect="off"
+                          autoCapitalize="off"
+                          spellCheck="false"
+                          required
+                        />
+                        <InputGroupAddon align="inline-end">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="h-auto w-auto p-1 hover:text-slate-600"
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                        </InputGroupAddon>
+                      </InputGroup>
+                      
+                      {/* Password Strength Tooltip - Fixed to prevent clipping */}
+                      {passwordFocused && (
+                        <div 
+                          ref={passwordStrengthRef}
+                          className="bg-white p-3 rounded-md shadow-md border border-gray-200 z-50 w-auto"
+                          style={{ 
+                            position: 'fixed',
+                            left: passwordInputRef.current ? 
+                              passwordInputRef.current.getBoundingClientRect().left + 
+                              passwordInputRef.current.getBoundingClientRect().width + 10 : 'auto',
+                            top: passwordInputRef.current ? 
+                              passwordInputRef.current.getBoundingClientRect().top : 'auto'
+                          }}
+                        >
+                          <PasswordStrength password={formData.password} />
+                        </div>
+                      )}
+                    </div>
+                    {touched.password && errors.password && <FieldError>{errors.password.message}</FieldError>}
+                  </FieldContent>
+                </Field>
+
+                <Field>
+                  <FieldLabel htmlFor="confirmPassword">Confirm password</FieldLabel>
+                  <FieldContent>
+                    <InputGroup>
+                      <InputGroupAddon>
+                        <Lock className="h-4 w-4" />
+                      </InputGroupAddon>
+                      <InputGroupInput
+                        id="confirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Confirm your password"
+                        value={formData.confirmPassword}
+                        onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+                        onBlur={() => handleBlur("confirmPassword")}
+                        className={`${touched.confirmPassword && errors.confirmPassword ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
+                        autoComplete="new-password"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        required
+                      />
+                      <InputGroupAddon align="inline-end">
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
-                          onClick={() => setShowPassword(!showPassword)}
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                           className="h-auto w-auto p-1 hover:text-slate-600"
                         >
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </Button>
-                      }
-                      className={`${touched.password && errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
-                      autoComplete="new-password"
-                      autoCorrect="off"
-                      autoCapitalize="off"
-                      spellCheck="false"
-                      required
-                    />
-                    
-                    {/* Password Strength Tooltip - Fixed to prevent clipping */}
-                    {passwordFocused && (
-                      <div 
-                        ref={passwordStrengthRef}
-                        className="bg-white p-3 rounded-md shadow-md border border-gray-200 z-50 w-auto"
-                        style={{ 
-                          position: 'fixed',
-                          left: passwordInputRef.current ? 
-                            passwordInputRef.current.getBoundingClientRect().left + 
-                            passwordInputRef.current.getBoundingClientRect().width + 10 : 'auto',
-                          top: passwordInputRef.current ? 
-                            passwordInputRef.current.getBoundingClientRect().top : 'auto'
-                        }}
-                      >
-                        <PasswordStrength password={formData.password} />
-                      </div>
-                    )}
-                    
-                    {/* Display password errors inline */}
-                    {touched.password && errors.password && (
-                      <ErrorMessage message={errors.password?.message} />
-                    )}
-                  </div>
-                </div>
-
-                <div className="grid gap-1">
-                  <Label htmlFor="confirmPassword">Confirm password</Label>
-                  <Input
-                    id="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Confirm your password"
-                    value={formData.confirmPassword}
-                    onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                    onBlur={() => handleBlur("confirmPassword")}
-                    leftIcon={<Lock className="h-4 w-4" />}
-                    rightIcon={
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="h-auto w-auto p-1 hover:text-slate-600"
-                      >
-                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </Button>
-                    }
-                    className={`${touched.confirmPassword && errors.confirmPassword ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
-                    autoComplete="new-password"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck="false"
-                    required
-                  />
-                  {touched.confirmPassword && <ErrorMessage message={errors.confirmPassword?.message} />}
-                </div>
+                      </InputGroupAddon>
+                    </InputGroup>
+                    {touched.confirmPassword && errors.confirmPassword && <FieldError>{errors.confirmPassword.message}</FieldError>}
+                  </FieldContent>
+                </Field>
 
                 <div className="flex items-start space-x-2">
                   <Checkbox
@@ -550,26 +591,31 @@ export default function SignupPage() {
                 </div>
 
                 <div className="grid gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="otp" className="text-sm font-medium">Verification Code</Label>
-                    <InputOTP
-                      maxLength={6}
-                      value={verificationCode}
-                      onChange={setVerificationCode}
-                    >
-                      <InputOTPGroup>
-                        <InputOTPSlot index={0} />
-                        <InputOTPSlot index={1} />
-                        <InputOTPSlot index={2} />
-                      </InputOTPGroup>
-                      <InputOTPSeparator />
-                      <InputOTPGroup>
-                        <InputOTPSlot index={3} />
-                        <InputOTPSlot index={4} />
-                        <InputOTPSlot index={5} />
-                      </InputOTPGroup>
-                    </InputOTP>
-                  </div>
+                  <Field>
+                    <FieldLabel htmlFor="otp" className="text-sm font-medium">Verification Code</FieldLabel>
+                    <FieldContent>
+                      <InputOTP
+                        maxLength={6}
+                        value={verificationCode}
+                        onChange={setVerificationCode}
+                      >
+                        <InputOTPGroup>
+                          <InputOTPSlot index={0} />
+                          <InputOTPSlot index={1} />
+                          <InputOTPSlot index={2} />
+                        </InputOTPGroup>
+                        <InputOTPSeparator />
+                        <InputOTPGroup>
+                          <InputOTPSlot index={3} />
+                          <InputOTPSlot index={4} />
+                          <InputOTPSlot index={5} />
+                        </InputOTPGroup>
+                      </InputOTP>
+                      {verificationAttempts > 0 && verificationCode !== generatedCode && (
+                        <FieldError>Invalid verification code. Please try again.</FieldError>
+                      )}
+                    </FieldContent>
+                  </Field>
                   <div className="text-left">
                     <p className="text-sm text-muted-foreground">
                       Didn't receive a code?{" "}
@@ -594,12 +640,6 @@ export default function SignupPage() {
                       </Button>
                     </p>
                   </div>
-                  {verificationAttempts > 0 && verificationCode !== generatedCode && (
-                    <p className="text-sm text-red-500 mt-1 flex items-center">
-                      <AlertCircle className="h-3.5 w-3.5 mr-1.5" />
-                      Invalid verification code. Please try again.
-                    </p>
-                  )}
                 </div>
 
                 <Button

@@ -1,4 +1,4 @@
-import { ReactNode, useState } from 'react'
+import { ReactNode, useState, useEffect } from 'react'
 import { AppSidebar } from "@/components/app-sidebar"
 import { PageWrapper } from "@/components/page-wrapper"
 import { PageHeader } from "@/components/page-header"
@@ -28,6 +28,25 @@ function DashboardContent({ children }: { children: ReactNode }) {
   const handleActionCenterClose = () => {
     setIsActionCenterOpen(false)
   }
+
+  // Add keyboard shortcut for Command/Ctrl + K to open action center
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check for Command/Ctrl + K
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault() // Prevent default browser behavior
+        setIsActionCenterOpen(true)
+      }
+    }
+
+    // Add event listener
+    window.addEventListener('keydown', handleKeyDown)
+
+    // Clean up
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [])
 
   return (
     <SidebarProvider

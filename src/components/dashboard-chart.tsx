@@ -48,7 +48,7 @@ export function DashboardChart({ timeRange, isLoading = false, className }: Dash
     >
       <Card className="py-0">
         <CardHeader className="flex flex-col items-stretch border-b !p-0 sm:flex-row">
-          <div className="flex flex-1 flex-col justify-center gap-1 px-6 pt-4 pb-3 sm:!py-6">
+          <div className="flex flex-1 flex-col justify-center gap-1 px-4 pt-4 pb-3 sm:!py-6">
             <CardTitle>Performance Metrics</CardTitle>
             <CardDescription>
               Showing total messages and active senders
