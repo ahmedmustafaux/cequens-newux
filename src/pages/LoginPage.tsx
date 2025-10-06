@@ -347,417 +347,311 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden w-full max-w-6xl mx-auto h-full max-h-[calc(100vh-2rem)]">
-      <div className="grid grid-cols-1 lg:grid-cols-2 h-full min-h-[700px]">
-          {/* Left Panel - White Background with Form */}
-          <motion.div 
-            className="bg-white flex items-center justify-center p-6"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={smoothTransition}
-          >
-            <div className="w-full max-w-md">
-          {/* Logo/Brand */}
-          <div className="text-left mb-6 sm:mb-8">
-            <div className="h-4 w-auto mb-3 sm:mb-4 py-10">
-              <img
-                src="/Logo.svg"
-                alt={getLogoAltText()}
-                className="w-25 h-auto"
-              />
+    <>
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden w-full max-w-md mx-auto h-full max-h-[calc(100vh-2rem)]">
+        <div className="h-full">
+            {/* Form Panel */}
+            <motion.div 
+              className="bg-white flex items-center justify-center p-6 h-full"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={smoothTransition}
+            >
+              <div className="w-full max-w-md">
+            {/* Logo/Brand */}
+            <div className="text-left mb-6 sm:mb-8">
+              <div className="h-4 w-auto mb-3 sm:mb-4 py-6">
+                <img
+                  src="/Logo.svg"
+                  alt={getLogoAltText()}
+                  className="w-25 h-auto"
+                />
+              </div>
+              {currentStep === 'credentials' && (
+                <>
+                  <h1 className="text-xl font-semibold tracking-tight text-foreground mb-1">Welcome back</h1>
+                  <p className="text-sm text-muted-foreground">Sign in to your {getAccountText()}</p>
+                </>
+              )}
             </div>
-            {currentStep === 'credentials' && (
-              <>
-                <h1 className="text-xl font-semibold tracking-tight text-foreground mb-1">Welcome back</h1>
-                <p className="text-sm text-muted-foreground">Sign in to your {getAccountText()}</p>
-              </>
-            )}
-          </div>
 
 
-          {/* Login Form */}
-          <form onSubmit={handleSubmit} className="grid gap-3 sm:gap-4">
-            {currentStep === 'credentials' ? (
-              <>
-                {/* General Error Alert */}
-                {generalError && (
-                  <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-800">
-                    <AlertTriangle className="h-4 w-4 text-red-600" />
-                    <AlertDescription className="text-red-800">
-                      {generalError}
-                    </AlertDescription>
-                  </Alert>
-                )}
-                
-                {/* Social Login Options */}
-                <div className="grid grid-cols-2 gap-3 mb-2">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="flex items-center justify-center gap-2"
-                    onClick={() => {
-                      toast.info("Google login", {
-                        description: "Google authentication would be initiated here.",
-                        duration: 3000,
-                      })
-                    }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-5 w-5">
-                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                    </svg>
-                    <span>Sign in with Google</span>
-                  </Button>
-                  
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="flex items-center justify-center gap-2"
-                    onClick={() => {
-                      toast.info("Microsoft login", {
-                        description: "Microsoft authentication would be initiated here.",
-                        duration: 3000,
-                      })
-                    }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 23 23" className="h-5 w-5">
-                      <path fill="#f25022" d="M1 1h10v10H1z"/>
-                      <path fill="#00a4ef" d="M1 12h10v10H1z"/>
-                      <path fill="#7fba00" d="M12 1h10v10H12z"/>
-                      <path fill="#ffb900" d="M12 12h10v10H12z"/>
-                    </svg>
-                    <span>Sign in with Microsoft</span>
-                  </Button>
-                </div>
-                
-                <div className="relative my-2">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-gray-200"></span>
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-2 text-muted-foreground">Or with email</span>
-                  </div>
-                </div>
-                
-                <Field>
-                  <FieldLabel htmlFor="email">Email</FieldLabel>
-                  <FieldContent>
-                    <InputGroup>
-                      <InputGroupAddon>
-                        <Mail className="h-4 w-4" />
-                      </InputGroupAddon>
-                      <InputGroupInput
-                        id="email"
-                        type="email"
-                        placeholder="Enter your email"
-                        value={email}
-                        onChange={(e) => handleEmailChange(e.target.value)}
-                        onBlur={() => handleBlur("email")}
-                        autoComplete="email"
-                        autoCorrect="off"
-                        autoCapitalize="off"
-                        spellCheck="false"
-                        required
-                      />
-                    </InputGroup>
-                    {touched.email && errors.email && <FieldError>{errors.email.message}</FieldError>}
-                  </FieldContent>
-                </Field>
-
-                <Field>
-                  <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <FieldContent>
-                    <InputGroup>
-                      <InputGroupAddon>
-                        <Lock className="h-4 w-4" />
-                      </InputGroupAddon>
-                      <InputGroupInput
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Enter your password"
-                        value={password}
-                        onChange={(e) => handlePasswordChange(e.target.value)}
-                        onBlur={() => handleBlur("password")}
-                        autoComplete="new-password"
-                        autoCorrect="off"
-                        autoCapitalize="off"
-                        spellCheck="false"
-                        required
-                      />
-                      <InputGroupAddon align="inline-end">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="h-auto w-auto p-1 hover:text-slate-600"
-                        >
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </Button>
-                      </InputGroupAddon>
-                    </InputGroup>
-                    {touched.password && errors.password && <FieldError>{errors.password.message}</FieldError>}
-                  </FieldContent>
-                </Field>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="remember"
-                      className="h-4 w-4"
-                    />
-                    <Label htmlFor="remember" className="text-sm text-muted-foreground">
-                      Remember me
-                    </Label>
-                  </div>
-                  <Link
-                    to="#"
-                    className="text-sm font-medium text-foreground hover:text-foreground/80"
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                      <span>Verifying...</span>
-                    </div>
-                  ) : (
-                    "Continue"
+            {/* Login Form */}
+            <form onSubmit={handleSubmit} className="grid gap-3 sm:gap-4">
+              {currentStep === 'credentials' ? (
+                <>
+                  {/* General Error Alert */}
+                  {generalError && (
+                    <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-800">
+                      <AlertTriangle className="h-4 w-4 text-red-600" />
+                      <AlertDescription className="text-red-800">
+                        {generalError}
+                      </AlertDescription>
+                    </Alert>
                   )}
-                </Button>
-              </>
-            ) : (
-              <>
-                {/* Back button */}
-                <div className="flex items-center mb-2">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={goBackToCredentials}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back to login
-                  </Button>
-                </div>
-
-                {/* OTP Section */}
-                <Item className="mb-6">
-                  <ItemMedia variant="icon">
-                    <Shield className="h-6 w-6" />
-                  </ItemMedia>
-                  <ItemContent>
-                    <ItemTitle>Verify your identity</ItemTitle>
-                    <ItemDescription>
-                      We've sent a 6-digit code to {verificationContact}
-                    </ItemDescription>
-                  </ItemContent>
-                </Item>
-
-                <div className="grid gap-4">
+                  
+                  {/* Social Login Options */}
+                  <div className="grid grid-cols-2 gap-3 mb-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="flex items-center justify-center gap-2"
+                      onClick={() => {
+                        toast.info("Google login", {
+                          description: "Google authentication would be initiated here.",
+                          duration: 3000,
+                        })
+                      }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-5 w-5">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                      </svg>
+                      <span>Sign in with Google</span>
+                    </Button>
+                    
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="flex items-center justify-center gap-2"
+                      onClick={() => {
+                        toast.info("Microsoft login", {
+                          description: "Microsoft authentication would be initiated here.",
+                          duration: 3000,
+                        })
+                      }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 23 23" className="h-5 w-5">
+                        <path fill="#f25022" d="M1 1h10v10H1z"/>
+                        <path fill="#00a4ef" d="M1 12h10v10H1z"/>
+                        <path fill="#7fba00" d="M12 1h10v10H12z"/>
+                        <path fill="#ffb900" d="M12 12h10v10H12z"/>
+                      </svg>
+                      <span>Sign in with Microsoft</span>
+                    </Button>
+                  </div>
+                  
+                  <div className="relative my-2">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-gray-200"></span>
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-white px-2 text-muted-foreground">Or with email</span>
+                    </div>
+                  </div>
+                  
                   <Field>
-                    <FieldLabel htmlFor="otp" className="text-sm font-medium">Verification Code</FieldLabel>
+                    <FieldLabel htmlFor="email">Email</FieldLabel>
                     <FieldContent>
-                      <InputOTP
-                        maxLength={6}
-                        value={otp}
-                        onChange={handleOtpChange}
-                      >
-                        <InputOTPGroup>
-                          <InputOTPSlot index={0} />
-                          <InputOTPSlot index={1} />
-                          <InputOTPSlot index={2} />
-                        </InputOTPGroup>
-                        <InputOTPSeparator />
-                        <InputOTPGroup>
-                          <InputOTPSlot index={3} />
-                          <InputOTPSlot index={4} />
-                          <InputOTPSlot index={5} />
-                        </InputOTPGroup>
-                      </InputOTP>
-                      {touched.otp && errors.otp && <FieldError>{errors.otp.message}</FieldError>}
+                      <InputGroup>
+                        <InputGroupAddon>
+                          <Mail className="h-4 w-4" />
+                        </InputGroupAddon>
+                        <InputGroupInput
+                          id="email"
+                          type="email"
+                          placeholder="Enter your email"
+                          value={email}
+                          onChange={(e) => handleEmailChange(e.target.value)}
+                          onBlur={() => handleBlur("email")}
+                          autoComplete="email"
+                          autoCorrect="off"
+                          autoCapitalize="off"
+                          spellCheck="false"
+                          required
+                        />
+                      </InputGroup>
+                      {touched.email && errors.email && <FieldError>{errors.email.message}</FieldError>}
                     </FieldContent>
                   </Field>
-                  <div className="text-left">
-                    <p className="text-sm text-muted-foreground">
-                      Didn't receive the code?{" "}
-                      <Button
-                        type="button"
-                        variant="link"
-                        onClick={handleResendCode}
-                        disabled={resendCountdown > 0 || isResending}
-                        className={`font-medium transition-colors ${
-                          resendCountdown > 0 || isResending
-                            ? 'text-muted-foreground'
-                            : 'text-foreground hover:text-foreground/80'
-                        }`}
-                      >
-                        {isResending ? (
-                          'Sending...'
-                        ) : resendCountdown > 0 ? (
-                          `Resend code (${resendCountdown}s)`
-                        ) : (
-                          'Resend code'
-                        )}
-                      </Button>
-                    </p>
-                  </div>
-                </div>
 
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={isLoading || otp.length !== 6}
-                >
-                  {isLoading ? (
+                  <Field>
+                    <FieldLabel htmlFor="password">Password</FieldLabel>
+                    <FieldContent>
+                      <InputGroup>
+                        <InputGroupAddon>
+                          <Lock className="h-4 w-4" />
+                        </InputGroupAddon>
+                        <InputGroupInput
+                          id="password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Enter your password"
+                          value={password}
+                          onChange={(e) => handlePasswordChange(e.target.value)}
+                          onBlur={() => handleBlur("password")}
+                          autoComplete="new-password"
+                          autoCorrect="off"
+                          autoCapitalize="off"
+                          spellCheck="false"
+                          required
+                        />
+                        <InputGroupAddon align="inline-end">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="h-auto w-auto p-1 hover:text-slate-600"
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                        </InputGroupAddon>
+                      </InputGroup>
+                      {touched.password && errors.password && <FieldError>{errors.password.message}</FieldError>}
+                    </FieldContent>
+                  </Field>
+
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                      <span>Verifying...</span>
+                      <Checkbox
+                        id="remember"
+                        className="h-4 w-4"
+                      />
+                      <Label htmlFor="remember" className="text-sm text-muted-foreground">
+                        Remember me
+                      </Label>
                     </div>
-                  ) : (
-                    "Verify & Sign In"
-                  )}
-                </Button>
-              </>
-            )}
+                    <Link
+                      to="#"
+                      className="text-sm font-medium text-foreground hover:text-foreground/80"
+                    >
+                      Forgot password?
+                    </Link>
+                  </div>
 
-            {currentStep === 'credentials' && (
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground">
-                  Don't have an account?{" "}
-                  <Link
-                    to="/signup"
-                    className="font-medium text-foreground hover:text-foreground/80"
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={isLoading}
                   >
-                    Sign up
-                  </Link>
-                </p>
+                    {isLoading ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        <span>Verifying...</span>
+                      </div>
+                    ) : (
+                      "Continue"
+                    )}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  {/* Back button */}
+                  <div className="flex items-center mb-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={goBackToCredentials}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Back to login
+                    </Button>
+                  </div>
+
+                  {/* OTP Section */}
+                  <Item className="mb-6">
+                    <ItemMedia variant="icon">
+                      <Shield className="h-6 w-6" />
+                    </ItemMedia>
+                    <ItemContent>
+                      <ItemTitle>Verify your identity</ItemTitle>
+                      <ItemDescription>
+                        We've sent a 6-digit code to {verificationContact}
+                      </ItemDescription>
+                    </ItemContent>
+                  </Item>
+
+                  <div className="grid gap-4">
+                    <Field>
+                      <FieldLabel htmlFor="otp" className="text-sm font-medium">Verification Code</FieldLabel>
+                      <FieldContent>
+                        <InputOTP
+                          maxLength={6}
+                          value={otp}
+                          onChange={handleOtpChange}
+                        >
+                          <InputOTPGroup>
+                            <InputOTPSlot index={0} />
+                            <InputOTPSlot index={1} />
+                            <InputOTPSlot index={2} />
+                          </InputOTPGroup>
+                          <InputOTPSeparator />
+                          <InputOTPGroup>
+                            <InputOTPSlot index={3} />
+                            <InputOTPSlot index={4} />
+                            <InputOTPSlot index={5} />
+                          </InputOTPGroup>
+                        </InputOTP>
+                        {touched.otp && errors.otp && <FieldError>{errors.otp.message}</FieldError>}
+                      </FieldContent>
+                    </Field>
+                    <div className="text-left">
+                      <p className="text-sm text-muted-foreground">
+                        Didn't receive the code?{" "}
+                        <Button
+                          type="button"
+                          variant="link"
+                          onClick={handleResendCode}
+                          disabled={resendCountdown > 0 || isResending}
+                          className={`font-medium transition-colors ${
+                            resendCountdown > 0 || isResending
+                              ? 'text-muted-foreground'
+                              : 'text-foreground hover:text-foreground/80'
+                          }`}
+                        >
+                          {isResending ? (
+                            'Sending...'
+                          ) : resendCountdown > 0 ? (
+                            `Resend code (${resendCountdown}s)`
+                          ) : (
+                            'Resend code'
+                          )}
+                        </Button>
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={isLoading || otp.length !== 6}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        <span>Verifying...</span>
+                      </div>
+                    ) : (
+                      "Verify & Sign In"
+                    )}
+                  </Button>
+                </>
+              )}
+
+              {currentStep === 'credentials' && (
+                <div className="text-center m-6">
+                  <p className="text-sm text-muted-foreground">
+                    Don't have an account?{" "}
+                    <Link
+                      to="/signup"
+                      className="font-medium text-foreground hover:text-foreground/80"
+                    >
+                      Sign up
+                    </Link>
+                  </p>
+                </div>
+              )}
+            </form>
+
               </div>
-            )}
-          </form>
-
-            </div>
-          </motion.div>
-
-          {/* Right Panel Wrapper with Margins */}
-          <div className="p-4 hidden lg:block">
-            {/* Blue Background with Partners */}
-            <div className="bg-gray-100 flex flex-col justify-end p-4 relative overflow-hidden h-full rounded-2xl">
-            {/* Background Elements */}
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-20 left-20 w-32 h-32 bg-gray-300/30 rounded-full blur-xl"></div>
-              <div className="absolute top-40 right-32 w-24 h-24 bg-gray-300/30 rounded-full blur-xl"></div>
-              <div className="absolute bottom-32 left-32 w-40 h-40 bg-gray-300/30 rounded-full blur-xl"></div>
-              <div className="absolute bottom-20 right-20 w-28 h-28 bg-gray-300/30 rounded-full blur-xl"></div>
-            </div>
-            
-            {/* Partners Section */}
-            <div className="relative z-10 text-gray-800">
-              <h3 className="text-xs uppercase text-gray-400 font-medium mb-6 text-center">OUR PARTNERS</h3>
-              <div className="relative overflow-hidden">
-                {/* Gradient overlays for smooth edges */}
-                <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-100 to-transparent z-10"></div>
-                <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-100 to-transparent z-10"></div>
-                
-                {/* Animated partners */}
-                <motion.div 
-                  className="flex items-center"
-                  animate={{ x: [0, -600] }}
-                  transition={{ 
-                    duration: 20, 
-                    repeat: Infinity, 
-                    repeatType: "loop",
-                    ease: "linear" 
-                  }}
-                >
-                  {/* First set of logos */}
-                  {/* Meta */}
-                  <div className="flex-shrink-0 mx-8">
-                    <div className="w-28 h-12 flex items-center justify-center">
-                      <img src="/logos/meta.svg" alt="Meta" className="max-h-8 max-w-24 object-contain" />
-                    </div>
-                  </div>
-                  
-                  {/* Microsoft */}
-                  <div className="flex-shrink-0 mx-8">
-                    <div className="w-28 h-12 flex items-center justify-center">
-                      <img src="/logos/microsoft.svg" alt="Microsoft" className="max-h-8 max-w-24 object-contain" />
-                    </div>
-                  </div>
-                  
-                  {/* AWS */}
-                  <div className="flex-shrink-0 mx-8">
-                    <div className="w-28 h-12 flex items-center justify-center">
-                      <img src="/logos/aws.svg" alt="AWS" className="max-h-6 max-w-20 object-contain" />
-                    </div>
-                  </div>
-                  
-                  {/* Google */}
-                  <div className="flex-shrink-0 mx-8">
-                    <div className="w-28 h-12 flex items-center justify-center">
-                      <img src="/logos/google.svg" alt="Google" className="max-h-8 max-w-24 object-contain" />
-                    </div>
-                  </div>
-                  
-                  {/* MasterCard */}
-                  <div className="flex-shrink-0 mx-8">
-                    <div className="w-28 h-12 flex items-center justify-center">
-                      <img src="/logos/mastercard.svg" alt="MasterCard" className="max-h-8 max-w-24 object-contain" />
-                    </div>
-                  </div>
-
-                  {/* Duplicate set for seamless loop */}
-                  {/* Meta */}
-                  <div className="flex-shrink-0 mx-8">
-                    <div className="w-28 h-12 flex items-center justify-center">
-                      <img src="/logos/meta.svg" alt="Meta" className="max-h-8 max-w-24 object-contain" />
-                    </div>
-                  </div>
-                  
-                  {/* Microsoft */}
-                  <div className="flex-shrink-0 mx-8">
-                    <div className="w-28 h-12 flex items-center justify-center">
-                      <img src="/logos/microsoft.svg" alt="Microsoft" className="max-h-8 max-w-24 object-contain" />
-                    </div>
-                  </div>
-                  
-                  {/* AWS */}
-                  <div className="flex-shrink-0 mx-8">
-                    <div className="w-28 h-12 flex items-center justify-center">
-                      <img src="/logos/aws.svg" alt="AWS" className="max-h-6 max-w-20 object-contain" />
-                    </div>
-                  </div>
-                  
-                  {/* Google */}
-                  <div className="flex-shrink-0 mx-8">
-                    <div className="w-28 h-12 flex items-center justify-center">
-                      <img src="/logos/google.svg" alt="Google" className="max-h-8 max-w-24 object-contain" />
-                    </div>
-                  </div>
-                  
-                  {/* MasterCard */}
-                  <div className="flex-shrink-0 mx-8">
-                    <div className="w-28 h-12 flex items-center justify-center">
-                      <img src="/logos/mastercard.svg" alt="MasterCard" className="max-h-8 max-w-24 object-contain" />
-                    </div>
-                  </div>
-                </motion.div>
-              </div>
-            </div>
-            </div>
+            </motion.div>
+        </div>
       </div>
-    </div>
 
       {/* Verification Methods Dialog */}
       <Dialog open={showVerificationMethods} onOpenChange={setShowVerificationMethods}>
@@ -843,6 +737,6 @@ export default function LoginPage() {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   )
 }

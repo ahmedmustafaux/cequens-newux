@@ -201,7 +201,7 @@ export default function SignupPage() {
 
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden w-full max-w-6xl mx-auto h-full max-h-[calc(100vh-2rem)]">
-      <div className="grid grid-cols-1 lg:grid-cols-2 h-full min-h-[700px] mb-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 h-full">
           {/* Left Panel - White Background with Form */}
           <motion.div 
             className="bg-white flex items-center justify-center p-6"
@@ -525,7 +525,7 @@ export default function SignupPage() {
 
 
             {currentStep === SignupStep.FORM && (
-              <div className="text-center">
+              <div className="text-center m-6">
                 <p className="text-sm text-muted-foreground">
                   Already have an account?{" "}
                   <Link
