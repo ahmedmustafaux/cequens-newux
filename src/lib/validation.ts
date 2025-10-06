@@ -174,7 +174,7 @@ export const validateSignupForm = (formData: {
     errors.companyName = { isValid: false, message: "Company name must be at least 2 characters long" }
   }
   
-  const emailValidation = validateEmail(formData.email, true) // true = require business email
+  const emailValidation = validateEmail(formData.email, false) // false = allow personal emails
   if (!emailValidation.isValid) {
     errors.email = emailValidation
   }
