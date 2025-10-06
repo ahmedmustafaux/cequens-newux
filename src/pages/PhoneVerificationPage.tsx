@@ -1,7 +1,7 @@
 import * as React from "react"
 import { useState, useEffect } from "react"
 import { useNavigate, Link, useLocation } from "react-router-dom"
-import { Phone, AlertCircle, CheckCircle2, Shield, ArrowLeft, Info } from "lucide-react"
+import { Phone, AlertCircle, CheckCircle2, Shield, ArrowLeft, Globe, Search, ChevronDown, Info } from "lucide-react"
 import { Item, ItemMedia, ItemContent, ItemTitle, ItemDescription } from "@/components/ui/item"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -29,7 +29,13 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp"
 import { validatePhoneNumber, type FieldValidation } from "@/lib/validation"
-import { PhoneInputWithCountryCode } from "@/components/ui/country-code-select"
+import { Input } from "@/components/ui/input"
+import { CircleFlag } from "react-circle-flags"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 
 export default function PhoneVerificationPage() {
@@ -455,7 +461,7 @@ export default function PhoneVerificationPage() {
         <div className="w-full p-6">
           {/* Logo/Brand */}
           <div className="text-left mb-6 sm:mb-8">
-            <div className="h-4 w-auto mb-3 sm:mb-4 py-10">
+            <div className="h-4 w-auto mb-3 sm:mb-4 py-4">
               <img
                 src="/Logo.svg"
                 alt={getLogoAltText()}
@@ -758,7 +764,7 @@ export default function PhoneVerificationPage() {
         </div>
       </div>
       
-      {/* Info alert and demo button outside the white container */}
+      {/*demo button outside the white container */}
       <div className="mt-4 space-y-4 w-full max-w-lg mx-auto">
       
         

@@ -107,7 +107,7 @@ export default function EmailConfirmationPage() {
         <div className="w-full p-6">
           {/* Logo/Brand */}
           <div className="text-left mb-6 sm:mb-8">
-            <div className="h-4 w-auto mb-3 sm:mb-4 py-10">
+            <div className="h-4 w-auto mb-3 sm:mb-4 py-4">
               <img
                 src="/Logo.svg"
                 alt={getLogoAltText()}
