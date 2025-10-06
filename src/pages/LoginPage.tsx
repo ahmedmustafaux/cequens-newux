@@ -634,7 +634,7 @@ export default function LoginPage() {
               )}
 
               {currentStep === 'credentials' && (
-                <div className="text-center m-6">
+                <div className="text-center m-2 mb-4">
                   <p className="text-sm text-muted-foreground">
                     Don't have an account?{" "}
                     <Link

@@ -525,7 +525,7 @@ export default function SignupPage() {
 
 
             {currentStep === SignupStep.FORM && (
-              <div className="text-center m-6">
+              <div className="text-center m-2 mb-4">
                 <p className="text-sm text-muted-foreground">
                   Already have an account?{" "}
                   <Link
