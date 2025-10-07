@@ -12,6 +12,7 @@ import {
   InputGroupInput, 
   InputGroupAddon 
 } from "@/components/ui/input-group";
+import { FilterSelect } from "@/components/ui/filter-select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -66,6 +67,10 @@ export default function NotificationsPage() {
     groupByCategory: false
   });
   
+  // Filter states
+  const [selectedCategories, setSelectedCategories] = React.useState<string[]>([]);
+  const [categorySearchQuery, setCategorySearchQuery] = React.useState("");
+  
   // Dynamic page title
   usePageTitle("Notifications");
 
@@ -92,16 +97,35 @@ export default function NotificationsPage() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Category filter options
+  const categoryOptions = [
+    { value: "system", label: "System" },
+    { value: "campaign", label: "Campaign" },
+    { value: "contact", label: "Contact" },
+    { value: "message", label: "Message" },
+    { value: "billing", label: "Billing" }
+  ];
+
+  // Filtered options based on search
+  const filteredCategoryOptions = categoryOptions.filter(option =>
+    option.label.toLowerCase().includes(categorySearchQuery.toLowerCase())
+  );
+
   // Filter notifications based on category and search
   const filteredNotifications = React.useMemo(() => {
     let filtered = [...notifications];
 
-    // Category filter
+    // Tab category filter
     if (activeCategory === 'unread') {
       filtered = filtered.filter(n => !n.read);
     } else if (activeCategory !== 'all') {
       // Filter by notification category (system, campaign, contact, message, billing)
       filtered = filtered.filter(n => n.category === activeCategory);
+    }
+
+    // Category filter select
+    if (selectedCategories.length > 0) {
+      filtered = filtered.filter(n => n.category && selectedCategories.includes(n.category));
     }
 
     // Search filter
@@ -114,7 +138,7 @@ export default function NotificationsPage() {
     }
 
     return filtered;
-  }, [notifications, activeCategory, searchQuery]);
+  }, [notifications, activeCategory, searchQuery, selectedCategories]);
 
   const getNotificationIcon = (type: string) => {
     const iconClass = "h-4 w-4";
@@ -306,42 +330,6 @@ export default function NotificationsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={smoothTransition}
         >
-          {/* Search and Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <div className="flex-1 max-w-sm">
-              <Field>
-                <FieldContent>
-                  <InputGroup>
-                    <InputGroupAddon>
-                      <Search className="h-4 w-4" />
-                    </InputGroupAddon>
-                    <InputGroupInput
-                      placeholder="Search notifications..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </InputGroup>
-                </FieldContent>
-              </Field>
-            </div>
-            
-            {selectedNotifications.length > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">
-                  {selectedNotifications.length} selected
-                </span>
-                <Button size="sm" variant="outline" onClick={handleBulkMarkAsRead}>
-                  <Check className="h-4 w-4 mr-1" />
-                  Mark Read
-                </Button>
-                <Button size="sm" variant="outline" onClick={handleBulkDelete}>
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Delete
-                </Button>
-              </div>
-            )}
-          </div>
-
           {/* Two-column layout: Notifications and Pro Tips */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Notifications Column - 2/3 width */}
@@ -349,11 +337,44 @@ export default function NotificationsPage() {
               {/* Tabs for Categories */}
               <Tabs value={activeCategory} onValueChange={(value) => handleTabChange(value as NotificationCategory)} className="w-full">
             <motion.div 
-              className="flex justify-start"
+              className="flex justify-between items-center flex-wrap gap-3"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={smoothTransition}
             >
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="w-auto min-w-[280px]">
+                  <Field>
+                    <FieldContent>
+                      <InputGroup>
+                        <InputGroupAddon>
+                          <Search className="h-4 w-4" />
+                        </InputGroupAddon>
+                        <InputGroupInput
+                          placeholder="Search notifications..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                      </InputGroup>
+                    </FieldContent>
+                  </Field>
+                </div>
+                
+                <FilterSelect
+                  placeholder="Category"
+                  options={categoryOptions}
+                  selectedValues={selectedCategories}
+                  onSelectionChange={setSelectedCategories}
+                  onClear={() => setSelectedCategories([])}
+                  searchable={true}
+                  searchPlaceholder="Search categories..."
+                  searchQuery={categorySearchQuery}
+                  onSearchChange={setCategorySearchQuery}
+                  filteredOptions={filteredCategoryOptions}
+                  className="min-w-[120px]"
+                />
+              </div>
+              
               <TabsList className="inline-flex h-10 items-center justify-center rounded-md p-1 text-muted-foreground">
                 <motion.div transition={smoothTransition}>
                   <TabsTrigger value="all">All</TabsTrigger>
@@ -383,17 +404,32 @@ export default function NotificationsPage() {
                 >
                   <TabsContent value={activeCategory} className="mt-4">
                 {/* Header Section */}
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold">
-                    {activeCategory === 'all' ? 'All Notifications' : 'Unread Notifications'}
-                  </h2>
-                  {filteredNotifications.length > 0 && (
-                    <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between m-4">
+                  <div className="flex items-center gap-2">
+                    {filteredNotifications.length > 0 && (
                       <Checkbox
                         checked={selectedNotifications.length === filteredNotifications.length}
                         onCheckedChange={handleSelectAll}
                       />
-                      <span className="text-sm text-muted-foreground">Select All</span>
+                    )}
+                    <h2 className="text-md font-semibold py-2">
+                      {activeCategory === 'all' ? 'All Notifications' : 'Unread Notifications'}
+                    </h2>
+                  </div>
+                  
+                  {selectedNotifications.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">
+                        {selectedNotifications.length} selected
+                      </span>
+                      <Button size="sm" variant="outline" onClick={handleBulkMarkAsRead}>
+                        <Check className="h-4 w-4 mr-1" />
+                        Mark Read
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={handleBulkDelete}>
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Delete
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -517,16 +553,6 @@ export default function NotificationsPage() {
                 </CardHeader>
                 <CardContent className="p-0">
                   <div className="space-y-0">
-                    <div className="px-4 py-3 border-b border-border/50 hover:bg-muted/30 transition-colors">
-                      <div className="flex items-start gap-3">
-                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <div>
-                          <h4 className="font-medium text-sm mb-1">Use Keyboard Shortcuts</h4>
-                          <p className="text-xs text-muted-foreground">Press <kbd className="px-1.5 py-0.5 bg-muted border border-border rounded text-xs font-mono">⌘A</kbd> to select all</p>
-                        </div>
-                      </div>
-                    </div>
-                    
                     <div className="px-4 py-3 border-b border-border/50 hover:bg-muted/30 transition-colors">
                       <div className="flex items-start gap-3">
                         <div className="w-1.5 h-1.5 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
