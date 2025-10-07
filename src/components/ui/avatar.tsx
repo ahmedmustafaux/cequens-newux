@@ -1,11 +1,7 @@
-"use client"
-
 import * as React from "react"
 import * as AvatarPrimitive from "@radix-ui/react-avatar"
-
 import { cn } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
-
 function Avatar({
   className,
   ...props
@@ -21,7 +17,6 @@ function Avatar({
     />
   )
 }
-
 function AvatarImage({
   className,
   ...props
@@ -34,7 +29,6 @@ function AvatarImage({
     />
   )
 }
-
 function AvatarFallback({
   className,
   ...props
@@ -50,7 +44,6 @@ function AvatarFallback({
     />
   )
 }
-
 function AvatarSkeleton({ 
   size = "default", 
   className, 
@@ -61,7 +54,6 @@ function AvatarSkeleton({
     default: "size-8", 
     lg: "size-12"
   }
-
   return (
     <div
       data-slot="avatar-skeleton"
@@ -76,5 +68,4 @@ function AvatarSkeleton({
     </div>
   )
 }
-
 export { Avatar, AvatarImage, AvatarFallback, AvatarSkeleton }

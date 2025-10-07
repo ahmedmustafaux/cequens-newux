@@ -1,8 +1,5 @@
-"use client"
-
 import React, { createContext, useContext, useState, useCallback, ReactNode } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-
 interface NavigationContextType {
   // Active state management
   activePath: string
@@ -18,16 +15,13 @@ interface NavigationContextType {
   // Check if a path is currently active
   isActive: (path: string) => boolean
 }
-
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined)
-
 export function NavigationProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
   const location = useLocation()
   const pathname = location.pathname
   const [activePath, setActivePath] = useState(pathname)
   const [isLoading, setIsLoading] = useState(false)
-
   const navigateTo = useCallback((url: string) => {
     // Don't navigate if already on the page
     if (pathname === url) return
@@ -44,7 +38,6 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
     // Reset loading state after navigation completes
     // This will be handled by the pathname change effect
   }, [navigate, pathname])
-
   const isActive = useCallback((path: string) => {
     // For exact matches (like root path)
     if (activePath === path) return true
@@ -55,13 +48,11 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
     
     return false
   }, [activePath])
-
   // Update active path when pathname changes (after navigation completes)
   React.useEffect(() => {
     setActivePath(pathname)
     setIsLoading(false)
   }, [pathname])
-
   const value: NavigationContextType = {
     activePath,
     setActivePath,
@@ -70,14 +61,12 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
     navigateTo,
     isActive,
   }
-
   return (
     <NavigationContext.Provider value={value}>
       {children}
     </NavigationContext.Provider>
   )
 }
-
 export function useNavigationContext() {
   const context = useContext(NavigationContext)
   if (context === undefined) {

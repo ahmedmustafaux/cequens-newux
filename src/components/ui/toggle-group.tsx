@@ -1,11 +1,7 @@
-"use client"
-
 import * as React from "react"
 import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group"
 import { cva, type VariantProps } from "class-variance-authority"
-
 import { cn } from "@/lib/utils"
-
 const toggleVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all cursor-pointer disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
   {
@@ -28,7 +24,6 @@ const toggleVariants = cva(
     },
   }
 )
-
 const ToggleGroupContext = React.createContext<{
   size?: "default" | "sm" | "lg"
   variant?: "default" | "outline"
@@ -36,7 +31,6 @@ const ToggleGroupContext = React.createContext<{
   size: "default",
   variant: "default",
 })
-
 function ToggleGroup({
   className,
   variant,
@@ -62,7 +56,6 @@ function ToggleGroup({
     </ToggleGroupPrimitive.Root>
   )
 }
-
 function ToggleGroupItem({
   className,
   children,
@@ -72,7 +65,6 @@ function ToggleGroupItem({
 }: React.ComponentProps<typeof ToggleGroupPrimitive.Item> &
   VariantProps<typeof toggleVariants>) {
   const context = React.useContext(ToggleGroupContext)
-
   return (
     <ToggleGroupPrimitive.Item
       data-slot="toggle-group-item"
@@ -92,5 +84,4 @@ function ToggleGroupItem({
     </ToggleGroupPrimitive.Item>
   )
 }
-
 export { ToggleGroup, ToggleGroupItem }

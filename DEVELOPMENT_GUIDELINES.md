@@ -1,12 +1,12 @@
 # 🚀 Development Guidelines
 
 ## **Project Overview**
-This is a Next.js application with TypeScript, Tailwind CSS, and Framer Motion for animations.
+This is a Vite React application with TypeScript, Tailwind CSS, and Framer Motion for animations.
 
 ## **Architecture & Structure**
 
 ### **Key Directories**
-- `src/app/` - Next.js App Router pages and layouts
+- `src/pages/` - React Router pages
 - `src/components/` - Reusable UI components
 - `src/lib/` - Utilities, configurations, and shared logic
 - `src/hooks/` - Custom React hooks
@@ -98,7 +98,7 @@ import {
 ### **Performance**
 - Use React.memo for expensive components
 - Implement proper loading states
-- Optimize images with Next.js Image component
+- Optimize images with proper sizing and formats
 - Use dynamic imports for code splitting
 
 ## **State Management**
@@ -144,8 +144,8 @@ import {
 - Group in appropriate lib folders
 
 ### **Pages**
-- Follow Next.js App Router conventions
-- Use lowercase with hyphens: `campaign-settings/page.tsx`
+- Follow React Router conventions
+- Use PascalCase for page components: `CampaignSettings.tsx`
 - Keep page components focused
 
 ## **Testing Guidelines**
@@ -192,11 +192,12 @@ import {
 ## **Dependencies**
 
 ### **Core Dependencies**
-- Next.js 15.3.3 - React framework
+- Vite 5.4.10 - Build tool
 - React 19.0.0 - UI library
 - TypeScript 5 - Type safety
 - Tailwind CSS 4 - Styling
 - Framer Motion 12.23.12 - Animations
+- React Router 6.28.0 - Routing
 
 ### **UI Components**
 - shadcn/ui - Component library

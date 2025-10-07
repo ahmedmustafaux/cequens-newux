@@ -1,8 +1,5 @@
-"use client"
-
 import * as React from "react"
 import { type Icon } from "@tabler/icons-react"
-
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -11,7 +8,6 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { useNavigationContext } from "@/hooks/use-navigation-context"
-
 export function NavSecondary({
   items,
   ...props
@@ -23,7 +19,6 @@ export function NavSecondary({
   }[]
 } & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
   const { isActive, navigateTo } = useNavigationContext()
-
   const handleNavigation = (e: React.MouseEvent, url: string) => {
     e.preventDefault()
     navigateTo(url)

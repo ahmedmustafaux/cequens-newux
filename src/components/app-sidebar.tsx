@@ -1,5 +1,3 @@
-"use client"
-
 import * as React from "react"
 // Image component replaced with img tag for Vite
 import { getAppName } from "@/lib/config"
@@ -16,7 +14,6 @@ import {
   IconRobot,
   IconComponents,
 } from "@tabler/icons-react"
-
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
@@ -29,7 +26,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-
 const data = {
   navMain: [
     {
@@ -94,9 +90,7 @@ const data = {
     },
   ],
 }
-
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {}
-
 export function AppSidebar({ ...props }: AppSidebarProps) {
   const { user } = useAuth()
   
@@ -106,7 +100,6 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
     email: user?.email || "user@example.com",
     avatar: "", // Use empty string to trigger Avatar fallback with initials
   }
-
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>

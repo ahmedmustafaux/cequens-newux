@@ -1,21 +1,16 @@
-"use client"
-
 import { ReactNode } from "react"
 import { useNavigationContext } from "@/hooks/use-navigation-context"
 import { motion, AnimatePresence } from "framer-motion"
-
 interface PageWrapperProps {
   children: ReactNode
   isLoading?: boolean
 }
-
 export function PageWrapper({ 
   children, 
   isLoading: propIsLoading = false 
 }: PageWrapperProps) {
   const { isLoading: contextIsLoading } = useNavigationContext()
   const isLoading = propIsLoading || contextIsLoading
-
   return (
     <div className="min-h-full">
       <AnimatePresence mode="wait">

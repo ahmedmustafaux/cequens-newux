@@ -1,5 +1,3 @@
-"use client"
-
 import * as React from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -34,12 +32,10 @@ import {
 import { FilterSelect } from "@/components/ui/filter-select"
 import { useTableSearch } from "@/hooks/use-table-search"
 import { TableSkeleton } from "@/components/ui/table"
-
 interface FilterOption {
   value: string
   label: string
 }
-
 interface FilterConfig {
   key: string
   label: string
@@ -53,7 +49,6 @@ interface FilterConfig {
   onSearchChange?: (query: string) => void
   filteredOptions?: FilterOption[]
 }
-
 interface DataTableProps {
   children: React.ReactNode
   className?: string
@@ -83,30 +78,25 @@ interface DataTableProps {
   filters?: FilterConfig[]
   showControls?: boolean
 }
-
 interface DataTableHeaderProps {
   children: React.ReactNode
   className?: string
 }
-
 interface DataTableBodyProps {
   children: React.ReactNode
   className?: string
 }
-
 interface DataTableRowProps {
   children: React.ReactNode
   className?: string
   selected?: boolean
   onClick?: () => void
 }
-
 interface DataTableHeadProps {
   children: React.ReactNode
   className?: string
   width?: string
 }
-
 interface DataTableCellProps {
   children: React.ReactNode
   className?: string
@@ -117,8 +107,6 @@ interface DataTableCellProps {
   onClick?: () => void
   clickable?: boolean
 }
-
-
 // Main DataTable component
 function DataTable({ 
   children, 
@@ -134,7 +122,6 @@ function DataTable({
   showControls = true,
 }: DataTableProps) {
   const tableRef = React.useRef<HTMLDivElement>(null)
-
   // Integrate table search if searchConfig is provided
   useTableSearch({ 
     table: searchConfig?.table, 
@@ -142,7 +129,6 @@ function DataTable({
     columnFilters: searchConfig?.table?.getState().columnFilters || [],
     globalFilter: searchConfig?.table?.getState().globalFilter || ""
   })
-
   return (
     <div className="w-full flex flex-col gap-4 mb-4">
       {/* Search and Filters Section */}
@@ -216,7 +202,6 @@ function DataTable({
                               })}
                           </DropdownMenuContent>
                         </DropdownMenu>
-
                         {/* Sorting */}
                         <DropdownMenu>
                           <Tooltip>
@@ -254,7 +239,6 @@ function DataTable({
                     )}
                   </div>
                 )}
-
                 {/* Filters */}
                 {filters && filters.length > 0 && (
                   <div className="flex flex-row gap-3 items-center flex-wrap">
@@ -274,7 +258,6 @@ function DataTable({
                         filteredOptions={filter.filteredOptions}
                       />
                     ))}
-
                     {/* Reset All Button - only show when filters are active */}
                     {filters.some(filter => filter.selectedValues.length > 0) && (
                       <Button
@@ -291,7 +274,6 @@ function DataTable({
                   </div>
                 )}
               </div>
-
               {/* Right Side - Table Controls */}
               {showControls && searchConfig?.table && (
                 <div className="hidden sm:flex items-center gap-2">
@@ -379,7 +361,6 @@ function DataTable({
           </div>
         </div>
       )}
-
       {/* Table container with content-fitted height */}
       <div className="w-full flex flex-col mb-2 relative" data-table-container>
         {isLoading ? (
@@ -409,7 +390,6 @@ function DataTable({
     </div>
   )
 }
-
 // Fixed Footer Component
 function DataTableFooter({ 
   pagination, 
@@ -421,7 +401,6 @@ function DataTableFooter({
   footerContent?: React.ReactNode
 }) {
   if (!pagination && !footerLabel && !footerContent) return null
-
   return (
     <div className="px-2 lg:px-4 py-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 w-full">
@@ -508,7 +487,6 @@ function DataTableFooter({
     </div>
   )
 }
-
 // DataTable Selection Header component
 const DataTableSelectionHeader = React.forwardRef<HTMLTableSectionElement, {
   selectedCount: number
@@ -598,7 +576,6 @@ const DataTableSelectionHeader = React.forwardRef<HTMLTableSectionElement, {
   )
 })
 DataTableSelectionHeader.displayName = "DataTableSelectionHeader"
-
 // DataTable Header component
 const DataTableHeader = React.forwardRef<HTMLTableSectionElement, DataTableHeaderProps>(
   ({ children, className }, ref) => {
@@ -612,7 +589,6 @@ const DataTableHeader = React.forwardRef<HTMLTableSectionElement, DataTableHeade
   }
 )
 DataTableHeader.displayName = "DataTableHeader"
-
 // DataTable Body component
 function DataTableBody({ children, className }: DataTableBodyProps) {
   return (
@@ -621,7 +597,6 @@ function DataTableBody({ children, className }: DataTableBodyProps) {
     </tbody>
   )
 }
-
 // DataTable Row component
 function DataTableRow({ children, className, selected, onClick }: DataTableRowProps) {
   return (
@@ -638,7 +613,6 @@ function DataTableRow({ children, className, selected, onClick }: DataTableRowPr
     </tr>
   )
 }
-
 // DataTable Head component
 function DataTableHead({ children, className, width }: DataTableHeadProps) {
   return (
@@ -651,7 +625,6 @@ function DataTableHead({ children, className, width }: DataTableHeadProps) {
     </th>
   )
 }
-
 // DataTable Cell component
 function DataTableCell({ 
   children, 
@@ -668,7 +641,6 @@ function DataTableCell({
     if (!autoHighlight || !columnId) {
       return children
     }
-
     // Helper function to recursively process children and highlight text content
     const processChildren = (children: React.ReactNode): React.ReactNode => {
       return React.Children.map(children, (child) => {
@@ -697,10 +669,8 @@ function DataTableCell({
         return child
       })
     }
-
     return processChildren(children)
   }, [children, autoHighlight, columnId, highlightClassName])
-
   const handleClick = (event: React.MouseEvent) => {
     // Only handle click if the cell is clickable and onClick is provided
     if (clickable && onClick) {
@@ -715,7 +685,6 @@ function DataTableCell({
       }
     }
   }
-
   return (
     <td 
       className={cn(
@@ -730,9 +699,6 @@ function DataTableCell({
     </td>
   )
 }
-
-
-
 export {
   DataTable,
   DataTableHeader,

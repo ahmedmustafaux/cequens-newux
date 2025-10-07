@@ -1,5 +1,3 @@
-"use client"
-
 import { Link } from "react-router-dom"
 import { useState } from "react"
 import { Bell, Check, X } from "lucide-react"
@@ -15,7 +13,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useNotificationContext } from "@/contexts/notification-context"
-
 // Props for the NotificationBell component
 interface NotificationBellProps {
   // Optional props for customization
@@ -24,7 +21,6 @@ interface NotificationBellProps {
   viewAllLinkHref?: string
   isLoading?: boolean
 }
-
 export function NotificationBell({
   className = "",
   showViewAllLink = true,
@@ -64,7 +60,6 @@ export function NotificationBell({
     if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`
     return `${Math.floor(diffInMinutes / 1440)}d ago`
   }
-
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
@@ -171,7 +166,6 @@ export function NotificationBell({
     </DropdownMenu>
   )
 }
-
 // Re-export the Notification type and useNotifications hook for backward compatibility
 export type { Notification } from "@/contexts/notification-context"
 export { useNotifications } from "@/contexts/notification-context"

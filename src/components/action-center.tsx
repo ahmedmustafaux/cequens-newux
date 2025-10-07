@@ -1,5 +1,3 @@
-"use client"
-
 import React, { useState, useEffect, useRef } from 'react'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { 
@@ -19,14 +17,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { mockContacts } from '@/data/mock-data'
 import { cn } from '@/lib/utils'
-
 interface SearchItem {
   id: string
   title: string
   description: string
   type: 'contact' | 'page'
 }
-
 interface ActionItem {
   id: string
   title: string
@@ -36,14 +32,12 @@ interface ActionItem {
   category: 'search' | 'action' | 'navigation'
   action: () => void
 }
-
 interface ActionCenterProps {
   isOpen: boolean
   onClose: () => void
   searchValue: string
   onSearchChange: (value: string) => void
 }
-
 export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: ActionCenterProps) {
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -133,9 +127,7 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
       }
     }
   ]
-
   const allActions = [...quickActions]
-
   const filteredActions = query.trim()
     ? allActions.filter(action => {
         const searchTerm = query.toLowerCase()
@@ -144,7 +136,6 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
                action.category.toLowerCase().includes(searchTerm)
       })
     : allActions
-
   // Contacts search (top 5)
   const filteredContacts = query.trim()
     ? mockContacts
@@ -155,21 +146,16 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
         })
         .slice(0, 5)
     : []
-
   // Hide contacts before searching
   const displayedContacts = query.trim() ? filteredContacts : []
-
   // Removed auto-focus behavior
-
   useEffect(() => {
     setSelectedIndex(-1)
   }, [query])
-
   // Reset local query when dialog opens
   useEffect(() => {
     if (isOpen) setQuery("")
   }, [isOpen])
-
   // Function to save search result
   const saveSearchResult = (item: any, searchQuery: string) => {
     if (!item) return
@@ -181,7 +167,6 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
       type: 'contact' | 'action' | 'search'
       originalItem?: any
     }
-
     // Handle contacts
     if ('phone' in item) {
       resultItem = {
@@ -214,16 +199,13 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
         type: 'search'
       }
     }
-
     setLatestSearches(prev => {
       // Remove if already exists and add to front
       const filtered = prev.filter(existing => existing.id !== resultItem.id)
       return [resultItem, ...filtered].slice(0, 5) // Keep only last 5 searches
     })
   }
-
   
-
   const scrollSelectedIntoView = (index: number) => {
     if (!contentRef.current || index < 0) return
     
@@ -231,15 +213,12 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
     const recentSearchesCount = !query.trim() ? Math.min(3, latestSearches.length) : 0
     const totalItems = recentSearchesCount + displayedContacts.length + filteredActions.length
     if (index >= totalItems) return
-
     // Find the selected item element
     const selectedElement = contentRef.current.querySelector(`[data-item-index="${index}"]`) as HTMLElement
     if (!selectedElement) return
-
     const container = contentRef.current
     const containerRect = container.getBoundingClientRect()
     const elementRect = selectedElement.getBoundingClientRect()
-
     // Check if element is above viewport
     if (elementRect.top < containerRect.top) {
       selectedElement.scrollIntoView({ block: 'start', behavior: 'smooth' })
@@ -249,7 +228,6 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
       selectedElement.scrollIntoView({ block: 'end', behavior: 'smooth' })
     }
   }
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     const recentSearchesCount = !query.trim() ? Math.min(3, latestSearches.length) : 0
     const contactsCount = displayedContacts.length
@@ -269,7 +247,6 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
         ? (currentIndex - 1 + totalItems) % totalItems 
         : (currentIndex + 1) % totalItems;
     }
-
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault()
@@ -296,26 +273,21 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
             handleLatestSearchClick(searchResult)
             return
           }
-
           // Adjust index for contacts/actions when recent searches are present
           const adjustedIndex = query.trim() ? selectedIndex : selectedIndex - recentSearchesCount
           const allItems = [...displayedContacts, ...filteredActions]
           const selectedItem = allItems[adjustedIndex]
-
           if (!selectedItem) return
-
           // Save the search result
           if (query.trim()) {
             saveSearchResult(selectedItem, query)
           }
-
           // Handle contacts
           if ('phone' in selectedItem) {
             navigate(`/contacts/${selectedItem.id}`)
             onClose()
             return
           }
-
           // Handle quick actions
           if (selectedItem.action) {
             selectedItem.action()
@@ -327,7 +299,6 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
         break
     }
   }
-
   const handleLatestSearchClick = (searchResult: any) => {
     if (searchResult.type === 'contact' && searchResult.originalItem) {
       navigate(`/contacts/${searchResult.originalItem.id}`)
@@ -338,7 +309,6 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
       setQuery(searchResult.title)
     }
   }
-
   const handleItemClick = (item: any, index: number) => {
     setSelectedIndex(index)
     
@@ -359,13 +329,11 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
       onClose()
       return
     }
-
     // Handle quick actions
     if (item.action) {
       item.action()
     }
   }
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-xl p-0 gap-0 overflow-hidden h-[600px] flex flex-col bg-background border" showCloseButton={false}>
@@ -430,7 +398,6 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
             </div>
           </div>
         </div>
-
         {/* 2. Content with reduced padding and overflow-auto */}
         <div ref={contentRef} className="p-3 flex-1 overflow-y-auto space-y-1.5">
           {/* Latest Searches - show when no query */}
@@ -486,7 +453,6 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
               </div>
             </motion.div>
           )}
-
           <AnimatePresence>
             {displayedContacts.length > 0 && (
               <motion.div
@@ -525,9 +491,7 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
                 </div>
               </motion.div>
             )}
-
           </AnimatePresence>
-
           <AnimatePresence>
             {filteredActions.length > 0 && (
               <motion.div
@@ -567,7 +531,6 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
               </motion.div>
             )}
           </AnimatePresence>
-
           {query.trim() && (displayedContacts.length === 0) && filteredActions.length === 0 && (
             <div className="text-center py-4 text-muted-foreground">
               <Search className="h-6 w-6 mx-auto mb-1.5 opacity-50" />
@@ -575,7 +538,6 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
             </div>
           )}
         </div>
-
         {/* 3. Footer with reduced padding */}
         <div className="px-3 py-4 border-t bg-background flex items-center justify-between text-xs text-muted-foreground flex-shrink-0">
           <div className="flex items-center gap-4">

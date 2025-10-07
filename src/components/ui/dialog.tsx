@@ -1,36 +1,28 @@
-"use client"
-
 import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { XIcon } from "lucide-react"
-
 import { cn } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
-
 function Dialog({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Root>) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />
 }
-
 function DialogTrigger({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
   return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
 }
-
 function DialogPortal({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Portal>) {
   return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
 }
-
 function DialogClose({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Close>) {
   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
 }
-
 function DialogOverlay({
   className,
   ...props
@@ -46,7 +38,6 @@ function DialogOverlay({
     />
   )
 }
-
 function DialogContent({
   className,
   children,
@@ -80,7 +71,6 @@ function DialogContent({
     </DialogPortal>
   )
 }
-
 function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -90,7 +80,6 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
     />
   )
 }
-
 function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -103,7 +92,6 @@ function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
     />
   )
 }
-
 function DialogTitle({
   className,
   ...props
@@ -116,7 +104,6 @@ function DialogTitle({
     />
   )
 }
-
 function DialogDescription({
   className,
   ...props
@@ -129,7 +116,6 @@ function DialogDescription({
     />
   )
 }
-
 function DialogSkeleton({ 
   className, 
   ...props 
@@ -159,7 +145,6 @@ function DialogSkeleton({
     </div>
   )
 }
-
 export {
   Dialog,
   DialogClose,

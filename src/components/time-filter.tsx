@@ -1,5 +1,3 @@
-"use client"
-
 import * as React from "react"
 import { CalendarIcon, Check } from "lucide-react"
 import { format } from "date-fns"
@@ -19,7 +17,6 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@/components/ui/toggle-group"
-
 interface TimeFilterProps {
   value: string | DateRange | undefined
   onValueChange: (value: string | DateRange | undefined) => void
@@ -27,7 +24,6 @@ interface TimeFilterProps {
   isLoading?: boolean
   mode?: "simple" | "advanced" // New prop to control complexity
 }
-
 export function TimeFilter({ 
   value, 
   onValueChange, 
@@ -45,11 +41,9 @@ export function TimeFilter({
     }
     return undefined
   })
-
   // Temporary state for pending changes in advanced mode
   const [tempDateRange, setTempDateRange] = React.useState<DateRange | undefined>(dateRange)
   const [isOpen, setIsOpen] = React.useState(false)
-
   // Convert DateRange to string for simple mode
   const stringValue = React.useMemo(() => {
     if (mode === "simple") {
@@ -57,7 +51,6 @@ export function TimeFilter({
     }
     return "30d"
   }, [value, mode])
-
   // Helper function to convert string to DateRange
   function convertStringToDateRange(timeRange: string): DateRange {
     const now = new Date()
@@ -84,7 +77,6 @@ export function TimeFilter({
         }
     }
   }
-
   // Helper function to convert DateRange to string
   function convertDateRangeToString(range: DateRange | undefined): string {
     if (!range?.from || !range?.to) return "30d"
@@ -97,7 +89,6 @@ export function TimeFilter({
     if (daysDiff <= 90) return "90d"
     return "90d"
   }
-
   // Handle date range changes in advanced mode
   const handleDateRangeChange = (newRange: DateRange | undefined) => {
     if (mode === "advanced") {
@@ -110,20 +101,17 @@ export function TimeFilter({
       onValueChange(stringValue)
     }
   }
-
   // Handle applying the temporary date range
   const handleApply = () => {
     setDateRange(tempDateRange)
     onValueChange(tempDateRange)
     setIsOpen(false)
   }
-
   // Handle canceling changes
   const handleCancel = () => {
     setTempDateRange(dateRange)
     setIsOpen(false)
   }
-
   // Reset temporary state when popover opens
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open)
@@ -131,21 +119,18 @@ export function TimeFilter({
       setTempDateRange(dateRange)
     }
   }
-
   // Handle string value changes in simple mode
   const handleStringValueChange = (newValue: string) => {
     if (mode === "simple") {
       onValueChange(newValue)
     }
   }
-
   // Helper function to check which shortcut is currently active
   const getActiveShortcut = React.useMemo(() => {
     if (mode === "simple") return null
     
     const currentRange = isOpen ? tempDateRange : dateRange
     if (!currentRange?.from || !currentRange?.to) return null
-
     const normalizeDate = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate())
     
     const currentFrom = normalizeDate(currentRange.from)
@@ -196,7 +181,6 @@ export function TimeFilter({
     
     return null
   }, [dateRange, tempDateRange, isOpen, mode])
-
   // Predefined date range shortcuts
   const shortcuts = [
     {
@@ -261,7 +245,6 @@ export function TimeFilter({
       },
     },
   ]
-
   if (isLoading) {
     return (
       <div className={className}>
@@ -269,7 +252,6 @@ export function TimeFilter({
       </div>
     )
   }
-
   // Simple mode - original TimeFilter behavior
   if (mode === "simple") {
     return (
@@ -311,7 +293,6 @@ export function TimeFilter({
       </div>
     )
   }
-
   // Advanced mode - rich date range picker
   return (
     <div className={className}>

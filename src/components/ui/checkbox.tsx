@@ -1,16 +1,11 @@
-"use client"
-
 import * as React from "react"
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox"
 import { CheckIcon } from "lucide-react"
-
 import { cn } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
-
 interface CheckboxProps extends React.ComponentProps<typeof CheckboxPrimitive.Root> {
   containerClickable?: boolean
 }
-
 function Checkbox({
   className,
   containerClickable = false,
@@ -24,7 +19,6 @@ function Checkbox({
       props.onClick(event)
     }
   }
-
   return (
     <CheckboxPrimitive.Root
       data-slot="checkbox"
@@ -45,7 +39,6 @@ function Checkbox({
     </CheckboxPrimitive.Root>
   )
 }
-
 function CheckboxSkeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <Skeleton 
@@ -54,5 +47,4 @@ function CheckboxSkeleton({ className, ...props }: React.ComponentProps<"div">) 
     />
   )
 }
-
 export { Checkbox, CheckboxSkeleton }

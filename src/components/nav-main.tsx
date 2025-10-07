@@ -1,9 +1,6 @@
-"use client"
-
 import { useLocation } from "react-router-dom"
 import { type Icon, IconChevronDown, IconChevronRight } from "@tabler/icons-react"
 import { useState, useEffect } from "react"
-
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -15,7 +12,6 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
 import { useNavigationContext } from "@/hooks/use-navigation-context"
-
 export function NavMain({
   items,
 }: {
@@ -57,12 +53,10 @@ export function NavMain({
         : [...prev, title]
     )
   }
-
   const handleNavigation = (e: React.MouseEvent, url: string) => {
     e.preventDefault()
     navigateTo(url)
   }
-
   
   return (
     <SidebarGroup>

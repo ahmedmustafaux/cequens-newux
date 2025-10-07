@@ -1,18 +1,13 @@
-"use client"
-
 import * as React from "react"
 import * as TabsPrimitive from "@radix-ui/react-tabs"
-
 import { cn } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
-
 interface TabsProps extends React.ComponentProps<typeof TabsPrimitive.Root> {
   isLoading?: boolean
   loadingTabCount?: number
   showContentSkeleton?: boolean
   skeletonComponent?: React.ReactNode
 }
-
 function Tabs({
   className,
   isLoading = false,
@@ -59,7 +54,6 @@ function Tabs({
       </div>
     )
   }
-
   return (
     <TabsPrimitive.Root
       data-slot="tabs"
@@ -70,7 +64,6 @@ function Tabs({
     </TabsPrimitive.Root>
   )
 }
-
 function TabsList({
   className,
   ...props
@@ -86,7 +79,6 @@ function TabsList({
     />
   )
 }
-
 function TabsTrigger({
   className,
   ...props
@@ -102,7 +94,6 @@ function TabsTrigger({
     />
   )
 }
-
 function TabsContent({
   className,
   ...props
@@ -120,5 +111,4 @@ function TabsContent({
     />
   )
 }
-
 export { Tabs, TabsList, TabsTrigger, TabsContent }

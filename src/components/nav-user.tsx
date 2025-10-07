@@ -1,5 +1,3 @@
-"use client"
-
 import {
   IconCreditCard,
   IconDotsVertical,
@@ -8,7 +6,6 @@ import {
   IconUserCircle,
 } from "@tabler/icons-react"
 import { useAuth } from "@/hooks/use-auth"
-
 import {
   Avatar,
   AvatarFallback,
@@ -29,7 +26,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-
 export function NavUser({
   user,
 }: {
@@ -51,7 +47,6 @@ export function NavUser({
       .toUpperCase()
       .slice(0, 2) || 'U'
   }
-
   return (
     <SidebarMenu>
       <SidebarMenuItem>

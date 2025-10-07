@@ -1,7 +1,4 @@
-"use client"
-
 import React, { createContext, useContext, useState, ReactNode } from "react"
-
 // Notification type definition
 export interface Notification {
   id: string
@@ -13,7 +10,6 @@ export interface Notification {
   timestamp: Date
   read: boolean
 }
-
 // Context type definition
 interface NotificationContextType {
   notifications: Notification[]
@@ -24,10 +20,8 @@ interface NotificationContextType {
   clearAll: () => void
   removeNotification: (id: string) => void
 }
-
 // Create the context
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined)
-
 // Provider component
 interface NotificationProviderProps {
   children: ReactNode
@@ -39,7 +33,6 @@ interface NotificationProviderProps {
     type: 'success' | 'error' | 'info' | 'warning'
   }>
 }
-
 export function NotificationProvider({
   children,
   maxNotifications = 10
@@ -201,7 +194,6 @@ export function NotificationProvider({
     </NotificationContext.Provider>
   )
 }
-
 // Custom hook to use the notification context
 export function useNotificationContext() {
   const context = useContext(NotificationContext)
@@ -210,7 +202,6 @@ export function useNotificationContext() {
   }
   return context
 }
-
 // Legacy hook for backward compatibility
 export function useNotifications() {
   const context = useNotificationContext()

@@ -1,5 +1,3 @@
-"use client"
-
 import * as React from "react"
 import { ChevronDown, Check, Search, X, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -20,12 +18,10 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-
 interface FilterOption {
   value: string
   label: string
 }
-
 interface FilterSelectProps {
   placeholder: string
   options: FilterOption[]
@@ -40,7 +36,6 @@ interface FilterSelectProps {
   searchQuery?: string
   filteredOptions?: FilterOption[]
 }
-
 export function FilterSelect({
   placeholder,
   options,
@@ -63,18 +58,15 @@ export function FilterSelect({
       : [...selectedValues, value]
     onSelectionChange(newSelection)
   }
-
   const getButtonText = () => {
     // Always show the default placeholder text (e.g., "Channels", "Status")
     return placeholder
   }
-
   const removeFilter = (value: string, e: React.MouseEvent) => {
     e.stopPropagation()
     const newSelection = selectedValues.filter(v => v !== value)
     onSelectionChange(newSelection)
   }
-
   return (
     <Popover>
       <PopoverTrigger asChild>

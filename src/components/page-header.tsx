@@ -1,5 +1,3 @@
-"use client"
-
 import { Link, useLocation } from "react-router-dom"
 import React, { ReactNode } from "react"
 import { Button } from "@/components/ui/button"
@@ -37,13 +35,11 @@ import {
 } from "@/components/ui/input-group"
 import { ActionCenter } from "@/components/action-center"
 import { useIsMobile } from "@/hooks/use-mobile"
-
 interface BreadcrumbItem {
   label: string
   href: string
   isCurrent: boolean
 }
-
 // Action button configuration
 interface ActionButton {
   label: string
@@ -54,7 +50,6 @@ interface ActionButton {
   disabled?: boolean
   icon?: ReactNode
 }
-
 // Main page header props
 interface PageHeaderProps {
   // Basic content
@@ -94,7 +89,6 @@ interface PageHeaderProps {
   // Responsive behavior
   stackOnMobile?: boolean
 }
-
 export function PageHeader({
   // Basic content
   title,
@@ -236,7 +230,6 @@ export function PageHeader({
       </Button>
     )
   }
-
   // Loading state
   if (isLoading) {
     return (
@@ -300,7 +293,6 @@ export function PageHeader({
                 <Skeleton className="h-4 w-20 rounded-sm" />
               </div>
             </motion.div>
-
             {/* Center - Search Bar skeleton (Hidden on mobile, absolute positioning for perfect centering on desktop) */}
             {!isMobile && (
               <motion.div 
@@ -330,7 +322,6 @@ export function PageHeader({
         </motion.header>
       )
     }
-
     return (
       <>
         <header className="flex h-(--header-height) shrink-0 items-center border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) relative max-w-full overflow-x-hidden rounded-t-xl overflow-hidden">
@@ -379,7 +370,6 @@ export function PageHeader({
                 )
               )}
             </div>
-
             {/* Center - Search Bar (Hidden on mobile, absolute positioning for perfect centering on desktop) */}
             {!isMobile && (
               <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl px-4 lg:px-6 pointer-events-none">
@@ -531,7 +521,6 @@ export function PageHeader({
     </div>
   )
 }
-
 // Legacy component for backward compatibility
 export function PageHeaderWithFilters({ 
   title, 
@@ -557,7 +546,6 @@ export function PageHeaderWithFilters({
     />
   )
 }
-
 export function PageHeaderWithActions({ 
   title, 
   description, 
@@ -581,7 +569,6 @@ export function PageHeaderWithActions({
     />
   )
 }
-
 // Profile Header Variant - with back button and avatar
 interface PageHeaderProfileProps {
   title: string
@@ -596,7 +583,6 @@ interface PageHeaderProfileProps {
   className?: string
   isLoading?: boolean
 }
-
 export function PageHeaderProfile({
   title,
   description,
@@ -645,7 +631,6 @@ export function PageHeaderProfile({
       </motion.div>
     )
   }
-
   return (
     <div className={`flex flex-col gap-4 px-6 py-6 md:flex-row md:items-end md:justify-between ${className}`}>
       {/* Left side - Back button, Avatar, Title and Description */}

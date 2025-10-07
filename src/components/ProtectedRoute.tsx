@@ -1,5 +1,3 @@
-"use client"
-
 import { useAuth } from "@/hooks/use-auth"
 import { Navigate, useLocation } from "react-router-dom"
 import { ReactNode } from "react"
