@@ -23,7 +23,7 @@ import { useAuth } from "@/hooks/use-auth"
 import { validateSignupForm, validateEmail, validateName, validatePassword, validateConfirmPassword, validateTermsAgreement, isFormValid, type FieldValidation } from "@/lib/validation"
 import { ErrorMessage } from "@/components/ui/error-message"
 import { PasswordStrength } from "@/components/ui/password-strength"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { getLogoAltText, getWelcomeMessage, getJoinMessage, getDemoCredentials, getAppName } from "@/lib/config"
 import { smoothTransition, fadeVariants, pageVariants, directionalTabVariants } from "@/lib/transitions"
 
@@ -754,7 +754,7 @@ export default function SignupPage() {
                 </div>
               </div>
               
-              {/* Partners Section */}
+              {/* Partners Section with Infinite Scrolling - Single Row */}
               <div className="relative z-10 text-gray-800 mt-auto px-4 pb-4">
                 <h3 className="text-xs uppercase text-gray-400 font-medium mb-6 text-center">OUR PARTNERS</h3>
                 <div className="relative overflow-hidden">
@@ -762,43 +762,94 @@ export default function SignupPage() {
                   <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-100 to-transparent z-10"></div>
                   <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-100 to-transparent z-10"></div>
                   
-                  {/* Partners logos - static */}
-                  <div className="flex items-center justify-center">
-                    {/* Partners logos (same as before) */}
-                    {/* Meta */}
-                    <div className="flex-shrink-0 mx-8">
-                      <div className="w-28 h-12 flex items-center justify-center">
-                        <img src="/logos/meta.svg" alt="Meta" className="max-h-8 max-w-24 object-contain" />
+                  {/* Single row with infinite scroll */}
+                  <div className="overflow-hidden">
+                    <motion.div
+                      className="flex"
+                      animate={{ x: [0, -1080] }}
+                      transition={{
+                        x: {
+                          repeat: Infinity,
+                          repeatType: "loop",
+                          duration: 30,
+                          ease: "linear",
+                        },
+                      }}
+                    >
+                      {/* First set of logos */}
+                      <div className="flex-shrink-0 mx-10">
+                        <div className="h-10 flex items-center justify-center">
+                          <img src="/logos/meta.svg" alt="Meta" className="h-5 w-auto" />
+                        </div>
                       </div>
-                    </div>
-                    
-                    {/* Microsoft */}
-                    <div className="flex-shrink-0 mx-8">
-                      <div className="w-28 h-12 flex items-center justify-center">
-                        <img src="/logos/microsoft.svg" alt="Microsoft" className="max-h-8 max-w-24 object-contain" />
+                      
+                      <div className="flex-shrink-0 mx-10">
+                        <div className="h-10 flex items-center justify-center">
+                          <img src="/logos/microsoft.svg" alt="Microsoft" className="h-5 w-auto" />
+                        </div>
                       </div>
-                    </div>
-                    
-                    {/* AWS */}
-                    <div className="flex-shrink-0 mx-8">
-                      <div className="w-28 h-12 flex items-center justify-center">
-                        <img src="/logos/aws.svg" alt="AWS" className="max-h-6 max-w-20 object-contain" />
+                      
+                      <div className="flex-shrink-0 mx-10">
+                        <div className="h-10 flex items-center justify-center">
+                          <img src="/logos/aws.svg" alt="AWS" className="h-6 w-auto" />
+                        </div>
                       </div>
-                    </div>
-                    
-                    {/* Google */}
-                    <div className="flex-shrink-0 mx-8">
-                      <div className="w-28 h-12 flex items-center justify-center">
-                        <img src="/logos/google.svg" alt="Google" className="max-h-8 max-w-24 object-contain" />
+                      
+                      <div className="flex-shrink-0 mx-10">
+                        <div className="h-10 flex items-center justify-center">
+                          <img src="/logos/google.svg" alt="Google" className="h-6 w-auto" />
+                        </div>
                       </div>
-                    </div>
-                    
-                    {/* MasterCard */}
-                    <div className="flex-shrink-0 mx-8">
-                      <div className="w-28 h-12 flex items-center justify-center">
-                        <img src="/logos/mastercard.svg" alt="MasterCard" className="max-h-8 max-w-24 object-contain" />
+                      
+                      <div className="flex-shrink-0 mx-10">
+                        <div className="h-10 flex items-center justify-center">
+                          <img src="/logos/mastercard.svg" alt="MasterCard" className="h-7 w-auto" />
+                        </div>
                       </div>
-                    </div>
+                      
+                      <div className="flex-shrink-0 mx-10">
+                        <div className="h-10 flex items-center justify-center">
+                          <img src="/logos/zain.svg" alt="Zain" className="h-7 w-auto" />
+                        </div>
+                      </div>
+                      
+                      {/* Duplicate set for seamless looping */}
+                      <div className="flex-shrink-0 mx-10">
+                        <div className="h-10 flex items-center justify-center">
+                          <img src="/logos/meta.svg" alt="Meta" className="h-5 w-auto" />
+                        </div>
+                      </div>
+                      
+                      <div className="flex-shrink-0 mx-10">
+                        <div className="h-10 flex items-center justify-center">
+                          <img src="/logos/microsoft.svg" alt="Microsoft" className="h-5 w-auto" />
+                        </div>
+                      </div>
+                      
+                      <div className="flex-shrink-0 mx-10">
+                        <div className="h-10 flex items-center justify-center">
+                          <img src="/logos/aws.svg" alt="AWS" className="h-6 w-auto" />
+                        </div>
+                      </div>
+                      
+                      <div className="flex-shrink-0 mx-10">
+                        <div className="h-10 flex items-center justify-center">
+                          <img src="/logos/google.svg" alt="Google" className="h-6 w-auto" />
+                        </div>
+                      </div>
+                      
+                      <div className="flex-shrink-0 mx-10">
+                        <div className="h-10 flex items-center justify-center">
+                          <img src="/logos/mastercard.svg" alt="MasterCard" className="h-7 w-auto" />
+                        </div>
+                      </div>
+                      
+                      <div className="flex-shrink-0 mx-10">
+                        <div className="h-10 flex items-center justify-center">
+                          <img src="/logos/zain.svg" alt="Zain" className="h-7 w-auto" />
+                        </div>
+                      </div>
+                    </motion.div>
                   </div>
                 </div>
               </div>
