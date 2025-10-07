@@ -348,7 +348,7 @@ export default function LoginPage() {
 
   return (
     <>
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden w-full max-w-md mx-auto h-full max-h-[calc(100vh-2rem)]">
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden w-full max-w-lg mx-auto h-full max-h-[calc(100vh-2rem)]">
         <div className="h-full">
             {/* Form Panel */}
             <motion.div 
