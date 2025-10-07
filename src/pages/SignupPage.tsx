@@ -636,8 +636,13 @@ export default function SignupPage() {
 
           {/* Right Panel Wrapper */}
           <div className="hidden md:block m-2 border rounded-xl overflow-hidden relative">
-            {/* Right Panel Content */}
-            <div className="bg-gray-50 flex flex-col justify-between relative overflow-hidden h-full">
+          <motion.div 
+            className="bg-gray-50 flex flex-col justify-between relative overflow-hidden h-full"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={smoothTransition}
+          >
 
               {/* Small top margin for spacing */}
               <div className="pt-16"></div>
@@ -855,7 +860,7 @@ export default function SignupPage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
       </div>
     </div>
