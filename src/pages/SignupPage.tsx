@@ -111,21 +111,19 @@ export default function SignupPage() {
     // Set direction based on target step
     setDirection(targetStep > activeStoryStep ? 'forward' : 'backward');
     
-    // If going back to a previous step, reset its progress by updating its key
+    // Reset progress key for the target step to restart animation
+    setProgressKeys(prev => ({
+      ...prev,
+      [targetStep]: (prev[targetStep] || 0) + 1
+    }));
+    
+    // When going back, remove all steps >= targetStep from completed steps
     if (targetStep < activeStoryStep) {
-      setProgressKeys(prev => ({
-        ...prev,
-        [targetStep]: (prev[targetStep] || 0) + 1
-      }));
-      
-      // Remove the target step from completed steps if it's there
-      setCompletedSteps(prev => prev.filter(s => s !== targetStep));
-    } else {
-      // Update completed steps for forward navigation
-      if (targetStep > 0) {
-        const newCompleted = Array.from({ length: targetStep }, (_, i) => i);
-        setCompletedSteps(newCompleted);
-      }
+      setCompletedSteps(prev => prev.filter(s => s < targetStep));
+    } else if (targetStep > activeStoryStep) {
+      // For forward navigation, add all steps before the target to completed
+      const newCompleted = Array.from({ length: targetStep }, (_, i) => i);
+      setCompletedSteps(newCompleted);
     }
     
     // Log for debugging
@@ -648,38 +646,8 @@ export default function SignupPage() {
                 <div className="absolute bottom-20 right-20 w-28 h-28 bg-gray-300/30 rounded-full blur-xl"></div>
               </div>
               
-              {/* Instagram-style Story Progress Indicator */}
-              <div className="flex gap-2 justify-center mb-4 z-20 pt-4 px-4">
-                {storySteps.map((_, index) => (
-                  <div 
-                    key={index}
-                    className={`h-1 bg-gray-300 rounded-full flex-1 overflow-hidden`}
-                  >
-                    {index === activeStoryStep ? (
-                      // Active step - animate from 0 to 100% over 5 seconds
-                      <motion.div 
-                        key={`progress-${index}-${progressKeys[index] || 0}`}
-                        className="h-full bg-blue-500"
-                        initial={{ width: "0%" }}
-                        animate={{ width: "100%" }}
-                        transition={{ 
-                          duration: 5, 
-                          ease: "linear" 
-                        }}
-                      />
-                    ) : (
-                      // Inactive step - either 100% if completed or 0% if not
-                      <div 
-                        className="h-full bg-blue-500"
-                        style={{ 
-                          width: completedSteps.includes(index) ? "100%" : "0%",
-                          transition: "width 0.3s ease" 
-                        }}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
+              {/* Small top margin for spacing */}
+              <div className="pt-4"></div>
               
               {/* Visual Content */}
               <div className="flex-1 flex flex-col items-center justify-center z-10 mt-2 relative">
@@ -713,9 +681,9 @@ export default function SignupPage() {
                         {step.description}
                       </p>
                       
-                      {/* Navigation Arrows - Directly after description */}
+                      {/* Navigation Arrows with Carousel Indicator */}
                       {index === activeStoryStep && (
-                        <div className="flex justify-center space-x-4 mt-1">
+                        <div className="flex justify-center items-center space-x-3 mt-1">
                           <button 
                             type="button"
                             className="bg-white/80 rounded-full p-1 shadow-sm hover:bg-white cursor-pointer z-30"
@@ -731,6 +699,47 @@ export default function SignupPage() {
                           >
                             <ChevronLeft className="h-4 w-4 text-gray-700" />
                           </button>
+                          
+                          {/* Small Line Indicators */}
+                          <div className="flex space-x-1.5">
+                            {storySteps.map((_, idx) => (
+                              <button
+                                key={`line-${idx}`}
+                                type="button"
+                                className="relative h-1.5 w-8 rounded-full overflow-hidden"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  goToStep(idx);
+                                }}
+                                aria-label={`Go to slide ${idx + 1}`}
+                              >
+                                {/* Background line */}
+                                <div className="absolute inset-0 bg-gray-300 rounded-full"></div>
+                                
+                                {/* Filled line */}
+                                {idx === activeStoryStep ? (
+                                  <motion.div 
+                                    key={`progress-${idx}-${progressKeys[idx] || 0}`}
+                                    className="absolute inset-0 bg-blue-500 rounded-full origin-left"
+                                    initial={{ scaleX: 0 }}
+                                    animate={{ scaleX: 1 }}
+                                    transition={{ 
+                                      duration: 5, 
+                                      ease: "linear" 
+                                    }}
+                                  />
+                                ) : (
+                                  <div 
+                                    className="absolute inset-0 bg-blue-500 rounded-full origin-left"
+                                    style={{ 
+                                      transform: `scaleX(${completedSteps.includes(idx) ? 1 : 0})`,
+                                      transition: "transform 0.3s ease" 
+                                    }}
+                                  />
+                                )}
+                              </button>
+                            ))}
+                          </div>
                           
                           <button 
                             type="button"
