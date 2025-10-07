@@ -62,7 +62,7 @@ function DashboardContent({ children }: { children: ReactNode }) {
         <AppSidebar variant="inset" />
         <SidebarInset className="flex flex-1 flex-col bg-white m-0">
           {/* Sticky Header */}
-          <div className="sticky top-0 z-1 w-full bg-white/95 backdrop-blur-sm border-b border-border/40 rounded-t-xl overflow-hidden">
+          <div className="sticky top-0 z-1 w-full bg-white backdrop-blur-sm border-b border-border/40 rounded-t-xl overflow-hidden">
             <PageHeader
               showBreadcrumbs={true}
               showSearch={true}
