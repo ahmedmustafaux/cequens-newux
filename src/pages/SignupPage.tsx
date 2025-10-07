@@ -638,21 +638,14 @@ export default function SignupPage() {
           <div className="hidden md:block m-2 border rounded-xl overflow-hidden relative">
             {/* Right Panel Content */}
             <div className="bg-gray-50 flex flex-col justify-between relative overflow-hidden h-full">
-              {/* Background Elements */}
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-20 left-20 w-32 h-32 bg-gray-300/30 rounded-full blur-xl"></div>
-                <div className="absolute top-40 right-32 w-24 h-24 bg-gray-300/30 rounded-full blur-xl"></div>
-                <div className="absolute bottom-32 left-32 w-40 h-40 bg-gray-300/30 rounded-full blur-xl"></div>
-                <div className="absolute bottom-20 right-20 w-28 h-28 bg-gray-300/30 rounded-full blur-xl"></div>
-              </div>
-              
+
               {/* Small top margin for spacing */}
-              <div className="pt-4"></div>
+              <div className="pt-16"></div>
               
               {/* Visual Content */}
-              <div className="flex-1 flex flex-col items-center justify-center z-10 mt-2 relative">
+              <div className="flex-1 flex flex-col items-center justify-center relative">
                 {/* Image Placeholder - Container */}
-                <div className="w-full relative" style={{ minHeight: "250px" }}>
+                <div className="w-full relative">
                   {storySteps.map((step, index) => (
                     <div 
                       key={`image-${index}`}
@@ -764,7 +757,7 @@ export default function SignupPage() {
               </div>
               
               {/* Partners Section with Infinite Scrolling - Single Row */}
-              <div className="relative z-10 text-gray-800 mt-auto px-4 pb-4">
+              <div className="relative mt-auto pb-4">
                 <h3 className="text-xs uppercase text-gray-400 font-medium mb-6 text-center">OUR PARTNERS</h3>
                 <div className="relative overflow-hidden">
                   {/* Gradient overlays for smooth edges */}
