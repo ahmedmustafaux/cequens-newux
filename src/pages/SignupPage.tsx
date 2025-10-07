@@ -639,7 +639,7 @@ export default function SignupPage() {
           {/* Right Panel Wrapper */}
           <div className="hidden md:block m-2 border rounded-xl overflow-hidden relative">
             {/* Right Panel Content */}
-            <div className="bg-muted/80 flex flex-col justify-between relative overflow-hidden h-full">
+            <div className="bg-gray-50 flex flex-col justify-between relative overflow-hidden h-full">
               {/* Background Elements */}
               <div className="absolute inset-0 opacity-10">
                 <div className="absolute top-20 left-20 w-32 h-32 bg-gray-300/30 rounded-full blur-xl"></div>
