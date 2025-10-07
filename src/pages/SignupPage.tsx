@@ -1,7 +1,7 @@
 import * as React from "react"
 import { useState, useRef, useEffect } from "react"
 import { useNavigate, Link, useLocation } from "react-router-dom"
-import { Eye, EyeOff, Mail, Lock, User, Building, CheckCircle2, AlertCircle, ArrowRight, Shield } from "lucide-react"
+import { Eye, EyeOff, Mail, Lock, User, Building, CheckCircle2, AlertCircle, ArrowRight, Shield, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { 
   Field, 
@@ -25,7 +25,9 @@ import { ErrorMessage } from "@/components/ui/error-message"
 import { PasswordStrength } from "@/components/ui/password-strength"
 import { motion } from "framer-motion"
 import { getLogoAltText, getWelcomeMessage, getJoinMessage, getDemoCredentials, getAppName } from "@/lib/config"
-import { smoothTransition, fadeVariants, pageVariants } from "@/lib/transitions"
+import { smoothTransition, fadeVariants, pageVariants, directionalTabVariants } from "@/lib/transitions"
+
+// No StoryIndicator component needed anymore
 
 export default function SignupPage() {
   // Signup step
@@ -34,6 +36,105 @@ export default function SignupPage() {
   }
 
   const [currentStep, setCurrentStep] = useState<SignupStep>(SignupStep.FORM)
+  
+  // Story step for the right panel
+  const [activeStoryStep, setActiveStoryStep] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [autoplayFinished, setAutoplayFinished] = useState(false);
+  const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
+  const storySteps = [
+    {
+      image: "/visual/Image1.png",
+      title: "a place for everything",
+      description: "Communication, Marketing, Supporting and security in one dashboard."
+    },
+    {
+      image: "/visual/Image2.png",
+      title: "Seamless Integration",
+      description: "Connect with all your favorite platforms and services in one place."
+    },
+    {
+      image: "/visual/Image3.png",
+      title: "Powerful Analytics",
+      description: "Get insights and make data-driven decisions with comprehensive reports."
+    }
+  ];
+  
+  // Auto-rotate story steps with 5-second intervals, stopping after the 3rd step
+  useEffect(() => {
+    if (autoplayFinished) return; // Don't set up interval if autoplay is finished
+    
+    const interval = setInterval(() => {
+      setActiveStoryStep((prev) => {
+        // Mark current step as completed
+        setCompletedSteps(completed => {
+          // Only add to completed if not already there
+          if (!completed.includes(prev)) {
+            return [...completed, prev];
+          }
+          return completed;
+        });
+        
+        const nextStep = prev + 1;
+        
+        // If we've reached the end, stop autoplay
+        if (nextStep >= storySteps.length) {
+          setAutoplayFinished(true);
+          clearInterval(interval);
+          return prev; // Stay on the last step
+        }
+        
+        // Set direction to forward for auto-rotation
+        setDirection('forward');
+        
+        // Reset the progress key for the next step to ensure animation starts from 0
+        setProgressKeys(keys => ({
+          ...keys,
+          [nextStep]: (keys[nextStep] || 0) + 1
+        }));
+        
+        return nextStep;
+      });
+    }, 5000); // 5 seconds per image
+    
+    return () => clearInterval(interval);
+  }, [autoplayFinished, storySteps.length]);
+  
+  // Key to force animation restart when going back to a step
+  const [progressKeys, setProgressKeys] = useState<{[key: number]: number}>({});
+  
+  // Handle manual navigation between steps
+  const goToStep = (step: number) => {
+    // Ensure step is within bounds
+    const targetStep = Math.max(0, Math.min(step, storySteps.length - 1));
+    
+    // Set direction based on target step
+    setDirection(targetStep > activeStoryStep ? 'forward' : 'backward');
+    
+    // If going back to a previous step, reset its progress by updating its key
+    if (targetStep < activeStoryStep) {
+      setProgressKeys(prev => ({
+        ...prev,
+        [targetStep]: (prev[targetStep] || 0) + 1
+      }));
+      
+      // Remove the target step from completed steps if it's there
+      setCompletedSteps(prev => prev.filter(s => s !== targetStep));
+    } else {
+      // Update completed steps for forward navigation
+      if (targetStep > 0) {
+        const newCompleted = Array.from({ length: targetStep }, (_, i) => i);
+        setCompletedSteps(newCompleted);
+      }
+    }
+    
+    // Log for debugging
+    console.log(`Navigating from step ${activeStoryStep} to step ${targetStep}, direction: ${targetStep > activeStoryStep ? 'forward' : 'backward'}`);
+    
+    setActiveStoryStep(targetStep);
+    setAutoplayFinished(true); // Stop autoplay when manually navigating
+  };
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -201,7 +302,7 @@ export default function SignupPage() {
 
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden w-full max-w-6xl mx-auto h-full max-h-[calc(100vh-2rem)]">
-      <div className="grid grid-cols-1 lg:grid-cols-2 h-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 h-full">
           {/* Left Panel - White Background with Form */}
           <motion.div 
             className="bg-white flex items-center justify-center p-6 h-full"
@@ -535,111 +636,172 @@ export default function SignupPage() {
             </div>
           </motion.div>
 
-          {/* Right Panel Wrapper with Margins */}
-          <div className="p-4 hidden lg:block">
-            {/* Blue Background with Partners */}
-            <div className="bg-gray-100 flex flex-col justify-end p-4 relative overflow-hidden h-full rounded-2xl">
-            {/* Background Elements */}
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-20 left-20 w-32 h-32 bg-gray-300/30 rounded-full blur-xl"></div>
-              <div className="absolute top-40 right-32 w-24 h-24 bg-gray-300/30 rounded-full blur-xl"></div>
-              <div className="absolute bottom-32 left-32 w-40 h-40 bg-gray-300/30 rounded-full blur-xl"></div>
-              <div className="absolute bottom-20 right-20 w-28 h-28 bg-gray-300/30 rounded-full blur-xl"></div>
-            </div>
-            
-            {/* Partners Section */}
-            <div className="relative z-10 text-gray-800">
-              <h3 className="text-xs uppercase text-gray-400 font-medium mb-6 text-center">OUR PARTNERS</h3>
-              <div className="relative overflow-hidden">
-                {/* Gradient overlays for smooth edges */}
-                <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-100 to-transparent z-10"></div>
-                <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-100 to-transparent z-10"></div>
-                
-                {/* Animated partners */}
-                <motion.div 
-                  className="flex items-center"
-                  animate={{ x: [0, -600] }}
-                  transition={{ 
-                    duration: 20, 
-                    repeat: Infinity, 
-                    repeatType: "loop",
-                    ease: "linear" 
-                  }}
-                >
-                  {/* First set of logos */}
-                  {/* Meta */}
-                  <div className="flex-shrink-0 mx-8">
-                    <div className="w-28 h-12 flex items-center justify-center">
-                      <img src="/logos/meta.svg" alt="Meta" className="max-h-8 max-w-24 object-contain" />
-                    </div>
-                  </div>
-                  
-                  {/* Microsoft */}
-                  <div className="flex-shrink-0 mx-8">
-                    <div className="w-28 h-12 flex items-center justify-center">
-                      <img src="/logos/microsoft.svg" alt="Microsoft" className="max-h-8 max-w-24 object-contain" />
-                    </div>
-                  </div>
-                  
-                  {/* AWS */}
-                  <div className="flex-shrink-0 mx-8">
-                    <div className="w-28 h-12 flex items-center justify-center">
-                      <img src="/logos/aws.svg" alt="AWS" className="max-h-6 max-w-20 object-contain" />
-                    </div>
-                  </div>
-                  
-                  {/* Google */}
-                  <div className="flex-shrink-0 mx-8">
-                    <div className="w-28 h-12 flex items-center justify-center">
-                      <img src="/logos/google.svg" alt="Google" className="max-h-8 max-w-24 object-contain" />
-                    </div>
-                  </div>
-                  
-                  {/* MasterCard */}
-                  <div className="flex-shrink-0 mx-8">
-                    <div className="w-28 h-12 flex items-center justify-center">
-                      <img src="/logos/mastercard.svg" alt="MasterCard" className="max-h-8 max-w-24 object-contain" />
-                    </div>
-                  </div>
-
-                  {/* Duplicate set for seamless loop */}
-                  {/* Meta */}
-                  <div className="flex-shrink-0 mx-8">
-                    <div className="w-28 h-12 flex items-center justify-center">
-                      <img src="/logos/meta.svg" alt="Meta" className="max-h-8 max-w-24 object-contain" />
-                    </div>
-                  </div>
-                  
-                  {/* Microsoft */}
-                  <div className="flex-shrink-0 mx-8">
-                    <div className="w-28 h-12 flex items-center justify-center">
-                      <img src="/logos/microsoft.svg" alt="Microsoft" className="max-h-8 max-w-24 object-contain" />
-                    </div>
-                  </div>
-                  
-                  {/* AWS */}
-                  <div className="flex-shrink-0 mx-8">
-                    <div className="w-28 h-12 flex items-center justify-center">
-                      <img src="/logos/aws.svg" alt="AWS" className="max-h-6 max-w-20 object-contain" />
-                    </div>
-                  </div>
-                  
-                  {/* Google */}
-                  <div className="flex-shrink-0 mx-8">
-                    <div className="w-28 h-12 flex items-center justify-center">
-                      <img src="/logos/google.svg" alt="Google" className="max-h-8 max-w-24 object-contain" />
-                    </div>
-                  </div>
-                  
-                  {/* MasterCard */}
-                  <div className="flex-shrink-0 mx-8">
-                    <div className="w-28 h-12 flex items-center justify-center">
-                      <img src="/logos/mastercard.svg" alt="MasterCard" className="max-h-8 max-w-24 object-contain" />
-                    </div>
-                  </div>
-                </motion.div>
+          {/* Right Panel Wrapper */}
+          <div className="hidden md:block m-2 border rounded-xl overflow-hidden relative">
+            {/* Right Panel Content */}
+            <div className="bg-gray-100 flex flex-col justify-between relative overflow-hidden h-full">
+              {/* Background Elements */}
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute top-20 left-20 w-32 h-32 bg-gray-300/30 rounded-full blur-xl"></div>
+                <div className="absolute top-40 right-32 w-24 h-24 bg-gray-300/30 rounded-full blur-xl"></div>
+                <div className="absolute bottom-32 left-32 w-40 h-40 bg-gray-300/30 rounded-full blur-xl"></div>
+                <div className="absolute bottom-20 right-20 w-28 h-28 bg-gray-300/30 rounded-full blur-xl"></div>
               </div>
-            </div>
+              
+              {/* Instagram-style Story Progress Indicator */}
+              <div className="flex gap-2 justify-center mb-4 z-20 pt-4 px-4">
+                {storySteps.map((_, index) => (
+                  <div 
+                    key={index}
+                    className={`h-1 bg-gray-300 rounded-full flex-1 overflow-hidden`}
+                  >
+                    {index === activeStoryStep ? (
+                      // Active step - animate from 0 to 100% over 5 seconds
+                      <motion.div 
+                        key={`progress-${index}-${progressKeys[index] || 0}`}
+                        className="h-full bg-blue-500"
+                        initial={{ width: "0%" }}
+                        animate={{ width: "100%" }}
+                        transition={{ 
+                          duration: 5, 
+                          ease: "linear" 
+                        }}
+                      />
+                    ) : (
+                      // Inactive step - either 100% if completed or 0% if not
+                      <div 
+                        className="h-full bg-blue-500"
+                        style={{ 
+                          width: completedSteps.includes(index) ? "100%" : "0%",
+                          transition: "width 0.3s ease" 
+                        }}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+              
+              {/* Visual Content */}
+              <div className="flex-1 flex flex-col items-center justify-center z-10 mt-2 relative">
+                {/* Image Placeholder - Container */}
+                <div className="w-full relative" style={{ minHeight: "250px" }}>
+                  {storySteps.map((step, index) => (
+                    <div 
+                      key={`image-${index}`}
+                      className={`w-full overflow-hidden ${index === activeStoryStep ? 'relative' : 'absolute opacity-0'}`}
+                    >
+                      <img 
+                        src={step.image} 
+                        alt={`Visual content ${index + 1}`} 
+                        className="w-full h-auto"
+                        style={{ objectFit: "cover" }}
+                      />
+                    </div>
+                  ))}
+                </div>
+            
+                
+                {/* Content - Container */}
+                <div className="w-full h-32 relative">
+                  {storySteps.map((step, index) => (
+                    <div 
+                      key={`content-${index}`}
+                      className={`absolute inset-0 flex flex-col justify-center w-full ${index === activeStoryStep ? 'opacity-100' : 'opacity-0'}`}
+                    >
+                      <h2 className="text-lg font-semibold mb-1 text-center">{step.title}</h2>
+                      <p className="text-gray-600 text-sm text-center px-8 mb-2">
+                        {step.description}
+                      </p>
+                      
+                      {/* Navigation Arrows - Directly after description */}
+                      {index === activeStoryStep && (
+                        <div className="flex justify-center space-x-4 mt-1">
+                          <button 
+                            type="button"
+                            className="bg-white/80 rounded-full p-1 shadow-sm hover:bg-white cursor-pointer z-30"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              console.log(`Left arrow clicked, current step: ${activeStoryStep}`);
+                              if (activeStoryStep > 0) {
+                                goToStep(activeStoryStep - 1);
+                              }
+                            }}
+                            disabled={activeStoryStep === 0}
+                            style={{ opacity: activeStoryStep === 0 ? 0.5 : 1 }}
+                          >
+                            <ChevronLeft className="h-4 w-4 text-gray-700" />
+                          </button>
+                          
+                          <button 
+                            type="button"
+                            className="bg-white/80 rounded-full p-1 shadow-sm hover:bg-white cursor-pointer z-30"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              console.log(`Right arrow clicked, current step: ${activeStoryStep}`);
+                              if (activeStoryStep < storySteps.length - 1) {
+                                goToStep(activeStoryStep + 1);
+                              }
+                            }}
+                            disabled={activeStoryStep === storySteps.length - 1}
+                            style={{ opacity: activeStoryStep === storySteps.length - 1 ? 0.5 : 1 }}
+                          >
+                            <ChevronRight className="h-4 w-4 text-gray-700" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Partners Section */}
+              <div className="relative z-10 text-gray-800 mt-auto px-4 pb-4">
+                <h3 className="text-xs uppercase text-gray-400 font-medium mb-6 text-center">OUR PARTNERS</h3>
+                <div className="relative overflow-hidden">
+                  {/* Gradient overlays for smooth edges */}
+                  <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-100 to-transparent z-10"></div>
+                  <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-100 to-transparent z-10"></div>
+                  
+                  {/* Partners logos - static */}
+                  <div className="flex items-center justify-center">
+                    {/* Partners logos (same as before) */}
+                    {/* Meta */}
+                    <div className="flex-shrink-0 mx-8">
+                      <div className="w-28 h-12 flex items-center justify-center">
+                        <img src="/logos/meta.svg" alt="Meta" className="max-h-8 max-w-24 object-contain" />
+                      </div>
+                    </div>
+                    
+                    {/* Microsoft */}
+                    <div className="flex-shrink-0 mx-8">
+                      <div className="w-28 h-12 flex items-center justify-center">
+                        <img src="/logos/microsoft.svg" alt="Microsoft" className="max-h-8 max-w-24 object-contain" />
+                      </div>
+                    </div>
+                    
+                    {/* AWS */}
+                    <div className="flex-shrink-0 mx-8">
+                      <div className="w-28 h-12 flex items-center justify-center">
+                        <img src="/logos/aws.svg" alt="AWS" className="max-h-6 max-w-20 object-contain" />
+                      </div>
+                    </div>
+                    
+                    {/* Google */}
+                    <div className="flex-shrink-0 mx-8">
+                      <div className="w-28 h-12 flex items-center justify-center">
+                        <img src="/logos/google.svg" alt="Google" className="max-h-8 max-w-24 object-contain" />
+                      </div>
+                    </div>
+                    
+                    {/* MasterCard */}
+                    <div className="flex-shrink-0 mx-8">
+                      <div className="w-28 h-12 flex items-center justify-center">
+                        <img src="/logos/mastercard.svg" alt="MasterCard" className="max-h-8 max-w-24 object-contain" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
       </div>
