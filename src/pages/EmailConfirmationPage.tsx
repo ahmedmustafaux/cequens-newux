@@ -75,15 +75,20 @@ export default function EmailConfirmationPage() {
     setCurrentStep(ConfirmationStep.SUCCESS)
     
     toast.success("Email verified successfully!", {
-      description: "Your email has been verified. Now we need to verify your phone number.",
+      description: "Your email has been verified. You will now be redirected to the signin page.",
       duration: 4000,
     })
     
     // Simulate final email verification
     await new Promise(resolve => setTimeout(resolve, 2000))
     
-    // Redirect to phone verification page with user data
-    navigate("/phone-verification", { state: { userData, from } })
+    // Redirect to signin page after email verification
+    navigate("/login", { 
+      state: { 
+        emailVerified: true,
+        userData 
+      } 
+    })
     
     setIsLoading(false)
   }
@@ -196,7 +201,7 @@ export default function EmailConfirmationPage() {
                 </div>
                 <h2 className="text-xl font-semibold mb-1">Email verified!</h2>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Your email has been successfully verified. Redirecting to phone verification...
+                  Your email has been successfully verified. Redirecting to signin page...
                 </p>
                 <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
                   <motion.div

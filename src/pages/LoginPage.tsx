@@ -41,6 +41,7 @@ import {
 import { motion } from "framer-motion"
 import { smoothTransition } from "@/lib/transitions"
 import { getLogoAltText, getAccountText, getDemoCredentials } from "@/lib/config"
+import { getTestUserByEmail } from "@/lib/test-users"
 
 // Helper function to mask email addresses
 const maskEmail = (email: string) => {
@@ -70,6 +71,21 @@ export default function LoginPage() {
   
   // Get the intended redirect path
   const from = location.state?.from?.pathname || "/"
+  
+  // Check if user came from email verification
+  const emailVerified = location.state?.emailVerified || false
+  const verifiedUserData = location.state?.userData
+  
+  // If user came from email verification, pre-fill the email
+  useEffect(() => {
+    if (emailVerified && verifiedUserData?.email) {
+      setEmail(verifiedUserData.email)
+      toast.info("Email verified", {
+        description: "Your email has been verified. Please sign in to continue.",
+        duration: 4000,
+      })
+    }
+  }, [emailVerified, verifiedUserData])
 
   // Demo credentials from config
   const demoCredentials = getDemoCredentials()
@@ -221,18 +237,50 @@ export default function LoginPage() {
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000))
 
-      // Check demo credentials
-      if (email === demoCredentials.email && password === demoCredentials.password) {
-        // Move to OTP step
-        setCurrentStep('otp')
-        setOtp("")
-        setErrors({})
-        setTouched({})
-        setGeneralError("")
-        // Set default verification contact to phone number
-        setVerificationContact("+20 010 **33")
-        // Start countdown for resend code
-        setResendCountdown(30)
+      // Get test user if email matches
+      const testUser = getTestUserByEmail(email)
+      
+      // Check credentials
+      if (testUser && password === testUser.password) {
+        if (testUser.requiresOtp) {
+          // User requires OTP verification
+          setCurrentStep('otp')
+          setOtp("")
+          setErrors({})
+          setTouched({})
+          setGeneralError("")
+          // Set default verification contact to phone number
+          setVerificationContact("+20 010 **33")
+          // Start countdown for resend code
+          setResendCountdown(30)
+        } else if (testUser.requiresPhoneVerification) {
+          // User requires phone verification
+          toast.info("Phone verification required", {
+            description: "Please verify your phone number to continue.",
+            duration: 3000,
+          })
+          
+          // Navigate to phone verification page with user data
+          navigate("/phone-verification", {
+            state: {
+              userData: {
+                email: email,
+                firstName: testUser.firstName,
+                lastName: testUser.lastName
+              },
+              from: from
+            }
+          })
+        } else {
+          // User doesn't require additional verification
+          toast.success("Welcome back! 👋", {
+            description: "You've successfully signed in. Redirecting to your dashboard...",
+            duration: 3000,
+          })
+          
+          // Use auth context to login with redirect
+          login(email, `${testUser.firstName} ${testUser.lastName}`, from)
+        }
       } else {
         // Show general error instead of individual field errors
         setGeneralError("Invalid email or password")
