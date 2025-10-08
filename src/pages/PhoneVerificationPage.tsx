@@ -400,7 +400,7 @@ export default function PhoneVerificationPage() {
         // Simulate final account creation
         await new Promise(resolve => setTimeout(resolve, 2000))
         
-        // Use auth context to login
+        // Use auth context to login with user's full name
         login(userData.email, `${userData.firstName} ${userData.lastName}`, from)
         
         // Redirect to overview page

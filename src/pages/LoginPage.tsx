@@ -306,7 +306,13 @@ export default function LoginPage() {
         })
         
         // Use auth context to login with redirect
-        login(email, undefined, from)
+        // For demo user, use the name from test users
+        const testUser = getTestUserByEmail(email)
+        if (testUser) {
+          login(email, `${testUser.firstName} ${testUser.lastName}`, from)
+        } else {
+          login(email, undefined, from)
+        }
       } else {
         // Show error in form
         setErrors({

@@ -16,15 +16,15 @@ export interface TestUser {
 export const testUsers: Record<string, TestUser> = {
   demo: {
     email: `demo@${appName}.com`,
-    password: "Demo123!",
-    firstName: "Demo",
-    lastName: "User",
+    password: "Demo123!@#",
+    firstName: "Ahmed",
+    lastName: "Mustafa",
     requiresPhoneVerification: false,
     requiresOtp: true
   },
   ahmed: {
     email: `ahmed@${appName}.com`,
-    password: "Demo123!",
+    password: "Demo123!@#",
     firstName: "Ahmed",
     lastName: "Mustafa",
     requiresPhoneVerification: true,
