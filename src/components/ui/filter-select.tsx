@@ -95,15 +95,17 @@ export function FilterSelect({
                       <Badge
                         key={value}
                         variant="secondary"
-                        className="flex items-center gap-1 px-2 py-0.5 text-xs h-5"
+                        className="flex items-center gap-2 px-2 py-0.5 text-xs h-5 border border-gray-300"
                       >
                         <span className="truncate max-w-[80px]">{option?.label || value}</span>
-                        <div
-                          className="h-3 w-3 p-0 hover:bg-transparent flex items-center justify-center rounded-sm hover:bg-gray-200 transition-colors cursor-pointer"
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-2 w-2 p-0 rounded-sm hover:"
                           onClick={(e) => removeFilter(value, e)}
                         >
-                          <X className="h-1.5 w-1.5" />
-                        </div>
+                          <X/>
+                        </Button>
                       </Badge>
                     )
                   })
@@ -111,17 +113,19 @@ export function FilterSelect({
                   <>
                     <Badge
                       variant="secondary"
-                      className="flex items-center gap-1 px-2 py-0.5 text-xs h-5"
+                      className="flex items-center gap-2 px-2 py-0.5 text-xs h-5 border border-gray-300"
                     >
                       <span className="truncate max-w-[80px]">
                         {options.find(opt => opt.value === selectedValues[0])?.label || selectedValues[0]}
                       </span>
-                      <div
-                        className="h-3 w-3 p-0 hover:bg-transparent flex items-center justify-center rounded-sm hover:bg-gray-200 transition-colors cursor-pointer"
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-2 w-2 p-0 rounded-sm"
                         onClick={(e) => removeFilter(selectedValues[0], e)}
                       >
-                        <X className="h-2 w-2" />
-                      </div>
+                        <X/>
+                      </Button>
                     </Badge>
                     <span className="text-xs text-muted-foreground">
                       +{selectedValues.length - 1} more

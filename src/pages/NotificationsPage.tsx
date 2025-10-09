@@ -560,7 +560,6 @@ export default function NotificationsPage() {
                   searchQuery={categorySearchQuery}
                   onSearchChange={setCategorySearchQuery}
                   filteredOptions={filteredCategoryOptions}
-                  className="min-w-[120px]"
                 />
               </div>
               
