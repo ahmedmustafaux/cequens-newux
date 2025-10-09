@@ -69,10 +69,6 @@ export function SectionCards({ timeRange, isLoading = false }: SectionCardsProps
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Volume {metrics.messagesSent.trend === "up" ? "up" : "down"} this period{" "}
-            {metrics.messagesSent.trend === "up" ? <IconTrendingUp className="size-4" /> : <IconTrendingDown className="size-4" />}
-          </div>
           <div className="text-muted-foreground">
             Across all channels ({timePeriodText})
           </div>
@@ -92,10 +88,6 @@ export function SectionCards({ timeRange, isLoading = false }: SectionCardsProps
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            {metrics.deliveryRate.trend === "up" ? "Improving delivery" : "Slight dip this period"}{" "}
-            {metrics.deliveryRate.trend === "up" ? <IconTrendingUp className="size-4" /> : <IconTrendingDown className="size-4" />}
-          </div>
           <div className="text-muted-foreground">
             Monitor carrier/ESP performance
           </div>
@@ -115,10 +107,6 @@ export function SectionCards({ timeRange, isLoading = false }: SectionCardsProps
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Teams actively sending{" "}
-            {metrics.activeSenders.trend === "up" ? <IconTrendingUp className="size-4" /> : <IconTrendingDown className="size-4" />}
-          </div>
           <div className="text-muted-foreground">Engagement exceed targets</div>
         </CardFooter>
       </Card>
@@ -136,10 +124,6 @@ export function SectionCards({ timeRange, isLoading = false }: SectionCardsProps
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Improving replies{" "}
-            {metrics.responseRate.trend === "up" ? <IconTrendingUp className="size-4" /> : <IconTrendingDown className="size-4" />}
-          </div>
           <div className="text-muted-foreground">Meets growth projections</div>
         </CardFooter>
       </Card>
