@@ -17,8 +17,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { 
+  Item, 
+  ItemContent, 
+  ItemTitle, 
+  ItemDescription, 
+  ItemActions,
+  ItemGroup,
+  ItemSeparator
+} from "@/components/ui/item";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { motion, AnimatePresence } from "framer-motion";
 import { directionalTabVariants, smoothTransition, initialTabContentVariants } from "@/lib/transitions";
 import * as React from "react";
@@ -64,7 +73,7 @@ export default function NotificationsPage() {
     pushNotifications: true,
     autoArchive: false,
     showPriority: true,
-    groupByCategory: false
+    notificationPosition: "top-right"
   });
   
   // Filter states
@@ -74,7 +83,7 @@ export default function NotificationsPage() {
   // Dynamic page title
   usePageTitle("Notifications");
 
-  const { notifications, unreadCount, markAsRead, markAllAsRead, removeNotification } = useNotificationContext();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, removeNotification, addNotification } = useNotificationContext();
 
   // Tab order for direction calculation
   const tabOrder: NotificationCategory[] = ['all', 'unread'];
@@ -95,6 +104,14 @@ export default function NotificationsPage() {
     }, 400);
 
     return () => clearTimeout(timer);
+  }, []);
+  
+  // Load saved notification position from localStorage
+  React.useEffect(() => {
+    const savedPosition = localStorage.getItem("toast-position");
+    if (savedPosition) {
+      setSettings(prev => ({ ...prev, notificationPosition: savedPosition }));
+    }
   }, []);
 
   // Category filter options
@@ -236,85 +253,259 @@ export default function NotificationsPage() {
                     Settings
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
-                  <DialogHeader>
-                    <DialogTitle>Notification Settings</DialogTitle>
-                    <DialogDescription>
+                <DialogContent className="sm:max-w-[500px] p-0 gap-0">
+                  <DialogHeader className="border-b p-5 pb-4">
+                    <DialogTitle className="text-xl font-semibold">Notification Settings</DialogTitle>
+                    <DialogDescription className="text-muted-foreground mt-1">
                       Configure your notification preferences and display options.
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="email-notifications" className="flex flex-col gap-1">
-                        <span>Email Notifications</span>
-                        <span className="text-sm text-muted-foreground">Receive notifications via email</span>
-                      </Label>
-                      <Checkbox
-                        id="email-notifications"
-                        checked={settings.emailNotifications}
-                        onCheckedChange={(checked) => 
-                          setSettings(prev => ({ ...prev, emailNotifications: !!checked }))
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="push-notifications" className="flex flex-col gap-1">
-                        <span>Push Notifications</span>
-                        <span className="text-sm text-muted-foreground">Show browser notifications</span>
-                      </Label>
-                      <Checkbox
-                        id="push-notifications"
-                        checked={settings.pushNotifications}
-                        onCheckedChange={(checked) => 
-                          setSettings(prev => ({ ...prev, pushNotifications: !!checked }))
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="auto-archive" className="flex flex-col gap-1">
-                        <span>Auto Archive</span>
-                        <span className="text-sm text-muted-foreground">Archive read notifications after 30 days</span>
-                      </Label>
-                      <Checkbox
-                        id="auto-archive"
-                        checked={settings.autoArchive}
-                        onCheckedChange={(checked) => 
-                          setSettings(prev => ({ ...prev, autoArchive: !!checked }))
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="show-priority" className="flex flex-col gap-1">
-                        <span>Show Priority Badges</span>
-                        <span className="text-sm text-muted-foreground">Display priority indicators</span>
-                      </Label>
-                      <Checkbox
-                        id="show-priority"
-                        checked={settings.showPriority}
-                        onCheckedChange={(checked) => 
-                          setSettings(prev => ({ ...prev, showPriority: !!checked }))
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="group-category" className="flex flex-col gap-1">
-                        <span>Group by Category</span>
-                        <span className="text-sm text-muted-foreground">Group notifications by category</span>
-                      </Label>
-                      <Checkbox
-                        id="group-category"
-                        checked={settings.groupByCategory}
-                        onCheckedChange={(checked) => 
-                          setSettings(prev => ({ ...prev, groupByCategory: !!checked }))
-                        }
-                      />
+                  <div className="px-0">
+                    <ItemGroup>
+                      <Item 
+                        size="default" 
+                        className="px-5 py-4 cursor-pointer"
+                        onClick={() => {
+                          setSettings(prev => ({ ...prev, emailNotifications: !prev.emailNotifications }));
+                        }}
+                      >
+                        <ItemContent>
+                          <div className="flex items-start gap-3">
+                            <Checkbox
+                              id="email-notifications"
+                              checked={settings.emailNotifications}
+                              onCheckedChange={(checked) => 
+                                setSettings(prev => ({ ...prev, emailNotifications: !!checked }))
+                              }
+                              className="mt-0.5"
+                            />
+                            <div>
+                              <ItemTitle>Email Notifications</ItemTitle>
+                              <ItemDescription className="text-xs mt-1">Receive notifications via email</ItemDescription>
+                            </div>
+                          </div>
+                        </ItemContent>
+                      </Item>
+                      <ItemSeparator />
+                      
+                      <Item 
+                        size="default" 
+                        className="px-5 py-4 cursor-pointer"
+                        onClick={() => {
+                          setSettings(prev => ({ ...prev, pushNotifications: !prev.pushNotifications }));
+                        }}
+                      >
+                        <ItemContent>
+                          <div className="flex items-start gap-3">
+                            <Checkbox
+                              id="push-notifications"
+                              checked={settings.pushNotifications}
+                              onCheckedChange={(checked) => 
+                                setSettings(prev => ({ ...prev, pushNotifications: !!checked }))
+                              }
+                              className="mt-0.5"
+                            />
+                            <div>
+                              <ItemTitle>Push Notifications</ItemTitle>
+                              <ItemDescription className="text-xs mt-1">Show browser notifications</ItemDescription>
+                            </div>
+                          </div>
+                        </ItemContent>
+                      </Item>
+                      <ItemSeparator />
+                      
+                      <Item 
+                        size="default" 
+                        className="px-5 py-4 cursor-pointer"
+                        onClick={() => {
+                          setSettings(prev => ({ ...prev, autoArchive: !prev.autoArchive }));
+                        }}
+                      >
+                        <ItemContent>
+                          <div className="flex items-start gap-3">
+                            <Checkbox
+                              id="auto-archive"
+                              checked={settings.autoArchive}
+                              onCheckedChange={(checked) => 
+                                setSettings(prev => ({ ...prev, autoArchive: !!checked }))
+                              }
+                              className="mt-0.5"
+                            />
+                            <div>
+                              <ItemTitle>Auto Archive</ItemTitle>
+                              <ItemDescription className="text-xs mt-1">Archive read notifications after 30 days</ItemDescription>
+                            </div>
+                          </div>
+                        </ItemContent>
+                      </Item>
+                      <ItemSeparator />
+                      
+                      <Item 
+                        size="default" 
+                        className="px-5 py-4 cursor-pointer"
+                        onClick={() => {
+                          setSettings(prev => ({ ...prev, showPriority: !prev.showPriority }));
+                        }}
+                      >
+                        <ItemContent>
+                          <div className="flex items-start gap-3">
+                            <Checkbox
+                              id="show-priority"
+                              checked={settings.showPriority}
+                              onCheckedChange={(checked) => 
+                                setSettings(prev => ({ ...prev, showPriority: !!checked }))
+                              }
+                              className="mt-0.5"
+                            />
+                            <div>
+                              <ItemTitle>Show Priority Badges</ItemTitle>
+                              <ItemDescription className="text-xs mt-1">Display priority indicators</ItemDescription>
+                            </div>
+                          </div>
+                        </ItemContent>
+                      </Item>
+                    </ItemGroup>
+                    
+                    <div className="px-5 py-5 mt-1 border-t">
+                      <h3 className="text-sm font-medium mb-4">Notification position</h3>
+                      <RadioGroup 
+                        value={settings.notificationPosition}
+                        onValueChange={(value) => {
+                          setSettings(prev => ({ ...prev, notificationPosition: value }));
+                          
+                          // Show a test notification with the new position
+                          toast.info("Notification position preview", {
+                            position: value as any,
+                            description: "This is how notifications will appear"
+                          });
+                        }}
+                        className="grid grid-cols-3 gap-5"
+                      >
+                        <div className="flex flex-col items-center">
+                          <div 
+                            className="w-full cursor-pointer group"
+                            onClick={() => {
+                              setSettings(prev => ({ ...prev, notificationPosition: "top-right" }));
+                              toast.info("Notification position preview", {
+                                position: "top-right" as any,
+                                description: "This is how notifications will appear"
+                              });
+                            }}
+                          >
+                            <div className="relative w-full aspect-video bg-gray-100 rounded-md overflow-hidden flex items-center justify-center transition-colors group-hover:bg-muted/60 group-hover:ring-1 group-hover:ring-primary">
+                              <div className="w-full h-full p-2">
+                                <div className="overflow-hidden w-full h-full bg-background/80 rounded-sm border border-border/50 relative">
+                                  {/* Header */}
+                                  <div className="absolute top-0 left-0 right-0 h-1.5 bg-gray-200"></div>
+                                  
+                                  {/* Content rows */}
+                                  <div className="absolute top-3 left-1 w-1/3 h-0.5 bg-gray-200/50 rounded-full"></div>
+                                  <div className="absolute top-5 left-1 w-1/4 h-0.5 bg-gray-200/50 rounded-full"></div>
+                                  <div className="absolute top-7 left-1 w-1/2 h-0.5 bg-gray-200/50 rounded-full"></div>
+                                  
+                                  {/* Notification */}
+                                  <div className="absolute top-0 right-0 m-0.5 w-1/3 h-3 bg-slate-500/40 rounded-sm border border-slate-400/30 flex items-center justify-center group-hover:bg-primary/70 group-hover:border-primary/80 transition-colors">
+                                    <div className="w-2/3 h-0.5 bg-white/60 rounded-full mx-auto"></div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2 justify-center mt-2">
+                              <RadioGroupItem value="top-right" id="topRight" />
+                              <label htmlFor="topRight" className="text-sm">Top Right</label>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-col items-center">
+                          <div 
+                            className="w-full cursor-pointer group"
+                            onClick={() => {
+                              setSettings(prev => ({ ...prev, notificationPosition: "bottom-right" }));
+                              toast.info("Notification position preview", {
+                                position: "bottom-right" as any,
+                                description: "This is how notifications will appear"
+                              });
+                            }}
+                          >
+                            <div className="relative w-full aspect-video bg-gray-100 rounded-md overflow-hidden flex items-center justify-center transition-colors group-hover:bg-muted/60 group-hover:ring-1 group-hover:ring-primary">
+                              <div className="w-full h-full p-2">
+                                <div className="overflow-hidden w-full h-full bg-background/80 rounded-sm border border-border/50 relative">
+                                  {/* Header */}
+                                  <div className="absolute top-0 left-0 right-0 h-1.5 bg-gray-200"></div>
+                                  
+                                  {/* Content rows */}
+                                  <div className="absolute top-3 left-1 w-1/3 h-0.5 bg-gray-200/50 rounded-full"></div>
+                                  <div className="absolute top-5 left-1 w-1/4 h-0.5 bg-gray-200/50 rounded-full"></div>
+                                  <div className="absolute top-7 left-1 w-1/2 h-0.5 bg-gray-200/50 rounded-full"></div>
+                                  
+                                  {/* Notification */}
+                                  <div className="absolute bottom-0 right-0 m-0.5 w-1/3 h-3 bg-slate-500/40 rounded-sm border border-slate-400/30 flex items-center justify-center group-hover:bg-primary/70 group-hover:border-primary/80 transition-colors">
+                                    <div className="w-2/3 h-0.5 bg-white/60 rounded-full mx-auto"></div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2 justify-center mt-2">
+                              <RadioGroupItem value="bottom-right" id="bottomRight" />
+                              <label htmlFor="bottomRight" className="text-sm">Bottom Right</label>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-col items-center">
+                          <div 
+                            className="w-full cursor-pointer group"
+                            onClick={() => {
+                              setSettings(prev => ({ ...prev, notificationPosition: "bottom-center" }));
+                              toast.info("Notification position preview", {
+                                position: "bottom-center" as any,
+                                description: "This is how notifications will appear"
+                              });
+                            }}
+                          >
+                            <div className="relative w-full aspect-video bg-gray-100 rounded-md overflow-hidden flex items-center justify-center transition-colors group-hover:bg-muted/60 group-hover:ring-1 group-hover:ring-primary">
+                              <div className="w-full h-full p-2">
+                                <div className="overflow-hidden w-full h-full bg-background/80 rounded-sm border border-border/50 relative">
+                                  {/* Header */}
+                                  <div className="absolute top-0 left-0 right-0 h-1.5 bg-gray-200"></div>
+                                  
+                                  {/* Content rows */}
+                                  <div className="absolute top-3 left-1 w-1/3 h-0.5 bg-gray-200/50 rounded-full"></div>
+                                  <div className="absolute top-5 left-1 w-1/4 h-0.5 bg-gray-200/50 rounded-full"></div>
+                                  <div className="absolute top-7 left-1 w-1/2 h-0.5 bg-gray-200/50 rounded-full"></div>
+                                  
+                                  {/* Notification */}
+                                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 m-0.5 w-1/3 h-3 bg-slate-500/40 rounded-sm border border-slate-400/30 flex items-center justify-center group-hover:bg-primary/70 group-hover:border-primary/80 transition-colors">
+                                    <div className="w-2/3 h-0.5 bg-white/60 rounded-full mx-auto"></div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2 justify-center mt-2">
+                              <RadioGroupItem value="bottom-center" id="bottomCenter" />
+                              <label htmlFor="bottomCenter" className="text-sm">Bottom center</label>
+                            </div>
+                          </div>
+                        </div>
+                      </RadioGroup>
                     </div>
                   </div>
-                  <DialogFooter>
-                    <Button onClick={() => {
-                      setSettingsOpen(false);
-                      toast.success("Notification preferences saved");
-                    }}>
+                  <DialogFooter className="border-t p-5 pt-4 mt-0">
+                    <Button 
+                      className="w-full"
+                      onClick={() => {
+                        // Save notification position to localStorage
+                        localStorage.setItem("toast-position", settings.notificationPosition);
+                        
+                        setSettingsOpen(false);
+                        
+                        // Use the selected position for this toast
+                        toast.success("Notification preferences saved", {
+                          position: settings.notificationPosition as any
+                        });
+                      }}
+                    >
                       Save preferences
                     </Button>
                   </DialogFooter>
