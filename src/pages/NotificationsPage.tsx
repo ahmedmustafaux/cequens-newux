@@ -252,24 +252,24 @@ export default function NotificationsPage() {
                     Settings
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="">
-                  <DialogHeader className="border-b p-5 pb-4">
+                <DialogContent className="p-0">
+                  <DialogHeader className="border-b p-4">
                     <DialogTitle className="text-lg font-semibold">Notification Settings</DialogTitle>
                     <DialogDescription className="text-muted-foreground">
                       Configure your notification preferences and display options.
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="px-0">
-                    <ItemGroup>
+                  <div>
+                    <ItemGroup className="py-4">
                       <Item 
                         size="default" 
-                        className="px-5 py-4 cursor-pointer"
+                        className="cursor-pointer"
                         onClick={() => {
                           setSettings(prev => ({ ...prev, emailNotifications: !prev.emailNotifications }));
                         }}
                       >
                         <ItemContent>
-                          <div className="flex items-start gap-3">
+                          <div className="px-4 py-2 flex items-start gap-3">
                             <Checkbox
                               id="email-notifications"
                               checked={settings.emailNotifications}
@@ -289,13 +289,13 @@ export default function NotificationsPage() {
                       
                       <Item 
                         size="default" 
-                        className="px-5 py-4 cursor-pointer"
+                        className="cursor-pointer"
                         onClick={() => {
                           setSettings(prev => ({ ...prev, pushNotifications: !prev.pushNotifications }));
                         }}
                       >
                         <ItemContent>
-                          <div className="flex items-start gap-3">
+                          <div className="px-4 py-2 flex items-start gap-3">
                             <Checkbox
                               id="push-notifications"
                               checked={settings.pushNotifications}
@@ -315,13 +315,13 @@ export default function NotificationsPage() {
                       
                       <Item 
                         size="default" 
-                        className="px-5 py-4 cursor-pointer"
+                        className="cursor-pointer"
                         onClick={() => {
                           setSettings(prev => ({ ...prev, autoArchive: !prev.autoArchive }));
                         }}
                       >
                         <ItemContent>
-                          <div className="flex items-start gap-3">
+                          <div className="px-4 py-2 flex items-start gap-3">
                             <Checkbox
                               id="auto-archive"
                               checked={settings.autoArchive}
@@ -340,13 +340,13 @@ export default function NotificationsPage() {
                       
                       <Item 
                         size="default" 
-                        className="px-5 py-4 cursor-pointer"
+                        className="cursor-pointer"
                         onClick={() => {
                           setSettings(prev => ({ ...prev, showPriority: !prev.showPriority }));
                         }}
                       >
                         <ItemContent>
-                          <div className="flex items-start gap-3">
+                          <div className="px-4 py-2 flex items-start gap-3">
                             <Checkbox
                               id="show-priority"
                               checked={settings.showPriority}
@@ -364,8 +364,8 @@ export default function NotificationsPage() {
                       </Item>
                     </ItemGroup>
                     
-                    <div className="px-5 py-5 mt-1 border-t">
-                      <h3 className="text-sm font-medium mb-4">Notification position</h3>
+                    <div className="px-4 py-4 border-t">
+                      <h3 className="text-sm font-medium mb-3">Notification position</h3>
                       <RadioGroup 
                         value={settings.notificationPosition}
                         onValueChange={(value) => {
@@ -377,7 +377,7 @@ export default function NotificationsPage() {
                             description: "This is how notifications will appear"
                           });
                         }}
-                        className="grid grid-cols-3 gap-4"
+                        className="grid grid-cols-3 gap-3"
                       >
                         <div className="flex flex-col items-center">
                           <div 
@@ -489,7 +489,7 @@ export default function NotificationsPage() {
                       </RadioGroup>
                     </div>
                   </div>
-                  <DialogFooter className="border-t p-4 pt-4 mt-0">
+                  <DialogFooter className="border-t p-4">
                     <Button 
                       className="w-full"
                       onClick={() => {
@@ -594,7 +594,7 @@ export default function NotificationsPage() {
                   <TabsContent value={activeCategory} className="mt-4">
                 {/* Header Section */}
                 <div className="flex items-center justify-between m-4">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-4">
                     {filteredNotifications.length > 0 && (
                       <Checkbox
                         checked={selectedNotifications.length === filteredNotifications.length}
