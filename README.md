@@ -21,8 +21,8 @@ CEQUENS is a comprehensive communication platform designed to streamline messagi
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/ahmedmustafaux/cequens-newux.git
-cd cequens
+git clone https://github.com/ahmedmustafaux/CEQUENS-newux.git
+cd CEQUENS
 ```
 
 2. Install dependencies:

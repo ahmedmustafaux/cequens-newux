@@ -6,7 +6,7 @@ function getProjectName(): string {
   }
   
   // Default fallback
-  return "Cequens"
+  return "CEQUENS"
 }
 
 // Get the dynamic app name
