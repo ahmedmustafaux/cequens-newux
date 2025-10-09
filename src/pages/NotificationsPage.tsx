@@ -25,7 +25,6 @@ import {
   ItemDescription, 
   ItemActions,
   ItemGroup,
-  ItemSeparator
 } from "@/components/ui/item";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { motion, AnimatePresence } from "framer-motion";
@@ -253,10 +252,10 @@ export default function NotificationsPage() {
                     Settings
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[500px] p-0 gap-0">
+                <DialogContent className="">
                   <DialogHeader className="border-b p-5 pb-4">
-                    <DialogTitle className="text-xl font-semibold">Notification Settings</DialogTitle>
-                    <DialogDescription className="text-muted-foreground mt-1">
+                    <DialogTitle className="text-lg font-semibold">Notification Settings</DialogTitle>
+                    <DialogDescription className="text-muted-foreground">
                       Configure your notification preferences and display options.
                     </DialogDescription>
                   </DialogHeader>
@@ -286,7 +285,7 @@ export default function NotificationsPage() {
                           </div>
                         </ItemContent>
                       </Item>
-                      <ItemSeparator />
+                      
                       
                       <Item 
                         size="default" 
@@ -312,7 +311,7 @@ export default function NotificationsPage() {
                           </div>
                         </ItemContent>
                       </Item>
-                      <ItemSeparator />
+                    
                       
                       <Item 
                         size="default" 
@@ -338,7 +337,6 @@ export default function NotificationsPage() {
                           </div>
                         </ItemContent>
                       </Item>
-                      <ItemSeparator />
                       
                       <Item 
                         size="default" 
@@ -379,7 +377,7 @@ export default function NotificationsPage() {
                             description: "This is how notifications will appear"
                           });
                         }}
-                        className="grid grid-cols-3 gap-5"
+                        className="grid grid-cols-3 gap-4"
                       >
                         <div className="flex flex-col items-center">
                           <div 
@@ -400,7 +398,7 @@ export default function NotificationsPage() {
                                   
                                   {/* Content rows */}
                                   <div className="absolute top-3 left-1 w-1/3 h-0.5 bg-gray-200/50 rounded-full"></div>
-                                  <div className="absolute top-5 left-1 w-1/4 h-0.5 bg-gray-200/50 rounded-full"></div>
+                                  <div className="absolute top-4 left-1 w-1/4 h-0.5 bg-gray-200/50 rounded-full"></div>
                                   <div className="absolute top-7 left-1 w-1/2 h-0.5 bg-gray-200/50 rounded-full"></div>
                                   
                                   {/* Notification */}
@@ -436,7 +434,7 @@ export default function NotificationsPage() {
                                   
                                   {/* Content rows */}
                                   <div className="absolute top-3 left-1 w-1/3 h-0.5 bg-gray-200/50 rounded-full"></div>
-                                  <div className="absolute top-5 left-1 w-1/4 h-0.5 bg-gray-200/50 rounded-full"></div>
+                                  <div className="absolute top-4 left-1 w-1/4 h-0.5 bg-gray-200/50 rounded-full"></div>
                                   <div className="absolute top-7 left-1 w-1/2 h-0.5 bg-gray-200/50 rounded-full"></div>
                                   
                                   {/* Notification */}
@@ -472,7 +470,7 @@ export default function NotificationsPage() {
                                   
                                   {/* Content rows */}
                                   <div className="absolute top-3 left-1 w-1/3 h-0.5 bg-gray-200/50 rounded-full"></div>
-                                  <div className="absolute top-5 left-1 w-1/4 h-0.5 bg-gray-200/50 rounded-full"></div>
+                                  <div className="absolute top-4 left-1 w-1/4 h-0.5 bg-gray-200/50 rounded-full"></div>
                                   <div className="absolute top-7 left-1 w-1/2 h-0.5 bg-gray-200/50 rounded-full"></div>
                                   
                                   {/* Notification */}
@@ -491,7 +489,7 @@ export default function NotificationsPage() {
                       </RadioGroup>
                     </div>
                   </div>
-                  <DialogFooter className="border-t p-5 pt-4 mt-0">
+                  <DialogFooter className="border-t p-4 pt-4 mt-0">
                     <Button 
                       className="w-full"
                       onClick={() => {
