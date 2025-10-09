@@ -27,10 +27,6 @@ if [ -z "$CURRENT_NAME" ] && [ -f "package.json" ]; then
   CURRENT_NAME=$(grep -o '"name": "[^"]*"' package.json | sed 's/"name": "//' | sed 's/"//')
 fi
 
-# If we still don't have a name, use default values
-if [ -z "$CURRENT_NAME" ]; then
-  CURRENT_NAME="Cequens"
-fi
 
 # Create uppercase and lowercase versions for better matching
 CURRENT_NAME_UPPER=$(echo "$CURRENT_NAME" | tr '[:lower:]' '[:upper:]')
