@@ -2,7 +2,7 @@ import * as React from "react"
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { Check, ChevronRight, Loader2 } from "lucide-react"
+import { Check, ChevronRight, Loader2, MessageSquare, Mail, Phone } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { smoothTransition, pageVariants } from "@/lib/transitions"
@@ -13,6 +13,31 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Item, ItemContent, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { toast } from "sonner"
+
+// Define interfaces for option types
+interface BaseOption {
+  id: string;
+  label: string;
+}
+
+interface IconOption extends BaseOption {
+  iconType: "lucide" | "svg" | "img";
+  icon: string;
+}
+
+type Option = BaseOption | IconOption;
+
+interface OnboardingStep {
+  id: number;
+  question: string;
+  options: Option[];
+  multiSelect: boolean;
+}
+
+// Helper function to check if an option has an icon
+const hasIcon = (option: Option): option is IconOption => {
+  return 'iconType' in option && 'icon' in option;
+};
 
 // Define the onboarding questions and options
 const onboardingSteps = [
@@ -26,18 +51,18 @@ const onboardingSteps = [
       { id: "goal-4", label: "Lead generation" },
       { id: "goal-5", label: "Internal communications" },
     ],
-    multiSelect: false,
+    multiSelect: true,
   },
   {
     id: 2,
     question: "Which channels do you plan to use?",
     options: [
-      { id: "channel-1", label: "SMS" },
-      { id: "channel-2", label: "WhatsApp" },
-      { id: "channel-3", label: "Email" },
-      { id: "channel-4", label: "Voice" },
-      { id: "channel-5", label: "Messenger" },
-      { id: "channel-6", label: "Telegram" },
+      { id: "channel-1", label: "SMS", iconType: "lucide", icon: "MessageSquare" },
+      { id: "channel-2", label: "WhatsApp", iconType: "svg", icon: "/icons/WhatsApp.svg" },
+      { id: "channel-3", label: "Email", iconType: "lucide", icon: "Mail" },
+      { id: "channel-4", label: "Voice", iconType: "lucide", icon: "Phone" },
+      { id: "channel-5", label: "Messenger", iconType: "img", icon: "/icons/Messenger.png" },
+      { id: "channel-6", label: "Telegram", iconType: "svg", icon: "/icons/Telegram.svg" },
     ],
     multiSelect: true,
   },
@@ -270,26 +295,49 @@ export default function NewUserOnboardingPage() {
                         }
                       `}
                     >
-                      <div className="flex items-center gap-3">
-                        {onboardingSteps[currentStep].multiSelect ? (
-                          <Checkbox 
-                            checked={isOptionSelected(option.id)}
-                            className="pointer-events-none"
-                          />
-                        ) : (
-                          <div 
-                            className={`h-4 w-4 rounded-full border ${
-                              isOptionSelected(option.id) 
-                                ? "border-primary bg-primary" 
-                                : "border-gray-300 bg-gray-100/80"
-                            } flex items-center justify-center`}
-                          >
-                            {isOptionSelected(option.id) && (
-                              <div className="h-1.5 w-1.5 rounded-full bg-white"></div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          {onboardingSteps[currentStep].multiSelect ? (
+                            <Checkbox 
+                              checked={isOptionSelected(option.id)}
+                              className="pointer-events-none"
+                            />
+                          ) : (
+                            <div 
+                              className={`h-4 w-4 rounded-full border ${
+                                isOptionSelected(option.id) 
+                                  ? "border-primary bg-primary" 
+                                  : "border-gray-300 bg-gray-100/80"
+                              } flex items-center justify-center`}
+                            >
+                              {isOptionSelected(option.id) && (
+                                <div className="h-1.5 w-1.5 rounded-full bg-white"></div>
+                              )}
+                            </div>
+                          )}
+                          <span>{option.label}</span>
+                        </div>
+                        
+                        {/* Icon on the right side */}
+                        {currentStep === 1 && hasIcon(option) && (
+                          <div className="flex items-center justify-center w-6 h-6">
+                            {option.iconType === "lucide" && option.icon === "MessageSquare" && (
+                              <MessageSquare className="w-5 h-5 text-gray-500" />
+                            )}
+                            {option.iconType === "lucide" && option.icon === "Mail" && (
+                              <Mail className="w-5 h-5 text-gray-500" />
+                            )}
+                            {option.iconType === "lucide" && option.icon === "Phone" && (
+                              <Phone className="w-5 h-5 text-gray-500" />
+                            )}
+                            {option.iconType === "svg" && (
+                              <img src={option.icon} alt={option.label} className="w-5 h-5" />
+                            )}
+                            {option.iconType === "img" && (
+                              <img src={option.icon} alt={option.label} className="w-5 h-5" />
                             )}
                           </div>
                         )}
-                        <span>{option.label}</span>
                       </div>
                     </div>
                   ))}
