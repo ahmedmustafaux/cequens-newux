@@ -6,7 +6,8 @@ import { Item, ItemMedia, ItemContent, ItemTitle, ItemDescription } from "@/comp
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
-import { useAuth } from "@/hooks/use-auth"
+import { useAuth, UserType } from "@/hooks/use-auth"
+import { getUserTypeFromEmail } from "@/lib/user-utils"
 import { motion } from "framer-motion"
 import { getLogoAltText, getWelcomeMessage, getAppName } from "@/lib/config"
 import { smoothTransition, pageVariants } from "@/lib/transitions"
@@ -392,19 +393,30 @@ export default function PhoneVerificationPage() {
       if (otp === "000000") {
         setCurrentStep(VerificationStep.SUCCESS)
         
+        // Determine user type based on email
+        const userType = getUserTypeFromEmail(userData.email)
+        
         toast.success("Phone verified successfully!", {
-          description: "Your phone number has been verified. Redirecting to your dashboard...",
+          description: userType === "newUser" 
+            ? "Your phone number has been verified. Let's set up your experience..." 
+            : "Your phone number has been verified. Redirecting to your dashboard...",
           duration: 4000,
         })
         
         // Simulate final account creation
         await new Promise(resolve => setTimeout(resolve, 2000))
         
-        // Use auth context to login with user's full name
-        login(userData.email, `${userData.firstName} ${userData.lastName}`, from)
+        // Use auth context to login with user's full name and user type
+        login(userData.email, `${userData.firstName} ${userData.lastName}`, userType)
         
-        // Redirect to overview page
-        navigate("/")
+        // Redirect based on user type
+        if (userType === "newUser") {
+          // New users go to onboarding
+          navigate("/onboarding")
+        } else {
+          // Existing users go directly to dashboard
+          navigate("/")
+        }
       } else {
         // Show error in form
         setErrors({
@@ -747,7 +759,9 @@ export default function PhoneVerificationPage() {
                   </div>
                   <h2 className="text-xl font-semibold mb-1">Phone verified!</h2>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Your phone number has been successfully verified. Redirecting to dashboard...
+                    {getUserTypeFromEmail(userData.email) === "newUser"
+                      ? "Your phone number has been successfully verified. Setting up your experience..."
+                      : "Your phone number has been successfully verified. Redirecting to dashboard..."}
                   </p>
                   <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
                     <motion.div

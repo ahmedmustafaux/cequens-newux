@@ -1,4 +1,5 @@
 import { getAppName } from "./config"
+import { UserType } from "@/hooks/use-auth"
 
 // Get the app name for email addresses
 const appName = getAppName().toLowerCase()
@@ -10,6 +11,7 @@ export interface TestUser {
   lastName: string
   requiresPhoneVerification: boolean
   requiresOtp: boolean
+  userType: UserType
 }
 
 // Test users for development and testing
@@ -20,7 +22,8 @@ export const testUsers: Record<string, TestUser> = {
     firstName: "Ahmed",
     lastName: "Mustafa",
     requiresPhoneVerification: false,
-    requiresOtp: true
+    requiresOtp: true,
+    userType: "existingUser" // Master/owner account that should see everything
   },
   ahmed: {
     email: `ahmed@${appName}.com`,
@@ -28,7 +31,8 @@ export const testUsers: Record<string, TestUser> = {
     firstName: "Ahmed",
     lastName: "Mustafa",
     requiresPhoneVerification: true,
-    requiresOtp: false
+    requiresOtp: false,
+    userType: "newUser" // Admin who just signed up
   }
 }
 

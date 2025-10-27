@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from '@/hooks/use-auth'
+import { OnboardingProvider } from '@/contexts/onboarding-context'
 import { Toaster } from '@/components/ui/sonner'
 import { ProtectedRoute, PublicRoute } from '@/components/ProtectedRoute'
 // appConfig removed as it's not used in Vite version
@@ -14,6 +15,7 @@ import LoginPage from '@/pages/LoginPage'
 import SignupPage from '@/pages/SignupPage'
 import EmailConfirmationPage from '@/pages/EmailConfirmationPage'
 import PhoneVerificationPage from '@/pages/PhoneVerificationPage'
+import NewUserOnboardingPage from '@/pages/NewUserOnboardingPage'
 import DashboardPage from '@/pages/DashboardPage'
 import AnalyticsPage from '@/pages/AnalyticsPage'
 import CampaignsPage from '@/pages/CampaignsPage'
@@ -31,7 +33,8 @@ import SettingsPage from '@/pages/SettingsPage'
 function App() {
   return (
     <AuthProvider>
-      <Routes>
+      <OnboardingProvider>
+        <Routes>
         {/* Public routes */}
         <Route path="/login" element={
           <PublicRoute>
@@ -60,6 +63,13 @@ function App() {
               <PhoneVerificationPage />
             </LoginLayout>
           </PublicRoute>
+        } />
+        
+        {/* New User Onboarding */}
+        <Route path="/onboarding" element={
+          <ProtectedRoute>
+            <NewUserOnboardingPage />
+          </ProtectedRoute>
         } />
         
         {/* Protected routes */}
@@ -183,8 +193,9 @@ function App() {
         
         {/* Redirect unmatched routes to login */}
         <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-      <Toaster />
+        </Routes>
+        <Toaster />
+      </OnboardingProvider>
     </AuthProvider>
   )
 }

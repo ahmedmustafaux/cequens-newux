@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/use-auth"
+import { useOnboarding } from "@/contexts/onboarding-context"
 import { Navigate, useLocation } from "react-router-dom"
 import { ReactNode } from "react"
 
@@ -7,8 +8,10 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading, user } = useAuth()
+  const { hasCompletedOnboarding } = useOnboarding()
   const location = useLocation()
+  const currentPath = location.pathname
 
   // Show loading spinner while checking authentication
   if (isLoading) {
@@ -24,7 +27,16 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
-  // If authenticated, render the protected content
+  // If authenticated but new user hasn't completed onboarding and not already on onboarding page
+  if (
+    user?.userType === "newUser" && 
+    !hasCompletedOnboarding && 
+    currentPath !== "/onboarding"
+  ) {
+    return <Navigate to="/onboarding" replace />
+  }
+
+  // If authenticated and onboarding completed (or not required), render the protected content
   return <>{children}</>
 }
 
