@@ -1,6 +1,6 @@
 import { PageHeader } from "@/components/page-header";
 import { usePageTitle } from "@/hooks/use-dynamic-title";
-import { useNotificationContext } from "@/contexts/notification-context";
+import { useNotificationContext, Notification as AppNotification } from "@/contexts/notification-context";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -178,6 +178,79 @@ export default function NotificationsPage() {
     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
     if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
     return `${Math.floor(diffInMinutes / 1440)}d ago`;
+  };
+
+  // Function to determine the date group for a notification
+  const getDateGroup = (timestamp: Date): string => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const thisWeekStart = new Date(today);
+    thisWeekStart.setDate(today.getDate() - today.getDay()); // Start of current week (Sunday)
+    const lastWeekStart = new Date(thisWeekStart);
+    lastWeekStart.setDate(thisWeekStart.getDate() - 7); // Start of last week
+    
+    const notificationDate = new Date(
+      timestamp.getFullYear(),
+      timestamp.getMonth(),
+      timestamp.getDate()
+    );
+    
+    if (notificationDate.getTime() === today.getTime()) {
+      return 'Today';
+    } else if (notificationDate.getTime() === yesterday.getTime()) {
+      return 'Yesterday';
+    } else if (notificationDate >= thisWeekStart) {
+      // Return the day name for this week
+      return timestamp.toLocaleDateString('en-US', { weekday: 'long' });
+    } else if (notificationDate >= lastWeekStart) {
+      return 'Earlier';
+    } else {
+      // For older notifications, return the formatted date
+      return timestamp.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: timestamp.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+      });
+    }
+  };
+
+  // Group notifications by date
+  const groupNotificationsByDate = (notifications: AppNotification[]) => {
+    const groups: Record<string, AppNotification[]> = {};
+    
+    notifications.forEach(notification => {
+      const dateGroup = getDateGroup(notification.timestamp);
+      if (!groups[dateGroup]) {
+        groups[dateGroup] = [];
+      }
+      groups[dateGroup].push(notification);
+    });
+    
+    // Sort the groups by date (most recent first)
+    const sortedGroups: [string, AppNotification[]][] = Object.entries(groups).sort((a, b) => {
+      const dateOrder = ['Today', 'Yesterday'];
+      const aIndex = dateOrder.indexOf(a[0]);
+      const bIndex = dateOrder.indexOf(b[0]);
+      
+      if (aIndex !== -1 && bIndex !== -1) {
+        return aIndex - bIndex;
+      } else if (aIndex !== -1) {
+        return -1;
+      } else if (bIndex !== -1) {
+        return 1;
+      } else if (a[0] === 'Earlier') {
+        return b[0].includes('day') ? 1 : -1;
+      } else if (b[0] === 'Earlier') {
+        return a[0].includes('day') ? -1 : 1;
+      } else {
+        // For dates, compare the first notification's timestamp
+        return b[1][0].timestamp.getTime() - a[1][0].timestamp.getTime();
+      }
+    });
+    
+    return sortedGroups;
   };
 
   const handleSelectAll = (checked: boolean) => {
@@ -627,7 +700,7 @@ export default function NotificationsPage() {
                   {filteredNotifications.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-8 text-center">
                       <Bell className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                      <h3 className="text-lg font-medium text-muted-foreground mb-2">
+                      <h3 className="text-lg font-medium text-muted-foreground mb-8">
                         No notifications found
                       </h3>
                       <p className="text-sm text-muted-foreground max-w-md">
@@ -640,12 +713,20 @@ export default function NotificationsPage() {
                       </p>
                     </div>
                   ) : (
-                    <div className="space-y-2">
-                        {filteredNotifications.map((notification) => (
-                          <div
-                            key={notification.id}
-                            className="flex items-start gap-3 p-4 rounded-lg border transition-colors hover:bg-muted/50 border-border"
-                          >
+                    <div className="space-y-4">
+                      {groupNotificationsByDate(filteredNotifications).map(([dateGroup, groupedNotifications]) => (
+                        <div key={dateGroup} className="space-y-2">
+                          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm px-4">
+                            <h3 className="text-sm font-medium text-muted-foreground">
+                              {dateGroup}
+                            </h3>
+                          </div>
+                          
+                          {groupedNotifications.map((notification) => (
+                            <div
+                              key={notification.id}
+                              className="flex items-start gap-3 p-4 rounded-lg border transition-colors hover:bg-muted/50 border-border"
+                            >
                             <Checkbox
                               checked={selectedNotifications.includes(notification.id)}
                               onCheckedChange={(checked) => 
@@ -720,8 +801,10 @@ export default function NotificationsPage() {
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                            </div>
+                          ))}
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
