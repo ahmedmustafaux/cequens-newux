@@ -394,18 +394,7 @@ export default function NewUserOnboardingPage() {
                   transition={{ duration: 0.5 }}
                 />
               </div>
-
-              {/* Loading animation */}
-              <div className="flex justify-center py-2">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                >
-                  <Loader2 className="h-8 w-8 text-primary" />
-                </motion.div>
-              </div>
-
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground mt-10">
                 Please wait while we set up your personalized dashboard...
               </p>
             </motion.div>
