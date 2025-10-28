@@ -13,6 +13,22 @@ import {
   IconTemplate,
   IconRobot,
   IconComponents,
+  IconBrandWhatsapp,
+  IconMail,
+  IconBrandInstagram,
+  IconBrandApple,
+  IconDeviceMobile,
+  IconBrandMessenger,
+  IconWorld,
+  IconBrandTelegram,
+  IconPlus,
+  IconBulb,
+  IconTags,
+  IconUserPlus,
+  IconSection,
+  IconInbox,
+  IconBrandCampaignmonitor,
+  IconBrain,
 } from "@tabler/icons-react"
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
@@ -29,34 +45,46 @@ import {
 const data = {
   navMain: [
     {
-      title: "Overview",
+      title: "Dashboard",
       url: "/",
       icon: IconDashboard,
     },
     {
-      title: "Messages",
-      url: "/messages",
-      icon: IconMessage,
-    },
-    {
       title: "Campaigns",
       url: "/campaigns",
-      icon: IconPhoneCall,
+      icon: IconBrandCampaignmonitor,
       items: [
         {
-          title: "Templates",
-          url: "/campaigns/templates",
-          icon: IconTemplate,
+          title: "Create New Campaign",
+          url: "/campaigns/create",
+          icon: IconPlus,
+        },
+        {
+          title: "Automation",
+          url: "/campaigns/automation",
+          icon: IconBulb,
         },
         {
           title: "Settings",
           url: "/campaigns/settings",
           icon: IconSettings,
         },
+      ],
+    },
+    {
+      title: "Inbox",
+      url: "/inbox",
+      icon: IconInbox,
+      items: [
         {
-          title: "AI Bots",
-          url: "/campaigns/ai-bots",
-          icon: IconRobot,
+          title: "Requests",
+          url: "/inbox/requests",
+          icon: IconMessage,
+        },
+        {
+          title: "Settings",
+          url: "/inbox/settings",
+          icon: IconSettings,
         },
       ],
     },
@@ -64,6 +92,97 @@ const data = {
       title: "Contacts",
       url: "/contacts",
       icon: IconUsers,
+      items: [
+        {
+          title: "Create New Contact",
+          url: "/contacts/create",
+          icon: IconUserPlus,
+        },
+        {
+          title: "Segments",
+          url: "/contacts/segments",
+          icon: IconSection,
+        },
+        {
+          title: "Tags & Attributes",
+          url: "/contacts/tags",
+          icon: IconTags,
+        },
+      ],
+    },
+    {
+      title: "Automation Hub",
+      url: "/automation",
+      icon: IconRobot,
+      items: [
+        {
+          title: "Journey Builder",
+          url: "/automation/journey",
+          icon: IconComponents,
+        },
+        {
+          title: "Templates",
+          url: "/automation/templates",
+          icon: IconTemplate,
+        },
+        {
+          title: "Automation / CEQ Bots",
+          url: "/automation/bots",
+          icon: IconBrain,
+        },
+      ],
+    },
+    {
+      title: "Channels",
+      url: "/channels",
+      icon: IconWorld,
+      items: [
+        {
+          title: "SMS",
+          url: "/channels/sms",
+          icon: IconDeviceMobile,
+        },
+        {
+          title: "WhatsApp",
+          url: "/channels/whatsapp",
+          icon: IconBrandWhatsapp,
+        },
+        {
+          title: "Messenger",
+          url: "/channels/messenger",
+          icon: IconBrandMessenger,
+        },
+        {
+          title: "Instagram",
+          url: "/channels/instagram",
+          icon: IconBrandInstagram,
+        },
+        {
+          title: "Apple Messages",
+          url: "/channels/apple",
+          icon: IconBrandApple,
+        },
+        {
+          title: "Email",
+          url: "/channels/email",
+          icon: IconMail,
+        },
+        {
+          title: "Call",
+          url: "/channels/call",
+          icon: IconPhoneCall,
+        },
+        {
+          title: "Push Notifications",
+          url: "/channels/push",
+          icon: IconDeviceMobile,
+        },
+        {
+          title: "RCS",
+          url: "/channels/rcs",
+          icon: IconBrandTelegram,
+        },
+      ],
     },
     {
       title: "Analytics",

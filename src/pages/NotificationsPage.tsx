@@ -1,4 +1,5 @@
 import { PageHeader } from "@/components/page-header";
+import { PageWrapper } from "@/components/page-wrapper";
 import { usePageTitle } from "@/hooks/use-dynamic-title";
 import { useNotificationContext, Notification as AppNotification } from "@/contexts/notification-context";
 import { Button } from "@/components/ui/button";
@@ -281,38 +282,35 @@ export default function NotificationsPage() {
 
   if (isDataLoading) {
     return (
-      <div className="flex flex-1 flex-col">
-        <div className="@container/main flex flex-1 flex-col gap-2">
-          <PageHeader
-            title="Notifications"
-            description="View and manage your notifications"
-            showBreadcrumbs={false}
-            isLoading={true}
-          />
-          <div className="px-4 md:px-6">
-            <div className="space-y-4">
-              <Skeleton className="h-10 w-full" />
-              <div className="space-y-2">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="h-16 w-full" />
-                ))}
-              </div>
+      <PageWrapper isLoading={true}>
+        <PageHeader
+          title="Notifications"
+          description="View and manage your notifications"
+          showBreadcrumbs={false}
+          isLoading={true}
+        />
+        <div className="px-4 md:px-6">
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <div className="space-y-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-16 w-full" />
+              ))}
             </div>
           </div>
         </div>
-      </div>
+      </PageWrapper>
     );
   }
 
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="@container/main flex flex-1 flex-col gap-2">
-        <PageHeader
-          title="Notifications"
-          description={`View and manage your notifications • ${unreadCount} unread`}
-          showBreadcrumbs={false}
-          isLoading={false}
-          customActions={
+    <PageWrapper isLoading={isDataLoading}>
+      <PageHeader
+        title="Notifications"
+        description={`View and manage your notifications • ${unreadCount} unread`}
+        showBreadcrumbs={false}
+        isLoading={false}
+        customActions={
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={markAllAsRead} disabled={unreadCount === 0}>
                 <CheckCircle2 className="h-4 w-4 mr-2" />
@@ -869,7 +867,6 @@ export default function NotificationsPage() {
             </div>
           </div>
         </motion.div>
-      </div>
-    </div>
+      </PageWrapper>
   );
 }

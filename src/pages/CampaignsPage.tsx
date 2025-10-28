@@ -1,6 +1,7 @@
 import * as React from "react"
 import { useNavigate } from "react-router-dom"
 import { usePageTitle } from "@/hooks/use-dynamic-title"
+import { PageWrapper } from "@/components/page-wrapper"
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -306,24 +307,23 @@ function CampaignsPageContent() {
   };
 
   return (
-    <div className="flex flex-col">
-      <div className="@container/main flex flex-col gap-2">
-        <PageHeader
-          title="Campaigns"
-          description="Manage your marketing campaigns"
-          showBreadcrumbs={false}
-          isLoading={isDataLoading}
-          customActions={
-            <div className="flex items-center gap-2">
-              <Button onClick={handleNewCampaign}>
-                <Plus className="mr-2 h-4 w-4" />
-                New Campaign
-              </Button>
-            </div>
-          }
-        />
+    <PageWrapper isLoading={isDataLoading}>
+      <PageHeader
+        title="Campaigns"
+        description="Manage your marketing campaigns"
+        showBreadcrumbs={false}
+        isLoading={isDataLoading}
+        customActions={
+          <div className="flex items-center gap-2">
+            <Button onClick={handleNewCampaign}>
+              <Plus className="mr-2 h-4 w-4" />
+              New Campaign
+            </Button>
+          </div>
+        }
+      />
 
-        <div className="px-4 lg:px-6 flex flex-col">
+      <div className="flex flex-col">
           <DataTable
             isLoading={isDataLoading}
             searchConfig={{
@@ -468,11 +468,8 @@ function CampaignsPageContent() {
                     )}
                   </DataTableBody>
           </DataTable>
-        </div>
-        
       </div>
-      
-    </div>
+    </PageWrapper>
   );
 }
 

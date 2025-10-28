@@ -1,6 +1,7 @@
 import * as React from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { usePageTitle } from "@/hooks/use-dynamic-title"
+import { PageWrapper } from "@/components/page-wrapper"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -65,43 +66,41 @@ export default function ContactDetailPage() {
   // Show loading state while checking for contact
   if (!contact) {
     return (
-      <div className="flex flex-1 flex-col">
-        <div className="@container/main flex flex-1 flex-col gap-2">
-          <PageHeaderProfile
-            title="Contact Not Found"
-            description="The requested contact could not be found"
-            avatar={{
-              src: "",
-              fallback: "??",
-              alt: "Loading"
-            }}
-            onBack={() => navigate("/contacts")}
-            actions={
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" disabled>
-                  Edit
-                </Button>
-                <Button variant="outline" size="sm" disabled>
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </div>
-            }
-            isLoading={true}
-          />
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
-            <div className="lg:col-span-2 grid grid-cols-1 gap-4 items-start">
-              <CardSkeleton />
-              <CardSkeleton />
-              <CardSkeleton />
+      <PageWrapper isLoading={true}>
+        <PageHeaderProfile
+          title="Contact Not Found"
+          description="The requested contact could not be found"
+          avatar={{
+            src: "",
+            fallback: "??",
+            alt: "Loading"
+          }}
+          onBack={() => navigate("/contacts")}
+          actions={
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" disabled>
+                Edit
+              </Button>
+              <Button variant="outline" size="sm" disabled>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
             </div>
-            <div className="grid grid-cols-1 gap-4 items-start">
-              <CardSkeleton />
-              <CardSkeleton />
-              <CardSkeleton />
-            </div>
+          }
+          isLoading={true}
+        />
+        <div className="grid grid-cols-1 lg:grid-cols-3 items-start">
+          <div className="lg:col-span-2 grid grid-cols-1 items-start">
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
+          <div className="grid grid-cols-1 items-start">
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
           </div>
         </div>
-      </div>
+      </PageWrapper>
     )
   }
   
@@ -155,33 +154,32 @@ export default function ContactDetailPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="@container/main flex flex-1 flex-col gap-2">
-        <PageHeaderProfile
-          title={contact.name}
-          description={`Contact from ${contact.countryISO}`}
-          avatar={{
-            src: "", // No image source available
-            fallback: contact.avatar,
-            alt: contact.name
-          }}
-          onBack={handleBack}
-          actions={
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handleEdit}>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </Button>
-              <Button variant="outline" size="sm">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </div>
-          }
-        />
+    <PageWrapper>
+      <PageHeaderProfile
+        title={contact.name}
+        description={`Contact from ${contact.countryISO}`}
+        avatar={{
+          src: "", // No image source available
+          fallback: contact.avatar,
+          alt: contact.name
+        }}
+        onBack={handleBack}
+        actions={
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleEdit}>
+              <Edit className="h-4 w-4 mr-2" />
+              Edit
+            </Button>
+            <Button variant="outline" size="sm">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </div>
+        }
+      />
 
         {/* Profile Content */}
-        <div className="flex flex-col gap-4 pb-4">
-          <div className="px-4 md:px-6">
+        <div className="flex flex-col">
+          <div>
           <Tabs 
             value={activeTab} 
             onValueChange={handleTabChange}
@@ -190,13 +188,13 @@ export default function ContactDetailPage() {
             loadingTabCount={3}
             showContentSkeleton={true}
             skeletonComponent={
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
-                <div className="lg:col-span-2 grid grid-cols-1 gap-4 items-start">
+              <div className="grid grid-cols-1 lg:grid-cols-3 items-start">
+                <div className="lg:col-span-2 grid grid-cols-1 items-start">
                   <CardSkeleton />
                   <CardSkeleton />
                   <CardSkeleton />
                 </div>
-                <div className="grid grid-cols-1 gap-4 items-start">
+                <div className="grid grid-cols-1 items-start">
                   <CardSkeleton />
                   <CardSkeleton />
                   <CardSkeleton />
@@ -223,8 +221,8 @@ export default function ContactDetailPage() {
               </TabsList>
             </motion.div>
 
-            <motion.div 
-              className="relative pb-4 w-full"
+              <motion.div 
+                className="relative w-full"
               variants={isInitialLoad ? initialTabContentVariants : {}}
               initial={isInitialLoad ? "initial" : false}
               animate={isInitialLoad ? "animate" : false}
@@ -579,7 +577,6 @@ export default function ContactDetailPage() {
           </Tabs>
           </div>
         </div>
-      </div>
-    </div>
+      </PageWrapper>
   )
 }

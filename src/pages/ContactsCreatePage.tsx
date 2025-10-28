@@ -1,6 +1,7 @@
 import * as React from "react"
 import { useNavigate } from "react-router-dom"
 import { usePageTitle } from "@/hooks/use-dynamic-title"
+import { PageWrapper } from "@/components/page-wrapper"
 import { Button } from "@/components/ui/button"
 import { 
   Field, 
@@ -140,47 +141,46 @@ export default function ContactsCreatePage() {
   const canSave = formData.firstName.trim() !== "" && formData.lastName.trim() !== ""
 
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="@container/main flex flex-1 flex-col gap-2">
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={smoothTransition}
-        >
-          <PageHeaderWithActions
-            title="Create Contact"
-            description="Add a new lead or customer to your contacts"
-            isLoading={isInitialLoading}
-            actions={
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDiscard}
-                  disabled={isSubmitting || isInitialLoading}
-                  className="gap-2"
-                >
-                  <X className="h-4 w-4" />
-                  Cancel
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleSave}
-                  disabled={!canSave || !isDirty || isInitialLoading}
-                  className="gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  {isSubmitting ? "Creating..." : "Create Contact"}
-                </Button>
-              </div>
-            }
-          />
-        </motion.div>
+    <PageWrapper isLoading={isInitialLoading}>
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={smoothTransition}
+      >
+        <PageHeaderWithActions
+          title="Create Contact"
+          description="Add a new lead or customer to your contacts"
+          isLoading={isInitialLoading}
+          actions={
+            <div className="flex items-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDiscard}
+                disabled={isSubmitting || isInitialLoading}
+                className=""
+              >
+                <X className="h-4 w-4" />
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={!canSave || !isDirty || isInitialLoading}
+                className=""
+              >
+                <Plus className="h-4 w-4" />
+                {isSubmitting ? "Creating..." : "Create Contact"}
+              </Button>
+            </div>
+          }
+        />
+      </motion.div>
 
         {/* Content */}
-        <div className="flex flex-col gap-4 pb-4">
+        <div className="flex flex-col">
           {isInitialLoading ? (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3">
               <div className="lg:col-span-2 space-y-6">
                 <CardSkeleton />
                 <CardSkeleton />
@@ -193,21 +193,21 @@ export default function ContactsCreatePage() {
             </div>
           ) : (
             <motion.div 
-              className="flex flex-col gap-4"
+              className="flex flex-col"
               variants={pageVariants}
               initial="initial"
               animate="animate"
               transition={smoothTransition}
             >
-          <div className="px-4 md:px-6">
+          <div>
             <form className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3">
               {/* Main Form */}
               <div className="lg:col-span-2 space-y-6">
                 {/* Basic Information */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+                    <CardTitle className="flex items-center">
                       <User className="h-5 w-5" />
                       Basic Information
                     </CardTitle>
@@ -216,7 +216,7 @@ export default function ContactsCreatePage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2">
                       <Field>
                         <FieldLabel htmlFor="firstName">First Name *</FieldLabel>
                         <FieldContent>
@@ -259,13 +259,13 @@ export default function ContactsCreatePage() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="Lead">
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center">
                                 <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
                                 Lead
                               </div>
                             </SelectItem>
                             <SelectItem value="Customer">
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center">
                                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                                 Customer
                               </div>
@@ -280,7 +280,7 @@ export default function ContactsCreatePage() {
                 {/* Contact Information */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+                    <CardTitle className="flex items-center">
                       <Phone className="h-5 w-5" />
                       Contact Information
                     </CardTitle>
@@ -289,7 +289,7 @@ export default function ContactsCreatePage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2">
                       <Field>
                         <FieldLabel htmlFor="email">Email Address</FieldLabel>
                         <FieldContent>
@@ -326,7 +326,7 @@ export default function ContactsCreatePage() {
                       </Field>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2">
                       <Field>
                         <FieldLabel htmlFor="country">Country</FieldLabel>
                         <FieldContent>
@@ -376,7 +376,7 @@ export default function ContactsCreatePage() {
                 {/* Company Information */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+                    <CardTitle className="flex items-center">
                       <Building className="h-5 w-5" />
                       Company Information
                     </CardTitle>
@@ -385,7 +385,7 @@ export default function ContactsCreatePage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2">
                       <Field>
                         <FieldLabel htmlFor="company">Company</FieldLabel>
                         <FieldContent>
@@ -422,7 +422,7 @@ export default function ContactsCreatePage() {
                 {/* Tags */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+                    <CardTitle className="flex items-center">
                       <Tag className="h-5 w-5" />
                       Tags
                     </CardTitle>
@@ -456,12 +456,12 @@ export default function ContactsCreatePage() {
                     </InputGroup>
                     
                     {formData.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap">
                         {formData.tags.map((tag) => (
                           <Badge
                             key={tag}
                             variant="secondary"
-                            className="flex items-center gap-1"
+                            className="flex items-center"
                           >
                             {tag}
                             <Button
@@ -504,7 +504,6 @@ export default function ContactsCreatePage() {
             </motion.div>
           )}
         </div>
-      </div>
-    </div>
+      </PageWrapper>
   )
 }

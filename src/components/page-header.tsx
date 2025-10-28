@@ -6,7 +6,6 @@ import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Kbd, KbdGroup } from "@/components/ui/kbd"
 import { motion } from "framer-motion"
-import { skeletonStaggerVariants, skeletonItemVariants } from "@/lib/transitions"
 import {
   Tooltip,
   TooltipContent,
@@ -22,8 +21,6 @@ import {
 } from "@/components/ui/breadcrumb"
 import { NotificationBell } from "@/components/notification-bell"
 import { ArrowLeft, Search } from "lucide-react"
-import { mockContacts } from "@/data/mock-data"
-import { Skeleton } from "@/components/ui/skeleton"
 import { 
   Field, 
   FieldContent 
@@ -35,11 +32,13 @@ import {
 } from "@/components/ui/input-group"
 import { ActionCenter } from "@/components/action-center"
 import { useIsMobile } from "@/hooks/use-mobile"
+
 interface BreadcrumbItem {
   label: string
   href: string
   isCurrent: boolean
 }
+
 // Action button configuration
 interface ActionButton {
   label: string
@@ -50,6 +49,7 @@ interface ActionButton {
   disabled?: boolean
   icon?: ReactNode
 }
+
 // Main page header props
 interface PageHeaderProps {
   // Basic content
@@ -73,7 +73,6 @@ interface PageHeaderProps {
   showFilters?: boolean
   filters?: ReactNode
   
-  
   // Actions (1-3 buttons with priority)
   primaryAction?: ActionButton
   secondaryAction?: ActionButton
@@ -84,11 +83,12 @@ interface PageHeaderProps {
   
   // Layout options
   className?: string
-  isLoading?: boolean
+  isLoading?: boolean // Kept for backward compatibility but ignored
   
   // Responsive behavior
   stackOnMobile?: boolean
 }
+
 export function PageHeader({
   // Basic content
   title,
@@ -111,7 +111,6 @@ export function PageHeader({
   showFilters = false,
   filters,
   
-  
   // Actions
   primaryAction,
   secondaryAction,
@@ -120,7 +119,7 @@ export function PageHeader({
   
   // Layout
   className = "",
-  isLoading = false,
+  isLoading = false, // Ignored
   stackOnMobile = true,
 }: PageHeaderProps) {
   const location = useLocation()
@@ -128,16 +127,11 @@ export function PageHeader({
   const isMobile = useIsMobile()
   
   // Component-level skeleton state for breadcrumbs
-  const [showBreadcrumbSkeleton, setShowBreadcrumbSkeleton] = React.useState(true)
+  const [showBreadcrumbSkeleton, setShowBreadcrumbSkeleton] = React.useState(false)
   
   React.useEffect(() => {
-    // Show skeleton briefly on initial load and pathname changes
-    setShowBreadcrumbSkeleton(true)
-    const timer = setTimeout(() => {
-      setShowBreadcrumbSkeleton(false)
-    }, 400) // 400ms delay to show skeleton
-    
-    return () => clearTimeout(timer)
+    // No longer showing skeleton, just updating breadcrumbs
+    setShowBreadcrumbSkeleton(false)
   }, [pathname])
   
   // Generate breadcrumbs based on pathname - memoized to prevent hydration issues
@@ -230,98 +224,9 @@ export function PageHeader({
       </Button>
     )
   }
-  // Loading state
-  if (isLoading) {
-    return (
-      <motion.div 
-        className={`flex flex-col gap-3 px-3 py-2 md:flex-row md:items-end md:justify-between ${className}`}
-        variants={skeletonStaggerVariants}
-        initial="initial"
-        animate="animate"
-      >
-        {/* Left side - Title and Description */}
-        <motion.div 
-          className="space-y-1"
-          variants={skeletonItemVariants}
-        >
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="h-4 w-64" />
-        </motion.div>
-        
-        {/* Right side - Search, Filters, and Actions */}
-        <motion.div 
-          className="flex items-center gap-2"
-          variants={skeletonItemVariants}
-        >
-          {showSearch && <Skeleton className="h-9 w-48" />}
-          {showFilters && <Skeleton className="h-9 w-32" />}
-          {(primaryAction || secondaryAction || tertiaryAction) && (
-            <>
-              {Array.from({ length: [primaryAction, secondaryAction, tertiaryAction].filter(Boolean).length }).map((_, index) => (
-                <Skeleton key={index} className="h-9 w-24" />
-              ))}
-            </>
-          )}
-        </motion.div>
-      </motion.div>
-    )
-  }
   
   // If no title/description, render breadcrumb-only header
   if (!title && !description) {
-    // Loading state for breadcrumb-only header
-    if (isLoading) {
-      return (
-        <motion.header 
-          className="flex h-(--header-height) shrink-0 items-center border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) relative max-w-full overflow-x-hidden rounded-t-xl overflow-hidden"
-          variants={skeletonStaggerVariants}
-          initial="initial"
-          animate="animate"
-        >
-          <div className="flex w-full items-center px-4 lg:px-6 py-3 min-w-0">
-            {/* Left side - Sidebar trigger and breadcrumbs skeleton */}
-            <motion.div 
-              className="flex items-center gap-2 sm:gap-3 flex-shrink-0"
-              variants={skeletonItemVariants}
-            >
-              <Skeleton className="h-8 w-8 rounded-md" />
-              <div className="h-4 w-px bg-border" />
-              
-              <div className="flex items-center gap-1.5">
-                <Skeleton className="h-4 w-16 rounded-sm" />
-                <Skeleton className="h-3 w-3 rounded-full" />
-                <Skeleton className="h-4 w-20 rounded-sm" />
-              </div>
-            </motion.div>
-            {/* Center - Search Bar skeleton (Hidden on mobile, absolute positioning for perfect centering on desktop) */}
-            {!isMobile && (
-              <motion.div 
-                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg px-3 pointer-events-none"
-                variants={skeletonItemVariants}
-              >
-                <div className="relative w-full pointer-events-auto">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Skeleton className="h-8 w-full rounded-md" />
-                </div>
-              </motion.div>
-            )}
-            
-            {/* Right side - Mobile Search Icon & Notification Bell skeleton */}
-            <motion.div 
-              className="flex items-center gap-2 flex-shrink-0 ml-auto"
-              variants={skeletonItemVariants}
-            >
-              {/* Mobile Search Icon Skeleton */}
-              {isMobile && showSearch && (
-                <Skeleton className="h-8 w-8 rounded-md" />
-              )}
-              {/* Notification Bell Skeleton */}
-              <Skeleton className="h-8 w-8 rounded-full" />
-            </motion.div>
-          </div>
-        </motion.header>
-      )
-    }
     return (
       <>
         <header className="flex h-(--header-height) shrink-0 items-center border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) relative max-w-full overflow-x-hidden rounded-t-xl overflow-hidden">
@@ -342,38 +247,30 @@ export function PageHeader({
               />
               
               {showBreadcrumbs && (
-                showBreadcrumbSkeleton ? (
-                  <div className="flex items-center gap-1.5">
-                    <Skeleton className="h-4 w-16 rounded-sm" />
-                    <Skeleton className="h-3 w-3 rounded-full" />
-                    <Skeleton className="h-4 w-20 rounded-sm" />
-                  </div>
-                ) : (
-                  <Breadcrumb>
-                    <BreadcrumbList>
-                      {breadcrumbs.map((breadcrumb, index) => (
-                        <div key={breadcrumb.href} className="flex items-center">
-                          <BreadcrumbItem>
-                            {breadcrumb.isCurrent ? (
-                              <BreadcrumbPage>{breadcrumb.label}</BreadcrumbPage>
-                            ) : (
-                              <BreadcrumbLink asChild>
-                                <Link to={breadcrumb.href}>{breadcrumb.label}</Link>
-                              </BreadcrumbLink>
-                            )}
-                          </BreadcrumbItem>
-                          {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
-                        </div>
-                      ))}
-                    </BreadcrumbList>
-                  </Breadcrumb>
-                )
+                <Breadcrumb>
+                  <BreadcrumbList>
+                    {breadcrumbs.map((breadcrumb, index) => (
+                      <div key={breadcrumb.href} className="flex items-center">
+                        <BreadcrumbItem>
+                          {breadcrumb.isCurrent ? (
+                            <BreadcrumbPage>{breadcrumb.label}</BreadcrumbPage>
+                          ) : (
+                            <BreadcrumbLink asChild>
+                              <Link to={breadcrumb.href}>{breadcrumb.label}</Link>
+                            </BreadcrumbLink>
+                          )}
+                        </BreadcrumbItem>
+                        {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
+                      </div>
+                    ))}
+                  </BreadcrumbList>
+                </Breadcrumb>
               )}
             </div>
             {/* Center - Search Bar (Hidden on mobile, absolute positioning for perfect centering on desktop) */}
             {!isMobile && (
               <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl px-4 lg:px-6 pointer-events-none">
-                {showSearch ? (
+                {showSearch && (
                   <div className="w-full pointer-events-auto">
                     <Field>
                       <FieldContent>
@@ -398,15 +295,6 @@ export function PageHeader({
                         </InputGroup>
                       </FieldContent>
                     </Field>
-                  </div>
-                ) : (
-                  <div className="w-full pointer-events-auto">
-                    <div className="relative">
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                        <Search className="h-4 w-4" />
-                      </div>
-                      <Skeleton className="h-8 w-full rounded-md" />
-                    </div>
                   </div>
                 )}
               </div>
@@ -433,7 +321,7 @@ export function PageHeader({
                 </Tooltip>
               )}
               {/* Notification Bell */}
-              <NotificationBell isLoading={isLoading} />
+              <NotificationBell />
             </div>
           </div>
         </header>
@@ -453,7 +341,7 @@ export function PageHeader({
   
   // Main content header
   return (
-    <div className={`flex flex-col gap-4 px-4 lg:px-6 py-6 md:flex-row md:items-end md:justify-between max-w-full ${className}`}>
+    <div className={`flex flex-col gap-4 md:flex-row md:items-end md:justify-between max-w-full ${className}`}>
       {/* Left side - Title and Description */}
       <div className="space-y-1">
         {title && <h1 className="text-xl font-semibold">{title}</h1>}
@@ -517,10 +405,10 @@ export function PageHeader({
           )}
         </div>
       )}
-      
     </div>
   )
 }
+
 // Legacy component for backward compatibility
 export function PageHeaderWithFilters({ 
   title, 
@@ -546,6 +434,7 @@ export function PageHeaderWithFilters({
     />
   )
 }
+
 export function PageHeaderWithActions({ 
   title, 
   description, 
@@ -569,6 +458,7 @@ export function PageHeaderWithActions({
     />
   )
 }
+
 // Profile Header Variant - with back button and avatar
 interface PageHeaderProfileProps {
   title: string
@@ -583,6 +473,7 @@ interface PageHeaderProfileProps {
   className?: string
   isLoading?: boolean
 }
+
 export function PageHeaderProfile({
   title,
   description,
@@ -590,49 +481,10 @@ export function PageHeaderProfile({
   onBack,
   actions,
   className = "",
-  isLoading = false
+  isLoading = false // Ignored
 }: PageHeaderProfileProps) {
-  if (isLoading) {
-    return (
-      <motion.div 
-        className={`flex flex-col gap-4 px-6 py-6 md:flex-row md:items-center md:justify-between ${className}`}
-        variants={skeletonStaggerVariants}
-        initial="initial"
-        animate="animate"
-      >
-        {/* Left side - Back button, Avatar, Title and Description */}
-        <motion.div 
-          className="flex items-center gap-4"
-          variants={skeletonItemVariants}
-        >
-          {/* Back button skeleton */}
-          <Skeleton className="h-8 w-8 rounded-md flex-shrink-0" />
-          
-          {/* Avatar skeleton */}
-          <Skeleton className="h-12 w-12 rounded-full flex-shrink-0" />
-          
-          {/* Title and description skeleton */}
-          <div className="space-y-2 min-w-0 flex-1">
-            <Skeleton className="h-6 w-48 max-w-full" />
-            <Skeleton className="h-4 w-64 max-w-full" />
-          </div>
-        </motion.div>
-        
-        {/* Right side - Actions skeleton */}
-        {actions && (
-          <motion.div 
-            className="flex items-center gap-2 flex-shrink-0"
-            variants={skeletonItemVariants}
-          >
-            <Skeleton className="h-9 w-24" />
-            <Skeleton className="h-9 w-8" />
-          </motion.div>
-        )}
-      </motion.div>
-    )
-  }
   return (
-    <div className={`flex flex-col gap-4 px-6 py-6 md:flex-row md:items-end md:justify-between ${className}`}>
+    <div className={`flex flex-col gap-4 md:flex-row md:items-end md:justify-between ${className}`}>
       {/* Left side - Back button, Avatar, Title and Description */}
       <div className="flex items-center gap-4">
         <Button

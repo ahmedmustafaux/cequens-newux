@@ -5,6 +5,7 @@ import { DashboardChart } from "@/components/dashboard-chart"
 import { DashboardPieChart } from "@/components/dashboard-pie-chart"
 import { TableSkeleton } from "@/components/ui/table"
 import { PageHeader } from "@/components/page-header"
+import { PageWrapper } from "@/components/page-wrapper"
 import { TimeFilter } from "@/components/time-filter"
 import { useTimeRangeTitle } from "@/hooks/use-dynamic-title"
 
@@ -59,38 +60,36 @@ export default function DashboardPage() {
 
 
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="@container/main flex flex-1 flex-col gap-2">
-        <PageHeader
-          title="Overview"
-          description="Monitor your communication platform performance"
-          showBreadcrumbs={false}
-          showFilters={true}
-          filters={<TimeFilter value={dateRange} onValueChange={(value) => {
-            if (value && typeof value === 'object') {
-              setDateRange(value as DateRange)
-            }
-          }} isLoading={isDataLoading} mode="advanced" />}
-          isLoading={isDataLoading}
-        />
+    <PageWrapper isLoading={isDataLoading}>
+      <PageHeader
+        title="Overview"
+        description="Monitor your communication platform performance"
+        showBreadcrumbs={false}
+        showFilters={true}
+        filters={<TimeFilter value={dateRange} onValueChange={(value) => {
+          if (value && typeof value === 'object') {
+            setDateRange(value as DateRange)
+          }
+        }} isLoading={isDataLoading} mode="advanced" />}
+        isLoading={isDataLoading}
+      />
 
-        <div className="flex flex-col gap-4 pb-4">
-          {isDataLoading ? (
-            <>
-              <TableSkeleton rows={4} columns={4} />
-              <TableSkeleton rows={1} columns={1} className="h-[400px]" />
-            </>
-          ) : (
-            <>
-              <SectionCards timeRange={timeRange} isLoading={isDataLoading} />
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 px-4 lg:px-6">
-                <DashboardChart timeRange={timeRange} isLoading={isDataLoading} className="lg:col-span-2" />
-                <DashboardPieChart timeRange={timeRange} isLoading={isDataLoading} />
-              </div>
-            </>
-          )}
-        </div>
+      <div className="flex flex-col">
+        {isDataLoading ? (
+          <>
+            <TableSkeleton rows={4} columns={4} />
+            <TableSkeleton rows={1} columns={1} className="h-[400px]" />
+          </>
+        ) : (
+          <>
+            <SectionCards timeRange={timeRange} isLoading={isDataLoading} />
+            <div className="grid grid-cols-1 lg:grid-cols-3">
+              <DashboardChart timeRange={timeRange} isLoading={isDataLoading} className="lg:col-span-2" />
+              <DashboardPieChart timeRange={timeRange} isLoading={isDataLoading} />
+            </div>
+          </>
+        )}
       </div>
-    </div>
+    </PageWrapper>
   )
 }

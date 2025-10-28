@@ -26,6 +26,7 @@ import {
   Upload,
   Search,
 } from "lucide-react"
+import { PageWrapper } from "@/components/page-wrapper"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -392,303 +393,303 @@ const ContactsPageContent = (): React.JSX.Element => {
   }
 
   return (
-    <div className="flex flex-col">
-      <div className="@container/main flex flex-col gap-2">
-        <PageHeader
-          title="Contacts"
-          description="Create and manage your contacts."
-          showBreadcrumbs={false}
-          isLoading={isDataLoading}
-          customActions={
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="gap-2" onClick={handleImport}>
-                <Upload className="w-4 h-4" />
-                Import
-              </Button>
-              <Button variant="outline" size="sm" className="gap-2" onClick={handleExport}>
-                <Download className="w-4 h-4" />
-                Export
-              </Button>
-              <Button 
-                size="sm" 
-                className="gap-2"
-                onClick={handleCreateContact}
-              >
-                <UserPlus className="w-4 h-4" />
-                Create Contact
-              </Button>
-            </div>
-          }
-        />
-
-        <Tabs 
-          value={activeTab} 
-          onValueChange={handleTabChange}
-          className="w-full"
-          isLoading={isDataLoading}
-          loadingTabCount={3}
-          showContentSkeleton={true}
-          skeletonComponent={<TableSkeleton rows={4} columns={4} />}
-        >
-            <motion.div 
-              className="px-4 lg:px-6 flex justify-start"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={smoothTransition}
+    <>
+      <PageHeader
+        title="Contacts"
+        description="Create and manage your contacts."
+        showBreadcrumbs={false}
+        isLoading={isDataLoading}
+        customActions={
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="gap-2" onClick={handleImport}>
+              <Upload className="w-4 h-4" />
+              Import
+            </Button>
+            <Button variant="outline" size="sm" className="gap-2" onClick={handleExport}>
+              <Download className="w-4 h-4" />
+              Export
+            </Button>
+            <Button 
+              size="sm" 
+              className="gap-2"
+              onClick={handleCreateContact}
             >
-              <TabsList className="inline-flex h-10 items-center justify-center rounded-md p-1 text-muted-foreground">
-                <motion.div transition={smoothTransition}>
-                  <TabsTrigger value="all" className="flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    All Contacts
-                  </TabsTrigger>
-                </motion.div>
-                <motion.div transition={smoothTransition}>
-                  <TabsTrigger value="archived" className="flex items-center gap-2">
-                    <Archive className="h-4 w-4" />
-                    Archived
-                  </TabsTrigger>
-                </motion.div>
-                <motion.div transition={smoothTransition}>
-                  <TabsTrigger value="activities" className="flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    Activities
-                  </TabsTrigger>
-                </motion.div>
-              </TabsList>
-            </motion.div>
+              <UserPlus className="w-4 h-4" />
+              Create Contact
+            </Button>
+          </div>
+        }
+      />
 
-              <motion.div 
-                className="relative pb-4 w-full"
-                variants={isInitialLoad ? initialTabContentVariants : {}}
-                initial={isInitialLoad ? "initial" : false}
-                animate={isInitialLoad ? "animate" : false}
+      <Tabs 
+        value={activeTab} 
+        onValueChange={handleTabChange}
+        className="w-full"
+        isLoading={isDataLoading}
+        loadingTabCount={3}
+        showContentSkeleton={true}
+        skeletonComponent={<TableSkeleton rows={4} columns={4} />}
+      >
+        <motion.div 
+          className="flex justify-start"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={smoothTransition}
+        >
+          <TabsList className="inline-flex h-10 items-center justify-center rounded-md p-1 text-muted-foreground">
+            <motion.div transition={smoothTransition}>
+              <TabsTrigger value="all" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                All Contacts
+              </TabsTrigger>
+            </motion.div>
+            <motion.div transition={smoothTransition}>
+              <TabsTrigger value="archived" className="flex items-center gap-2">
+                <Archive className="h-4 w-4" />
+                Archived
+              </TabsTrigger>
+            </motion.div>
+            <motion.div transition={smoothTransition}>
+              <TabsTrigger value="activities" className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Activities
+              </TabsTrigger>
+            </motion.div>
+          </TabsList>
+        </motion.div>
+
+        <motion.div 
+          className="relative w-full"
+          variants={isInitialLoad ? initialTabContentVariants : {}}
+          initial={isInitialLoad ? "initial" : false}
+          animate={isInitialLoad ? "animate" : false}
+          transition={smoothTransition}
+        >
+          <AnimatePresence mode="wait">
+            {activeTab === "all" && (
+              <motion.div
+                key="all"
+                variants={isInitialLoad ? initialTabContentVariants : directionalTabVariants(direction)}
+                initial={isInitialLoad ? "initial" : "hidden"}
+                animate={isInitialLoad ? "animate" : "visible"}
+                exit="exit"
                 transition={smoothTransition}
+                className="w-full"
               >
-                <AnimatePresence mode="wait">
-                  {activeTab === "all" && (
-                    <motion.div
-                      key="all"
-                      variants={isInitialLoad ? initialTabContentVariants : directionalTabVariants(direction)}
-                      initial={isInitialLoad ? "initial" : "hidden"}
-                      animate={isInitialLoad ? "animate" : "visible"}
-                      exit="exit"
-                      transition={smoothTransition}
-                      className="w-full"
+                <TabsContent value="all" className="mt-0">
+                  <div className="flex flex-col">
+                    <DataTable
+                      isLoading={isDataLoading}
+                      searchConfig={{
+                        placeholder: "Search contacts by name or phone",
+                        searchColumns: ['name', 'phone', 'lastMessage'],
+                        table: table
+                      }}
+                      filters={[
+                        {
+                          key: "channels",
+                          label: "Channel",
+                          options: channelOptions,
+                          selectedValues: selectedChannels,
+                          onSelectionChange: setSelectedChannels,
+                          onClear: () => setSelectedChannels([]),
+                          searchable: true,
+                          searchPlaceholder: "Search channels...",
+                          searchQuery: channelSearchQuery,
+                          onSearchChange: setChannelSearchQuery,
+                          filteredOptions: filteredChannelOptions
+                        },
+                        {
+                          key: "tags",
+                          label: "Tags",
+                          options: tagOptions,
+                          selectedValues: selectedTags,
+                          onSelectionChange: setSelectedTags,
+                          onClear: () => setSelectedTags([]),
+                          searchable: true,
+                          searchPlaceholder: "Search tags...",
+                          searchQuery: tagSearchQuery,
+                          onSearchChange: setTagSearchQuery,
+                          filteredOptions: filteredTagOptions
+                        },
+                        {
+                          key: "conversations",
+                          label: "Status",
+                          options: conversationOptions,
+                          selectedValues: selectedConversations,
+                          onSelectionChange: setSelectedConversations,
+                          onClear: () => setSelectedConversations([]),
+                          searchable: true,
+                          searchPlaceholder: "Search status...",
+                          searchQuery: conversationSearchQuery,
+                          onSearchChange: setConversationSearchQuery,
+                          filteredOptions: filteredConversationOptions
+                        }
+                      ]}
+                      pagination={{
+                        currentPage: table.getState().pagination.pageIndex + 1,
+                        totalPages: table.getPageCount(),
+                        totalItems: table.getFilteredRowModel().rows.length,
+                        itemsPerPage: table.getState().pagination.pageSize,
+                        onPrevious: () => table.previousPage(),
+                        onNext: () => table.nextPage(),
+                        hasPrevious: table.getCanPreviousPage(),
+                        hasNext: table.getCanNextPage(),
+                        onPageSizeChange: (pageSize: number) => table.setPageSize(pageSize),
+                        pageSizeOptions: [15, 20, 30]
+                      }}
+                      footerLabel={`Showing ${table.getRowModel().rows.length} contacts${table.getSelectedRowModel().rows.length > 0 ? ` • ${table.getSelectedRowModel().rows.length} selected` : ''}`}
                     >
-                      <TabsContent value="all" className="mt-0">
-                        <div className="px-4 lg:px-6 flex flex-col">
-                        <DataTable
-                          isLoading={isDataLoading}
-                          searchConfig={{
-                            placeholder: "Search contacts by name or phone",
-                            searchColumns: ['name', 'phone', 'lastMessage'],
-                            table: table
-                          }}
-                          filters={[
-                            {
-                              key: "channels",
-                              label: "Channel",
-                              options: channelOptions,
-                              selectedValues: selectedChannels,
-                              onSelectionChange: setSelectedChannels,
-                              onClear: () => setSelectedChannels([]),
-                              searchable: true,
-                              searchPlaceholder: "Search channels...",
-                              searchQuery: channelSearchQuery,
-                              onSearchChange: setChannelSearchQuery,
-                              filteredOptions: filteredChannelOptions
-                            },
-                            {
-                              key: "tags",
-                              label: "Tags",
-                              options: tagOptions,
-                              selectedValues: selectedTags,
-                              onSelectionChange: setSelectedTags,
-                              onClear: () => setSelectedTags([]),
-                              searchable: true,
-                              searchPlaceholder: "Search tags...",
-                              searchQuery: tagSearchQuery,
-                              onSearchChange: setTagSearchQuery,
-                              filteredOptions: filteredTagOptions
-                            },
-                            {
-                              key: "conversations",
-                              label: "Status",
-                              options: conversationOptions,
-                              selectedValues: selectedConversations,
-                              onSelectionChange: setSelectedConversations,
-                              onClear: () => setSelectedConversations([]),
-                              searchable: true,
-                              searchPlaceholder: "Search status...",
-                              searchQuery: conversationSearchQuery,
-                              onSearchChange: setConversationSearchQuery,
-                              filteredOptions: filteredConversationOptions
-                            }
-                          ]}
-                          pagination={{
-                            currentPage: table.getState().pagination.pageIndex + 1,
-                            totalPages: table.getPageCount(),
-                            totalItems: table.getFilteredRowModel().rows.length,
-                            itemsPerPage: table.getState().pagination.pageSize,
-                            onPrevious: () => table.previousPage(),
-                            onNext: () => table.nextPage(),
-                            hasPrevious: table.getCanPreviousPage(),
-                            hasNext: table.getCanNextPage(),
-                            onPageSizeChange: (pageSize: number) => table.setPageSize(pageSize),
-                            pageSizeOptions: [15, 20, 30]
-                          }}
-                          footerLabel={`Showing ${table.getRowModel().rows.length} contacts${table.getSelectedRowModel().rows.length > 0 ? ` • ${table.getSelectedRowModel().rows.length} selected` : ''}`}
-                        >
-                            {table.getSelectedRowModel().rows.length > 0 ? (
-                              <DataTableSelectionHeader
-                                selectedCount={table.getSelectedRowModel().rows.length}
-                                onClearSelection={() => table.resetRowSelection()}
-                                onSelectAll={() => table.toggleAllRowsSelected()}
-                                totalCount={table.getFilteredRowModel().rows.length}
-                                rightActions={
-                                  <>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-7 px-2 text-xs"
-                                      onClick={() => {
-                                        // TODO: Implement archive functionality
-                                      }}
-                                    >
-                                      Archive
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-7 px-2 text-xs text-red-600 hover:text-red-700 hover:border-red-300"
-                                      onClick={() => {
-                                        // TODO: Implement delete functionality
-                                      }}
-                                    >
-                                      Delete
-                                    </Button>
-                                  </>
-                                }
-                              />
-                            ) : (
-                              <DataTableHeader>
-                                {table.getHeaderGroups().map((headerGroup) => (
-                                  headerGroup.headers.map((header) => {
-                                    return (
-                                      <DataTableHead key={header.id}>
-                                        {header.isPlaceholder
-                                          ? null
-                                          : flexRender(
-                                              header.column.columnDef.header,
-                                              header.getContext()
-                                            )}
-                                      </DataTableHead>
-                                    )
-                                  })
-                                ))}
-                              </DataTableHeader>
-                            )}
-                            <DataTableBody>
-                              {table.getRowModel().rows?.length ? (
-                                table.getRowModel().rows.map((row) => (
-                                  <DataTableRow
-                                    key={row.id}
-                                    selected={row.getIsSelected()}
-                                    className="group cursor-pointer hover:bg-muted/50 transition-colors"
-                                    onClick={() => navigate(`/contacts/${row.original.id}`)}
-                                  >
-                                    {row.getVisibleCells().map((cell) => (
-                                      <DataTableCell 
-                                        key={cell.id}
-                                        columnId={cell.column.id}
-                                        clickable={cell.column.id === "select"}
-                                        onClick={cell.column.id === "select" ? () => row.toggleSelected(!row.getIsSelected()) : undefined}
-                                      >
-                                        {flexRender(
-                                          cell.column.columnDef.cell,
-                                          cell.getContext()
-                                        )}
-                                      </DataTableCell>
-                                    ))}
-                                  </DataTableRow>
-                                ))
-                              ) : (
-                                <DataTableRow>
-                                  <DataTableCell
-                                    colSpan={columns.length}
-                                    className="h-24 text-center"
-                                  >
-                                    No results.
-                                  </DataTableCell>
-                                </DataTableRow>
-                              )}
-                            </DataTableBody>
-                        </DataTable>
-                    </div>
-                  </TabsContent>
-                </motion.div>
-              )}
-              
-              {activeTab === "archived" && (
-                <motion.div
-                  key="archived"
-                  variants={isInitialLoad ? initialTabContentVariants : directionalTabVariants(direction)}
-                  initial={isInitialLoad ? "initial" : "hidden"}
-                  animate={isInitialLoad ? "animate" : "visible"}
-                  exit="exit"
-                  transition={smoothTransition}
-                  className="w-full"
-                >
-                  <TabsContent value="archived" className="mt-0">
-                    <div className="px-4 md:px-6">
-                      <Empty
-                        title="No Archived Contacts"
-                        description="Archived contacts will appear here when you archive them."
-                        icon={<Archive className="h-8 w-8" />}
-                        isLoading={isDataLoading}
-                        variant="default"
-                      />
-                    </div>
-                  </TabsContent>
-                </motion.div>
-              )}
-              
-              {activeTab === "activities" && (
-                <motion.div
-                  key="activities"
-                  variants={isInitialLoad ? initialTabContentVariants : directionalTabVariants(direction)}
-                  initial={isInitialLoad ? "initial" : "hidden"}
-                  animate={isInitialLoad ? "animate" : "visible"}
-                  exit="exit"
-                  transition={smoothTransition}
-                  className="w-full"
-                >
-                  <TabsContent value="activities" className="mt-0">
-                    <div className="px-4 md:px-6">
-                      <Empty
-                        title="No Recent Activities"
-                        description="Contact activities and interactions will appear here."
-                        icon={<Clock className="h-8 w-8" />}
-                        isLoading={isDataLoading}
-                        variant="default"
-                      />
-                    </div>
-                  </TabsContent>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-        </Tabs>
-      </div>
-    </div>
+                      {table.getSelectedRowModel().rows.length > 0 ? (
+                        <DataTableSelectionHeader
+                          selectedCount={table.getSelectedRowModel().rows.length}
+                          onClearSelection={() => table.resetRowSelection()}
+                          onSelectAll={() => table.toggleAllRowsSelected()}
+                          totalCount={table.getFilteredRowModel().rows.length}
+                          rightActions={
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 px-2 text-xs"
+                                onClick={() => {
+                                  // TODO: Implement archive functionality
+                                }}
+                              >
+                                Archive
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 px-2 text-xs text-red-600 hover:text-red-700 hover:border-red-300"
+                                onClick={() => {
+                                  // TODO: Implement delete functionality
+                                }}
+                              >
+                                Delete
+                              </Button>
+                            </>
+                          }
+                        />
+                      ) : (
+                        <DataTableHeader>
+                          {table.getHeaderGroups().map((headerGroup) => (
+                            headerGroup.headers.map((header) => {
+                              return (
+                                <DataTableHead key={header.id}>
+                                  {header.isPlaceholder
+                                    ? null
+                                    : flexRender(
+                                        header.column.columnDef.header,
+                                        header.getContext()
+                                      )}
+                                </DataTableHead>
+                              )
+                            })
+                          ))}
+                        </DataTableHeader>
+                      )}
+                      <DataTableBody>
+                        {table.getRowModel().rows?.length ? (
+                          table.getRowModel().rows.map((row) => (
+                            <DataTableRow
+                              key={row.id}
+                              selected={row.getIsSelected()}
+                              className="group cursor-pointer hover:bg-muted/50 transition-colors"
+                              onClick={() => navigate(`/contacts/${row.original.id}`)}
+                            >
+                              {row.getVisibleCells().map((cell) => (
+                                <DataTableCell 
+                                  key={cell.id}
+                                  columnId={cell.column.id}
+                                  clickable={cell.column.id === "select"}
+                                  onClick={cell.column.id === "select" ? () => row.toggleSelected(!row.getIsSelected()) : undefined}
+                                >
+                                  {flexRender(
+                                    cell.column.columnDef.cell,
+                                    cell.getContext()
+                                  )}
+                                </DataTableCell>
+                              ))}
+                            </DataTableRow>
+                          ))
+                        ) : (
+                          <DataTableRow>
+                            <DataTableCell
+                              colSpan={columns.length}
+                              className="h-24 text-center"
+                            >
+                              No results.
+                            </DataTableCell>
+                          </DataTableRow>
+                        )}
+                      </DataTableBody>
+                    </DataTable>
+                  </div>
+                </TabsContent>
+              </motion.div>
+            )}
+            
+            {activeTab === "archived" && (
+              <motion.div
+                key="archived"
+                variants={isInitialLoad ? initialTabContentVariants : directionalTabVariants(direction)}
+                initial={isInitialLoad ? "initial" : "hidden"}
+                animate={isInitialLoad ? "animate" : "visible"}
+                exit="exit"
+                transition={smoothTransition}
+                className="w-full"
+              >
+                <TabsContent value="archived" className="mt-0">
+                  <div>
+                    <Empty
+                      title="No Archived Contacts"
+                      description="Archived contacts will appear here when you archive them."
+                      icon={<Archive className="h-8 w-8" />}
+                      isLoading={isDataLoading}
+                      variant="default"
+                    />
+                  </div>
+                </TabsContent>
+              </motion.div>
+            )}
+            
+            {activeTab === "activities" && (
+              <motion.div
+                key="activities"
+                variants={isInitialLoad ? initialTabContentVariants : directionalTabVariants(direction)}
+                initial={isInitialLoad ? "initial" : "hidden"}
+                animate={isInitialLoad ? "animate" : "visible"}
+                exit="exit"
+                transition={smoothTransition}
+                className="w-full"
+              >
+                <TabsContent value="activities" className="mt-0">
+                  <div>
+                    <Empty
+                      title="No Recent Activities"
+                      description="Contact activities and interactions will appear here."
+                      icon={<Clock className="h-8 w-8" />}
+                      isLoading={isDataLoading}
+                      variant="default"
+                    />
+                  </div>
+                </TabsContent>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </Tabs>
+    </>
   )
 }
 
 export default function ContactsPage(): React.JSX.Element {
   return (
     <SearchProvider>
-      <ContactsPageContent />
+      <PageWrapper>
+        <ContactsPageContent />
+      </PageWrapper>
     </SearchProvider>
   )
 }

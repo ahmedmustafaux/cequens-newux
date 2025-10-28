@@ -1,6 +1,6 @@
-import { Empty } from "@/components/ui/empty";
-import { Construction } from "lucide-react";
+import { ComingSoon } from "@/components/coming-soon";
 import { PageHeader } from "@/components/page-header";
+import { PageWrapper } from "@/components/page-wrapper";
 import { TimeFilter } from "@/components/time-filter";
 import { TableSkeleton } from "@/components/ui/table";
 import { usePageTitle } from "@/hooks/use-dynamic-title";
@@ -36,40 +36,30 @@ export default function AnalyticsPage() {
   }, [timeRange]);
 
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="@container/main flex flex-1 flex-col gap-2">
-        <PageHeader
-          title="Analytics"
-          description="Analyze your communication platform performance"
-          showBreadcrumbs={false}
-          showFilters={true}
-          filters={<TimeFilter value={timeRange} onValueChange={(value) => {
-            if (typeof value === 'string') {
-              setTimeRange(value)
-            }
-          }} isLoading={isDataLoading} mode="simple" />}
-          isLoading={isDataLoading}
-        />
-
-        <div className="flex flex-col gap-4 pb-4">
-          {isDataLoading ? (
-            <>
-              <TableSkeleton rows={4} columns={4} />
-              <TableSkeleton rows={4} columns={4} />
-            </>
-          ) : (
-            <div className="px-4 md:px-6">
-              <Empty
-                title="Coming Soon"
-                description="We are working on this feature. Check back shortly for updates."
-                icon={<Construction className="h-8 w-8" />}
-                isLoading={isDataLoading}
-                variant="default"
-              />
-            </div>
-          )}
-        </div>
+    <PageWrapper isLoading={isDataLoading}>
+      <PageHeader
+        title="Analytics"
+        description="Analyze your communication platform performance"
+        showBreadcrumbs={false}
+        showFilters={true}
+        filters={<TimeFilter value={timeRange} onValueChange={(value) => {
+          if (typeof value === 'string') {
+            setTimeRange(value)
+          }
+        }} isLoading={isDataLoading} mode="simple" />}
+        isLoading={isDataLoading}
+      />
+      
+      <div className="flex flex-col">
+        {isDataLoading ? (
+          <>
+            <TableSkeleton rows={4} columns={4} />
+            <TableSkeleton rows={4} columns={4} />
+          </>
+        ) : (
+          <ComingSoon />
+        )}
       </div>
-    </div>
+    </PageWrapper>
   );
 }
