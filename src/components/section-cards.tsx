@@ -45,7 +45,7 @@ export function SectionCards({ timeRange, isLoading = false }: SectionCardsProps
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+      <div className="grid grid-cols-4 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
         {Array.from({ length: 4 }).map((_, index) => (
           <CardSkeleton key={index} />
         ))}
@@ -54,7 +54,7 @@ export function SectionCards({ timeRange, isLoading = false }: SectionCardsProps
   }
 
   return (
-    <div className="grid grid-cols-1 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+    <div className="grid grid-cols-4 gap-4 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
       <Card className="@container/card">
         <CardHeader>
           <CardDescription>Messages Sent</CardDescription>

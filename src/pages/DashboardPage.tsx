@@ -74,7 +74,7 @@ export default function DashboardPage() {
         isLoading={isDataLoading}
       />
 
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-4">
         {isDataLoading ? (
           <>
             <TableSkeleton rows={4} columns={4} />
@@ -83,7 +83,7 @@ export default function DashboardPage() {
         ) : (
           <>
             <SectionCards timeRange={timeRange} isLoading={isDataLoading} />
-            <div className="grid grid-cols-1 lg:grid-cols-3">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <DashboardChart timeRange={timeRange} isLoading={isDataLoading} className="lg:col-span-2" />
               <DashboardPieChart timeRange={timeRange} isLoading={isDataLoading} />
             </div>
