@@ -159,17 +159,29 @@ export function PageHeader({
       
       // Special handling for contact pages
       if (segments[0] === "contacts" && segments.length === 2 && isLast) {
-        // Check if it's a create page or contact detail page
+        // Check if it's a create page, segments, tags, or contact detail page
         if (segment === "create") {
           breadcrumbs.push({
-            label: "Create new contact",
+            label: "Create new audience member",
+            href: currentPath,
+            isCurrent: isLast
+          })
+        } else if (segment === "segments") {
+          breadcrumbs.push({
+            label: "Segments",
+            href: currentPath,
+            isCurrent: isLast
+          })
+        } else if (segment === "tags") {
+          breadcrumbs.push({
+            label: "Tags & Attributes",
             href: currentPath,
             isCurrent: isLast
           })
         } else {
-          // This is a contact detail page, show "Contact Details"
+          // This is a contact detail page, show "Audience member details"
           breadcrumbs.push({
-            label: "Contact details",
+            label: "Audience member details",
             href: currentPath,
             isCurrent: isLast
           })

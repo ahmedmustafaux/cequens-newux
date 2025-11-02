@@ -6,7 +6,7 @@ export default function ContactsSegmentsPage() {
   return (
     <PageWrapper>
       <PageHeader
-        title="Audience Segments"
+        title="Segments"
         description="Manage your audience segments"
       />
       <ComingSoon />
