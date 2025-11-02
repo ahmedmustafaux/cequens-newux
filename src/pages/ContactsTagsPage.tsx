@@ -7,7 +7,7 @@ export default function ContactsTagsPage() {
     <PageWrapper>
       <PageHeader
         title="Tags & Attributes"
-        description="Manage your contact tags and attributes"
+        description="Manage your audience tags and attributes"
       />
       <ComingSoon />
     </PageWrapper>

@@ -94,7 +94,7 @@ const data = {
       ],
     },
     {
-      title: "Contacts",
+      title: "Audience",
       url: "/contacts",
       icon: IconUsers,
       items: [
@@ -194,7 +194,7 @@ const data = {
           url: "/settings/organization",
         },
         {
-          title: "Contacts Export",
+          title: "Audience Export",
           url: "/settings/contacts-export",
         },
         {

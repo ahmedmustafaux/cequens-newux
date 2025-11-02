@@ -8,7 +8,7 @@ export default function SettingsContactsExportPage() {
   const [isDataLoading, setIsDataLoading] = React.useState(true);
   
   // Dynamic page title
-  usePageTitle("Contacts Export");
+  usePageTitle("Audience Export");
 
   // Simulate initial data loading from server
   React.useEffect(() => {
@@ -23,12 +23,12 @@ export default function SettingsContactsExportPage() {
   return (
     <PageWrapper isLoading={isDataLoading}>
       <PageHeader
-        title="Contacts Export"
-        description="Export your contacts data in various formats"
+        title="Audience Export"
+        description="Export your audience data in various formats"
         showBreadcrumbs={true}
         customBreadcrumbs={[
           { label: "Settings", href: "/settings", isCurrent: false },
-          { label: "Contacts Export", href: "/settings/contacts-export", isCurrent: true },
+          { label: "Audience Export", href: "/settings/contacts-export", isCurrent: true },
         ]}
         isLoading={isDataLoading}
       />

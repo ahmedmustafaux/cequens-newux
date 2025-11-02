@@ -175,8 +175,11 @@ export function PageHeader({
           })
         }
       } else {
-        // Capitalize segment for display
-        const label = segment.charAt(0).toUpperCase() + segment.slice(1)
+        // Special handling for "contacts" -> "Audience"
+        let label = segment.charAt(0).toUpperCase() + segment.slice(1)
+        if (segment === "contacts") {
+          label = "Audience"
+        }
         
         breadcrumbs.push({
           label,

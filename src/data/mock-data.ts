@@ -701,7 +701,7 @@ export const navigationData = {
       ],
     },
     {
-      title: "Contacts",
+      title: "Audience",
       url: "/contacts",
       icon: "IconUsers",
     },

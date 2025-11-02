@@ -73,7 +73,7 @@ const ContactsPageContent = (): React.JSX.Element => {
   const [tagSearchQuery, setTagSearchQuery] = React.useState("")
   
   // Dynamic page title
-  usePageTitle("Contacts")
+  usePageTitle("Audience")
   
   // Column definitions for the contacts table
   const columns: ColumnDef<Contact>[] = [
@@ -182,12 +182,15 @@ const ContactsPageContent = (): React.JSX.Element => {
     {
       accessorKey: "lastMessage",
       header: "Last Update",
+      meta: {
+        displayName: "Last Update"
+      },
       cell: ({ row }) => {
-        const lastMessage = row.getValue("lastMessage") as string;
+        const lastUpdate = row.original.lastMessage;
         return (
           <div className="max-w-[200px] truncate">
             <Highlight 
-              text={lastMessage} 
+              text={lastUpdate} 
               columnId="lastMessage"
               className="text-sm text-muted-foreground"
             />
@@ -324,8 +327,8 @@ const ContactsPageContent = (): React.JSX.Element => {
   return (
     <>
       <PageHeader
-        title="Contacts"
-        description="Create and manage your contacts."
+        title="Audience"
+        description="Create and manage your audience."
         showBreadcrumbs={false}
         isLoading={isDataLoading}
         customActions={
@@ -355,7 +358,7 @@ const ContactsPageContent = (): React.JSX.Element => {
           isLoading={isDataLoading}
           searchConfig={{
             placeholder: "Search contacts by name or phone",
-            searchColumns: ['name', 'phone', 'lastMessage'],
+            searchColumns: ['name', 'phone', 'lastUpdate'],
             table: table
           }}
           filters={[

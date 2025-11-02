@@ -136,7 +136,7 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
                action.category.toLowerCase().includes(searchTerm)
       })
     : allActions
-  // Contacts search (top 5)
+  // Audience search (top 5)
   const filteredContacts = query.trim()
     ? mockContacts
         .filter(contact => {
@@ -461,7 +461,7 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
                 exit={{ opacity: 0, y: -10 }}
                 className="mb-6"
               >
-                <h3 className="text-sm font-medium text-muted-foreground mx-2 mb-1">Contacts</h3>
+                <h3 className="text-sm font-medium text-muted-foreground mx-2 mb-1">Audience</h3>
                 <div className="space-y-0.5">
                   {displayedContacts.map((contact, index) => {
                     const recentSearchesCount = !query.trim() ? Math.min(3, latestSearches.length) : 0

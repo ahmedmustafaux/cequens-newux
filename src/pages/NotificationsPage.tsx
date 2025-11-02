@@ -784,7 +784,7 @@ export default function NotificationsPage() {
             </div>
 
             {/* Pro Tips Column - 1/3 width - Hidden on mobile */}
-            <div className="hidden lg:block lg:col-span-1 space-y-6 sticky top-18 self-start">
+            <div className="hidden lg:block lg:col-span-1 space-y-6 sticky top-0 self-start">
               {/* Pro Tips */}
               <Card className="bg-gray-50">
                 <CardHeader className="pb-4">

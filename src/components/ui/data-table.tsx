@@ -196,7 +196,7 @@ function DataTable({
                                       column.toggleVisibility(!!value)
                                     }
                                   >
-                                    {column.id}
+                                    {column.columnDef.meta?.displayName || column.id}
                                   </DropdownMenuCheckboxItem>
                                 )
                               })}
@@ -349,7 +349,7 @@ function DataTable({
                                   column.toggleVisibility(!!value)
                                 }
                               >
-                                {column.id}
+                                {column.columnDef.meta?.displayName || column.id}
                               </DropdownMenuCheckboxItem>
                             )
                           })}
@@ -617,7 +617,7 @@ function DataTableRow({ children, className, selected, onClick }: DataTableRowPr
 function DataTableHead({ children, className, width }: DataTableHeadProps) {
   return (
     <th className={cn(
-      "text-foreground px-4 py-2.5 text-left align-middle font-medium [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+      "text-foreground px-4 py-2.5 text-left align-middle font-medium [&:has([role=checkbox])]:pr-0 [&:has([role=checkbox])]:w-12 [&>[role=checkbox]]:translate-y-[2px]",
       width && `w-${width}`,
       className
     )}>
@@ -688,7 +688,7 @@ function DataTableCell({
   return (
     <td 
       className={cn(
-        "px-4 py-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        "px-4 py-2 align-middle [&:has([role=checkbox])]:pr-0 [&:has([role=checkbox])]:w-12 [&>[role=checkbox]]:translate-y-[2px]",
         clickable && "cursor-pointer hover:bg-gray-100 transition-colors",
         className
       )} 
