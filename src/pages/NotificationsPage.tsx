@@ -585,13 +585,12 @@ export default function NotificationsPage() {
         />
         
         <motion.div
-          className="px-4 md:px-6 flex flex-col gap-4 pb-4"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={smoothTransition}
         >
           {/* Two-column layout: Notifications and Pro Tips */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Main Notifications Column - 2/3 width */}
             <div className="lg:col-span-2">
               {/* Tabs for Categories */}
@@ -662,36 +661,7 @@ export default function NotificationsPage() {
                   className="w-full"
                 >
                   <TabsContent value={activeCategory} className="mt-4">
-                {/* Header Section */}
-                <div className="flex items-center justify-between m-4">
-                  <div className="flex items-center gap-4">
-                    {filteredNotifications.length > 0 && (
-                      <Checkbox
-                        checked={selectedNotifications.length === filteredNotifications.length}
-                        onCheckedChange={handleSelectAll}
-                      />
-                    )}
-                    <h2 className="text-md font-semibold py-2">
-                      {activeCategory === 'all' ? 'All Notifications' : 'Unread Notifications'}
-                    </h2>
-                  </div>
-                  
-                  {selectedNotifications.length > 0 && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">
-                        {selectedNotifications.length} selected
-                      </span>
-                      <Button size="sm" variant="outline" onClick={handleBulkMarkAsRead}>
-                        <Check className="h-4 w-4 mr-1" />
-                        Mark Read
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={handleBulkDelete}>
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Delete
-                      </Button>
-                    </div>
-                  )}
-                </div>
+                
 
                 {/* Notifications Content */}
                 <div>
@@ -714,7 +684,7 @@ export default function NotificationsPage() {
                     <div className="space-y-4">
                       {groupNotificationsByDate(filteredNotifications).map(([dateGroup, groupedNotifications]) => (
                         <div key={dateGroup} className="space-y-2">
-                          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm px-4">
+                          <div className="z-10 bg-background/95 backdrop-blur-sm px-4">
                             <h3 className="text-sm font-medium text-muted-foreground">
                               {dateGroup}
                             </h3>
@@ -814,7 +784,7 @@ export default function NotificationsPage() {
             </div>
 
             {/* Pro Tips Column - 1/3 width - Hidden on mobile */}
-            <div className="hidden lg:block lg:col-span-1 space-y-6 sticky top-10 self-start">
+            <div className="hidden lg:block lg:col-span-1 space-y-6 sticky top-18 self-start">
               {/* Pro Tips */}
               <Card className="bg-gray-50">
                 <CardHeader className="pb-4">

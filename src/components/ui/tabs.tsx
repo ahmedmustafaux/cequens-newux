@@ -57,7 +57,7 @@ function Tabs({
   return (
     <TabsPrimitive.Root
       data-slot="tabs"
-      className={cn("flex flex-col gap-6", className)}
+      className={cn("flex flex-col gap-4", className)}
       {...props}
     >
       {children}
