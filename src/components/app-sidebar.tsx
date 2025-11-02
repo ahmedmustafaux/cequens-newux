@@ -111,7 +111,7 @@ const data = {
       ],
     },
     {
-      title: "Automation",
+      title: "Automation Hub",
       url: "/automation",
       icon: IconRobot,
       items: [
