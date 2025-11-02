@@ -1,4 +1,4 @@
- import * as React from "react"
+import * as React from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { CircleFlag } from "react-circle-flags"
 import { 
@@ -48,14 +48,8 @@ import {
   DataTableHead,
   DataTableRow,
 } from "@/components/ui/data-table"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { TableSkeleton } from "@/components/ui/table"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardSkeleton } from "@/components/ui/card"
-import { Empty } from "@/components/ui/empty"
 import { usePageTitle } from "@/hooks/use-dynamic-title"
-import { motion, AnimatePresence } from "framer-motion"
-import { directionalTabVariants, smoothTransition, initialTabContentVariants } from "@/lib/transitions"
-import { mockContacts, type Contact, conversationStatusConfig } from "@/data/mock-data"
+import { mockContacts, type Contact } from "@/data/mock-data"
 
 
 const ContactsPageContent = (): React.JSX.Element => {
@@ -75,10 +69,8 @@ const ContactsPageContent = (): React.JSX.Element => {
   // Filter states
   const [selectedChannels, setSelectedChannels] = React.useState<string[]>([])
   const [selectedTags, setSelectedTags] = React.useState<string[]>([])
-  const [selectedConversations, setSelectedConversations] = React.useState<string[]>([])
   const [channelSearchQuery, setChannelSearchQuery] = React.useState("")
   const [tagSearchQuery, setTagSearchQuery] = React.useState("")
-  const [conversationSearchQuery, setConversationSearchQuery] = React.useState("")
   
   // Dynamic page title
   usePageTitle("Contacts")
@@ -157,15 +149,13 @@ const ContactsPageContent = (): React.JSX.Element => {
     },
     {
       accessorKey: "channel",
-      header: "Channel",
+      header: "Channels",
       cell: ({ row }) => {
         const channel = row.getValue("channel") as string;
         const getChannelIconPath = (channel: string) => {
           switch (channel) {
             case 'whatsapp':
               return '/icons/WhatsApp.svg'
-            case 'telegram':
-              return '/icons/Telegram.svg'
             case 'instagram':
               return '/icons/Instagram.svg'
             case 'messenger':
@@ -180,9 +170,8 @@ const ContactsPageContent = (): React.JSX.Element => {
             <img 
               src={getChannelIconPath(channel)} 
               alt={`${channel} icon`}
-              className="w-5 h-5 flex-shrink-0"
+              className="w-4 h-4 flex-shrink-0"
               onError={(e) => {
-                // Fallback to a default icon or hide the broken image
                 e.currentTarget.style.display = 'none';
               }}
             />
@@ -191,37 +180,8 @@ const ContactsPageContent = (): React.JSX.Element => {
       },
     },
     {
-      accessorKey: "conversationStatus",
-      header: "Conversation",
-      cell: ({ row }) => {
-        const status = row.getValue("conversationStatus") as string;
-        const config = conversationStatusConfig[status as keyof typeof conversationStatusConfig];
-        
-        // Map icon strings to actual icon components
-        const getIcon = (iconName: string) => {
-          switch (iconName) {
-            case "AlertCircle":
-              return <AlertCircle className="w-3 h-3 mr-1 flex-shrink-0" />;
-            case "CheckCircle":
-              return <CheckCircle className="w-3 h-3 mr-1 flex-shrink-0" />;
-            case "XCircle":
-              return <XCircle className="w-3 h-3 mr-1 flex-shrink-0" />;
-            default:
-              return <AlertCircle className="w-3 h-3 mr-1 flex-shrink-0" />;
-          }
-        };
-        
-        return (
-          <Badge variant="outline" className={`text-xs whitespace-nowrap flex-shrink-0 ${config.color}`}>
-            {getIcon(config.icon)}
-            {config.label}
-          </Badge>
-        );
-      },
-    },
-    {
       accessorKey: "lastMessage",
-      header: "Last Message",
+      header: "Last Update",
       cell: ({ row }) => {
         const lastMessage = row.getValue("lastMessage") as string;
         return (
@@ -290,12 +250,8 @@ const ContactsPageContent = (): React.JSX.Element => {
       newFilters.push({ id: 'tags', value: selectedTags })
     }
     
-    if (selectedConversations.length > 0) {
-      newFilters.push({ id: 'conversationStatus', value: selectedConversations })
-    }
-    
     setColumnFilters(newFilters)
-  }, [selectedChannels, selectedTags, selectedConversations])
+  }, [selectedChannels, selectedTags])
 
   const table = useReactTable({
     data: mockContacts,
@@ -312,10 +268,9 @@ const ContactsPageContent = (): React.JSX.Element => {
     onGlobalFilterChange: setGlobalFilter,
     // Custom global filter that only searches within specified columns
     globalFilterFn: (row, columnId, value) => {
-      const searchColumns = ['name', 'phone', 'lastMessage'] // Only search in specified columns
+      const searchColumns = ['name', 'phone', 'lastMessage']
       const searchValue = value.toLowerCase()
       
-      // Check if any of the specified columns contain the search value
       return searchColumns.some(columnId => {
         const cellValue = row.getValue(columnId)
         return cellValue && cellValue.toString().toLowerCase().includes(searchValue)
@@ -334,7 +289,6 @@ const ContactsPageContent = (): React.JSX.Element => {
   // Filter options
   const channelOptions = [
     { value: "whatsapp", label: "WhatsApp" },
-    { value: "telegram", label: "Telegram" },
     { value: "instagram", label: "Instagram" },
     { value: "messenger", label: "Messenger" }
   ]
@@ -346,12 +300,6 @@ const ContactsPageContent = (): React.JSX.Element => {
     { value: "New Customer", label: "New Customer" }
   ]
 
-  const conversationOptions = [
-    { value: "unassigned", label: "Unassigned" },
-    { value: "assigned", label: "Assigned" },
-    { value: "closed", label: "Closed" }
-  ]
-
   // Filtered options based on search
   const filteredChannelOptions = channelOptions.filter(option =>
     option.label.toLowerCase().includes(channelSearchQuery.toLowerCase())
@@ -360,17 +308,6 @@ const ContactsPageContent = (): React.JSX.Element => {
   const filteredTagOptions = tagOptions.filter(option =>
     option.label.toLowerCase().includes(tagSearchQuery.toLowerCase())
   )
-
-  const filteredConversationOptions = conversationOptions.filter(option =>
-    option.label.toLowerCase().includes(conversationSearchQuery.toLowerCase())
-  )
-
-  const [activeTab, setActiveTab] = React.useState("all")
-  const [direction, setDirection] = React.useState(0)
-  const [isInitialLoad, setIsInitialLoad] = React.useState(true)
-  
-  // Tab order for direction calculation
-  const tabOrder = ["all", "archived", "activities"]
 
   const handleImport = () => {
     // TODO: Implement import functionality
@@ -382,14 +319,6 @@ const ContactsPageContent = (): React.JSX.Element => {
 
   const handleCreateContact = () => {
     navigate("/contacts/create")
-  }
-
-  const handleTabChange = (newTab: string) => {
-    const currentIndex = tabOrder.indexOf(activeTab)
-    const newIndex = tabOrder.indexOf(newTab)
-    setDirection(newIndex > currentIndex ? 1 : -1)
-    setActiveTab(newTab)
-    setIsInitialLoad(false)
   }
 
   return (
@@ -421,265 +350,142 @@ const ContactsPageContent = (): React.JSX.Element => {
         }
       />
 
-      <Tabs 
-        value={activeTab} 
-        onValueChange={handleTabChange}
-        className="w-full"
-        isLoading={isDataLoading}
-        loadingTabCount={3}
-        showContentSkeleton={true}
-        skeletonComponent={<TableSkeleton rows={4} columns={4} />}
-      >
-        <motion.div 
-          className="flex justify-start"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={smoothTransition}
+      <div className="flex flex-col">
+        <DataTable
+          isLoading={isDataLoading}
+          searchConfig={{
+            placeholder: "Search contacts by name or phone",
+            searchColumns: ['name', 'phone', 'lastMessage'],
+            table: table
+          }}
+          filters={[
+            {
+              key: "channels",
+              label: "Channel",
+              options: channelOptions,
+              selectedValues: selectedChannels,
+              onSelectionChange: setSelectedChannels,
+              onClear: () => setSelectedChannels([]),
+              searchable: true,
+              searchPlaceholder: "Search channels...",
+              searchQuery: channelSearchQuery,
+              onSearchChange: setChannelSearchQuery,
+              filteredOptions: filteredChannelOptions
+            },
+            {
+              key: "tags",
+              label: "Tags",
+              options: tagOptions,
+              selectedValues: selectedTags,
+              onSelectionChange: setSelectedTags,
+              onClear: () => setSelectedTags([]),
+              searchable: true,
+              searchPlaceholder: "Search tags...",
+              searchQuery: tagSearchQuery,
+              onSearchChange: setTagSearchQuery,
+              filteredOptions: filteredTagOptions
+            }
+          ]}
+          pagination={{
+            currentPage: table.getState().pagination.pageIndex + 1,
+            totalPages: table.getPageCount(),
+            totalItems: table.getFilteredRowModel().rows.length,
+            itemsPerPage: table.getState().pagination.pageSize,
+            onPrevious: () => table.previousPage(),
+            onNext: () => table.nextPage(),
+            hasPrevious: table.getCanPreviousPage(),
+            hasNext: table.getCanNextPage(),
+            onPageSizeChange: (pageSize: number) => table.setPageSize(pageSize),
+            pageSizeOptions: [15, 20, 30]
+          }}
+          footerLabel={`Showing ${table.getRowModel().rows.length} contacts${table.getSelectedRowModel().rows.length > 0 ? ` • ${table.getSelectedRowModel().rows.length} selected` : ''}`}
         >
-          <TabsList className="inline-flex h-10 items-center justify-center rounded-md p-1 text-muted-foreground">
-            <motion.div transition={smoothTransition}>
-              <TabsTrigger value="all" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                All Contacts
-              </TabsTrigger>
-            </motion.div>
-            <motion.div transition={smoothTransition}>
-              <TabsTrigger value="archived" className="flex items-center gap-2">
-                <Archive className="h-4 w-4" />
-                Archived
-              </TabsTrigger>
-            </motion.div>
-            <motion.div transition={smoothTransition}>
-              <TabsTrigger value="activities" className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                Activities
-              </TabsTrigger>
-            </motion.div>
-          </TabsList>
-        </motion.div>
-
-        <motion.div 
-          className="relative w-full"
-          variants={isInitialLoad ? initialTabContentVariants : {}}
-          initial={isInitialLoad ? "initial" : false}
-          animate={isInitialLoad ? "animate" : false}
-          transition={smoothTransition}
-        >
-          <AnimatePresence mode="wait">
-            {activeTab === "all" && (
-              <motion.div
-                key="all"
-                variants={isInitialLoad ? initialTabContentVariants : directionalTabVariants(direction)}
-                initial={isInitialLoad ? "initial" : "hidden"}
-                animate={isInitialLoad ? "animate" : "visible"}
-                exit="exit"
-                transition={smoothTransition}
-                className="w-full"
-              >
-                <TabsContent value="all" className="mt-0">
-                  <div className="flex flex-col">
-                    <DataTable
-                      isLoading={isDataLoading}
-                      searchConfig={{
-                        placeholder: "Search contacts by name or phone",
-                        searchColumns: ['name', 'phone', 'lastMessage'],
-                        table: table
-                      }}
-                      filters={[
-                        {
-                          key: "channels",
-                          label: "Channel",
-                          options: channelOptions,
-                          selectedValues: selectedChannels,
-                          onSelectionChange: setSelectedChannels,
-                          onClear: () => setSelectedChannels([]),
-                          searchable: true,
-                          searchPlaceholder: "Search channels...",
-                          searchQuery: channelSearchQuery,
-                          onSearchChange: setChannelSearchQuery,
-                          filteredOptions: filteredChannelOptions
-                        },
-                        {
-                          key: "tags",
-                          label: "Tags",
-                          options: tagOptions,
-                          selectedValues: selectedTags,
-                          onSelectionChange: setSelectedTags,
-                          onClear: () => setSelectedTags([]),
-                          searchable: true,
-                          searchPlaceholder: "Search tags...",
-                          searchQuery: tagSearchQuery,
-                          onSearchChange: setTagSearchQuery,
-                          filteredOptions: filteredTagOptions
-                        },
-                        {
-                          key: "conversations",
-                          label: "Status",
-                          options: conversationOptions,
-                          selectedValues: selectedConversations,
-                          onSelectionChange: setSelectedConversations,
-                          onClear: () => setSelectedConversations([]),
-                          searchable: true,
-                          searchPlaceholder: "Search status...",
-                          searchQuery: conversationSearchQuery,
-                          onSearchChange: setConversationSearchQuery,
-                          filteredOptions: filteredConversationOptions
-                        }
-                      ]}
-                      pagination={{
-                        currentPage: table.getState().pagination.pageIndex + 1,
-                        totalPages: table.getPageCount(),
-                        totalItems: table.getFilteredRowModel().rows.length,
-                        itemsPerPage: table.getState().pagination.pageSize,
-                        onPrevious: () => table.previousPage(),
-                        onNext: () => table.nextPage(),
-                        hasPrevious: table.getCanPreviousPage(),
-                        hasNext: table.getCanNextPage(),
-                        onPageSizeChange: (pageSize: number) => table.setPageSize(pageSize),
-                        pageSizeOptions: [15, 20, 30]
-                      }}
-                      footerLabel={`Showing ${table.getRowModel().rows.length} contacts${table.getSelectedRowModel().rows.length > 0 ? ` • ${table.getSelectedRowModel().rows.length} selected` : ''}`}
+          {table.getSelectedRowModel().rows.length > 0 ? (
+            <DataTableSelectionHeader
+              selectedCount={table.getSelectedRowModel().rows.length}
+              onClearSelection={() => table.resetRowSelection()}
+              onSelectAll={() => table.toggleAllRowsSelected()}
+              totalCount={table.getFilteredRowModel().rows.length}
+              rightActions={
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => {
+                      // TODO: Implement archive functionality
+                    }}
+                  >
+                    Archive
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2 text-xs text-red-600 hover:text-red-700 hover:border-red-300"
+                    onClick={() => {
+                      // TODO: Implement delete functionality
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </>
+              }
+            />
+          ) : (
+            <DataTableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                headerGroup.headers.map((header) => {
+                  return (
+                    <DataTableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </DataTableHead>
+                  )
+                })
+              ))}
+            </DataTableHeader>
+          )}
+          <DataTableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <DataTableRow
+                  key={row.id}
+                  selected={row.getIsSelected()}
+                  className="group cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => navigate(`/contacts/${row.original.id}`)}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <DataTableCell 
+                      key={cell.id}
+                      columnId={cell.column.id}
+                      clickable={cell.column.id === "select"}
+                      onClick={cell.column.id === "select" ? () => row.toggleSelected(!row.getIsSelected()) : undefined}
                     >
-                      {table.getSelectedRowModel().rows.length > 0 ? (
-                        <DataTableSelectionHeader
-                          selectedCount={table.getSelectedRowModel().rows.length}
-                          onClearSelection={() => table.resetRowSelection()}
-                          onSelectAll={() => table.toggleAllRowsSelected()}
-                          totalCount={table.getFilteredRowModel().rows.length}
-                          rightActions={
-                            <>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-7 px-2 text-xs"
-                                onClick={() => {
-                                  // TODO: Implement archive functionality
-                                }}
-                              >
-                                Archive
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-7 px-2 text-xs text-red-600 hover:text-red-700 hover:border-red-300"
-                                onClick={() => {
-                                  // TODO: Implement delete functionality
-                                }}
-                              >
-                                Delete
-                              </Button>
-                            </>
-                          }
-                        />
-                      ) : (
-                        <DataTableHeader>
-                          {table.getHeaderGroups().map((headerGroup) => (
-                            headerGroup.headers.map((header) => {
-                              return (
-                                <DataTableHead key={header.id}>
-                                  {header.isPlaceholder
-                                    ? null
-                                    : flexRender(
-                                        header.column.columnDef.header,
-                                        header.getContext()
-                                      )}
-                                </DataTableHead>
-                              )
-                            })
-                          ))}
-                        </DataTableHeader>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
                       )}
-                      <DataTableBody>
-                        {table.getRowModel().rows?.length ? (
-                          table.getRowModel().rows.map((row) => (
-                            <DataTableRow
-                              key={row.id}
-                              selected={row.getIsSelected()}
-                              className="group cursor-pointer hover:bg-muted/50 transition-colors"
-                              onClick={() => navigate(`/contacts/${row.original.id}`)}
-                            >
-                              {row.getVisibleCells().map((cell) => (
-                                <DataTableCell 
-                                  key={cell.id}
-                                  columnId={cell.column.id}
-                                  clickable={cell.column.id === "select"}
-                                  onClick={cell.column.id === "select" ? () => row.toggleSelected(!row.getIsSelected()) : undefined}
-                                >
-                                  {flexRender(
-                                    cell.column.columnDef.cell,
-                                    cell.getContext()
-                                  )}
-                                </DataTableCell>
-                              ))}
-                            </DataTableRow>
-                          ))
-                        ) : (
-                          <DataTableRow>
-                            <DataTableCell
-                              colSpan={columns.length}
-                              className="h-24 text-center"
-                            >
-                              No results.
-                            </DataTableCell>
-                          </DataTableRow>
-                        )}
-                      </DataTableBody>
-                    </DataTable>
-                  </div>
-                </TabsContent>
-              </motion.div>
+                    </DataTableCell>
+                  ))}
+                </DataTableRow>
+              ))
+            ) : (
+              <DataTableRow>
+                <DataTableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  No results.
+                </DataTableCell>
+              </DataTableRow>
             )}
-            
-            {activeTab === "archived" && (
-              <motion.div
-                key="archived"
-                variants={isInitialLoad ? initialTabContentVariants : directionalTabVariants(direction)}
-                initial={isInitialLoad ? "initial" : "hidden"}
-                animate={isInitialLoad ? "animate" : "visible"}
-                exit="exit"
-                transition={smoothTransition}
-                className="w-full"
-              >
-                <TabsContent value="archived" className="mt-0">
-                  <div>
-                    <Empty
-                      title="No Archived Contacts"
-                      description="Archived contacts will appear here when you archive them."
-                      icon={<Archive className="h-8 w-8" />}
-                      isLoading={isDataLoading}
-                      variant="default"
-                    />
-                  </div>
-                </TabsContent>
-              </motion.div>
-            )}
-            
-            {activeTab === "activities" && (
-              <motion.div
-                key="activities"
-                variants={isInitialLoad ? initialTabContentVariants : directionalTabVariants(direction)}
-                initial={isInitialLoad ? "initial" : "hidden"}
-                animate={isInitialLoad ? "animate" : "visible"}
-                exit="exit"
-                transition={smoothTransition}
-                className="w-full"
-              >
-                <TabsContent value="activities" className="mt-0">
-                  <div>
-                    <Empty
-                      title="No Recent Activities"
-                      description="Contact activities and interactions will appear here."
-                      icon={<Clock className="h-8 w-8" />}
-                      isLoading={isDataLoading}
-                      variant="default"
-                    />
-                  </div>
-                </TabsContent>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-      </Tabs>
+          </DataTableBody>
+        </DataTable>
+      </div>
     </>
   )
 }

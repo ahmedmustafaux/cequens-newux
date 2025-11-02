@@ -63,7 +63,10 @@ export function NavMain({
       <SidebarGroupContent className="flex flex-col gap-2">
         <SidebarMenu>
           {items.map((item) => {
-            const itemIsActive = isActive(item.url) || (item.items && item.items.some(subItem => isActive(subItem.url)))
+            // Check if any subItem is active
+            const hasActiveSubItem = item.items && item.items.some(subItem => isActive(subItem.url))
+            // Parent is only active if its URL is active AND no subItem is active
+            const itemIsActive = isActive(item.url) && !hasActiveSubItem
             const hasSubItems = item.items && item.items.length > 0
             const isOpen = openItems.includes(item.title)
             

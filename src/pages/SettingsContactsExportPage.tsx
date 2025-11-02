@@ -1,0 +1,38 @@
+import { ComingSoon } from "@/components/coming-soon";
+import { PageHeader } from "@/components/page-header";
+import { PageWrapper } from "@/components/page-wrapper";
+import { usePageTitle } from "@/hooks/use-dynamic-title";
+import * as React from "react";
+
+export default function SettingsContactsExportPage() {
+  const [isDataLoading, setIsDataLoading] = React.useState(true);
+  
+  // Dynamic page title
+  usePageTitle("Contacts Export");
+
+  // Simulate initial data loading from server
+  React.useEffect(() => {
+    setIsDataLoading(true);
+    const timer = setTimeout(() => {
+      setIsDataLoading(false);
+    }, 400); // Standard 400ms loading time for server data
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <PageWrapper isLoading={isDataLoading}>
+      <PageHeader
+        title="Contacts Export"
+        description="Export your contacts data in various formats"
+        showBreadcrumbs={true}
+        customBreadcrumbs={[
+          { label: "Settings", href: "/settings", isCurrent: false },
+          { label: "Contacts Export", href: "/settings/contacts-export", isCurrent: true },
+        ]}
+        isLoading={isDataLoading}
+      />
+      <ComingSoon />
+    </PageWrapper>
+  );
+}

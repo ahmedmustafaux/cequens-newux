@@ -20,7 +20,6 @@ import {
   IconDeviceMobile,
   IconBrandMessenger,
   IconWorld,
-  IconBrandTelegram,
   IconPlus,
   IconBulb,
   IconTags,
@@ -29,6 +28,17 @@ import {
   IconInbox,
   IconBrandCampaignmonitor,
   IconBrain,
+  IconApi,
+  IconCreditCard,
+  IconUserCircle,
+  IconList,
+  IconFileDescription,
+  IconBell,
+  IconUser,
+  IconFileExport,
+  IconPuzzle,
+  IconAdjustments,
+  IconLifebuoy,
 } from "@tabler/icons-react"
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
@@ -54,11 +64,6 @@ const data = {
       url: "/campaigns",
       icon: IconBrandCampaignmonitor,
       items: [
-        {
-          title: "Create New Campaign",
-          url: "/campaigns/create",
-          icon: IconPlus,
-        },
         {
           title: "Automation",
           url: "/campaigns/automation",
@@ -94,11 +99,6 @@ const data = {
       icon: IconUsers,
       items: [
         {
-          title: "Create New Contact",
-          url: "/contacts/create",
-          icon: IconUserPlus,
-        },
-        {
           title: "Segments",
           url: "/contacts/segments",
           icon: IconSection,
@@ -111,7 +111,7 @@ const data = {
       ],
     },
     {
-      title: "Automation Hub",
+      title: "Automation",
       url: "/automation",
       icon: IconRobot,
       items: [
@@ -126,7 +126,7 @@ const data = {
           icon: IconTemplate,
         },
         {
-          title: "Automation / CEQ Bots",
+          title: "Bot Studio",
           url: "/automation/bots",
           icon: IconBrain,
         },
@@ -136,53 +136,6 @@ const data = {
       title: "Channels",
       url: "/channels",
       icon: IconWorld,
-      items: [
-        {
-          title: "SMS",
-          url: "/channels/sms",
-          icon: IconDeviceMobile,
-        },
-        {
-          title: "WhatsApp",
-          url: "/channels/whatsapp",
-          icon: IconBrandWhatsapp,
-        },
-        {
-          title: "Messenger",
-          url: "/channels/messenger",
-          icon: IconBrandMessenger,
-        },
-        {
-          title: "Instagram",
-          url: "/channels/instagram",
-          icon: IconBrandInstagram,
-        },
-        {
-          title: "Apple Messages",
-          url: "/channels/apple",
-          icon: IconBrandApple,
-        },
-        {
-          title: "Email",
-          url: "/channels/email",
-          icon: IconMail,
-        },
-        {
-          title: "Call",
-          url: "/channels/call",
-          icon: IconPhoneCall,
-        },
-        {
-          title: "Push Notifications",
-          url: "/channels/push",
-          icon: IconDeviceMobile,
-        },
-        {
-          title: "RCS",
-          url: "/channels/rcs",
-          icon: IconBrandTelegram,
-        },
-      ],
     },
     {
       title: "Analytics",
@@ -193,19 +146,71 @@ const data = {
   navClouds: [],
   navSecondary: [
     {
+      title: "Developer Hub",
+      url: "/developer-apis",
+      icon: IconApi,
+      items: [
+        {
+          title: "API Docs",
+          url: "/developer-apis/docs",
+        },
+        {
+          title: "SMS API",
+          url: "/developer-apis/sms",
+        },
+        {
+          title: "Voice API",
+          url: "/developer-apis/voice",
+        },
+        {
+          title: "WhatsApp Business API",
+          url: "/developer-apis/whatsapp",
+        },
+        {
+          title: "Push Notification API",
+          url: "/developer-apis/push",
+        },
+        {
+          title: "OTP API",
+          url: "/developer-apis/otp",
+        },
+        {
+          title: "Bot APIs",
+          url: "/developer-apis/bots",
+        },
+      ],
+    },
+    {
       title: "Settings",
       url: "/settings",
       icon: IconSettings,
+      items: [
+        {
+          title: "Account Settings",
+          url: "/settings/profile",
+        },
+        {
+          title: "Team Management",
+          url: "/settings/organization",
+        },
+        {
+          title: "Contacts Export",
+          url: "/settings/contacts-export",
+        },
+        {
+          title: "Integrations",
+          url: "/settings/plugins",
+        },
+        {
+          title: "System Preferences",
+          url: "/settings/preferences",
+        },
+      ],
     },
     {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
+      title: "Billing",
+      url: "/billing",
+      icon: IconCreditCard,
     },
   ],
 }

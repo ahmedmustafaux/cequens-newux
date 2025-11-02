@@ -526,7 +526,7 @@ function SidebarMenuSub({ className, ...props }: React.ComponentProps<"ul">) {
       data-slot="sidebar-menu-sub"
       data-sidebar="menu-sub"
       className={cn(
-        "border-sidebar-border mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l px-2.5 py-0.5",
+        "mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 px-2.5 py-0.5 relative before:absolute before:left-0 before:top-0 before:h-full before:w-[1px] before:bg-sidebar-border",
         "group-data-[collapsible=icon]:hidden",
         className
       )}
@@ -542,7 +542,12 @@ function SidebarMenuSubItem({
     <li
       data-slot="sidebar-menu-sub-item"
       data-sidebar="menu-sub-item"
-      className={cn("group/menu-sub-item relative", className)}
+      className={cn(
+        "group/menu-sub-item relative",
+        "before:absolute before:left-[-10.5px] before:top-[20%] before:h-[60%] before:w-[2px] before:bg-primary before:opacity-0 before:transition-opacity before:duration-200 before:ease-in-out",
+        "has-[a[data-active=true]]:before:opacity-100",
+        className
+      )}
       {...props}
     />
   )
@@ -567,7 +572,8 @@ function SidebarMenuSubButton({
       data-active={isActive}
       className={cn(
         "text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground [&>svg]:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
-        "data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground",
+        "data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground",
+        "data-[active=true]:relative data-[active=true]:before:absolute data-[active=true]:before:left-[-12.5px] data-[active=true]:before:top-0 data-[active=true]:before:h-full data-[active=true]:before:w-[2px] data-[active=true]:before:bg-primary",
         size === "sm" && "text-xs",
         size === "md" && "text-sm",
         "group-data-[collapsible=icon]:hidden",

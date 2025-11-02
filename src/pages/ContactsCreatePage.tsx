@@ -18,12 +18,21 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+import { Textarea } from "@/components/ui/textarea"
 import { PageHeaderWithActions } from "@/components/page-header"
 import { CardSkeleton } from "@/components/ui/card"
-import { ArrowLeft, User, Mail, Phone, MapPin, Building, Tag, Plus, X } from "lucide-react"
+import { ArrowLeft, User, Mail, Phone, MapPin, Building, Tag, Plus, X, MessageSquare, Search, ChevronDown } from "lucide-react"
 import { toast } from "sonner"
 import { motion } from "framer-motion"
 import { pageVariants, smoothTransition } from "@/lib/transitions"
+import { Input } from "@/components/ui/input"
+import { CircleFlag } from "react-circle-flags"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 
 interface ContactFormData {
   // Basic Information
@@ -43,6 +52,11 @@ interface ContactFormData {
   jobTitle: string
   
   // Additional Information
+  channels: {
+    whatsapp?: string
+    instagram?: string
+    messenger?: string
+  }
   tags: string[]
   notes: string
 }
@@ -53,8 +67,54 @@ export default function ContactsCreatePage() {
   const [newTag, setNewTag] = React.useState("")
   const [isDirty, setIsDirty] = React.useState(false)
   const [isInitialLoading, setIsInitialLoading] = React.useState(true)
+  const [countryCode, setCountryCode] = React.useState("+966") // Default to Saudi Arabia
+  const [searchQuery, setSearchQuery] = React.useState("")
+  const [isCountryPopoverOpen, setIsCountryPopoverOpen] = React.useState(false)
   
   usePageTitle("Create Contact")
+
+  // List of common country codes
+  const countryCodes = [
+    { code: "sa", dialCode: "+966", name: "Saudi Arabia" },
+    { code: "us", dialCode: "+1", name: "United States" },
+    { code: "gb", dialCode: "+44", name: "United Kingdom" },
+    { code: "ae", dialCode: "+971", name: "United Arab Emirates" },
+    { code: "eg", dialCode: "+20", name: "Egypt" },
+    { code: "in", dialCode: "+91", name: "India" },
+    { code: "ca", dialCode: "+1", name: "Canada" },
+    { code: "au", dialCode: "+61", name: "Australia" },
+    { code: "de", dialCode: "+49", name: "Germany" },
+    { code: "fr", dialCode: "+33", name: "France" },
+    { code: "it", dialCode: "+39", name: "Italy" },
+    { code: "es", dialCode: "+34", name: "Spain" },
+    { code: "jp", dialCode: "+81", name: "Japan" },
+    { code: "cn", dialCode: "+86", name: "China" },
+    { code: "br", dialCode: "+55", name: "Brazil" },
+    { code: "ru", dialCode: "+7", name: "Russia" },
+    { code: "kr", dialCode: "+82", name: "South Korea" },
+    { code: "sg", dialCode: "+65", name: "Singapore" },
+    { code: "my", dialCode: "+60", name: "Malaysia" },
+    { code: "th", dialCode: "+66", name: "Thailand" },
+    { code: "id", dialCode: "+62", name: "Indonesia" },
+    { code: "ph", dialCode: "+63", name: "Philippines" },
+    { code: "vn", dialCode: "+84", name: "Vietnam" },
+    { code: "tr", dialCode: "+90", name: "Turkey" },
+    { code: "qa", dialCode: "+974", name: "Qatar" },
+    { code: "kw", dialCode: "+965", name: "Kuwait" },
+    { code: "bh", dialCode: "+973", name: "Bahrain" },
+    { code: "om", dialCode: "+968", name: "Oman" },
+    { code: "jo", dialCode: "+962", name: "Jordan" },
+    { code: "lb", dialCode: "+961", name: "Lebanon" },
+  ]
+
+  // Filter countries based on search query
+  const filteredCountries = searchQuery 
+    ? countryCodes.filter(country => 
+        country.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        country.dialCode.includes(searchQuery))
+    : countryCodes
+
+  const selectedCountry = countryCodes.find(c => c.dialCode === countryCode) || countryCodes[0]
 
   // Simulate initial page loading
   React.useEffect(() => {
@@ -76,6 +136,7 @@ export default function ContactsCreatePage() {
     address: "",
     company: "",
     jobTitle: "",
+    channels: {},
     tags: [],
     notes: ""
   })
@@ -84,6 +145,72 @@ export default function ContactsCreatePage() {
     setFormData(prev => ({
       ...prev,
       [field]: value
+    }))
+    setIsDirty(true)
+  }
+
+  const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    handleInputChange("phone", value)
+    
+    // Auto-detect country based on phone number input
+    // If user is typing a full international number with +
+    if (value.startsWith('+')) {
+      // Extract the country code from the beginning
+      for (let i = 4; i >= 2; i--) {
+        const code = value.substring(0, i)
+        const matchedCountry = countryCodes.find(c => c.dialCode === code)
+        if (matchedCountry) {
+          setCountryCode(matchedCountry.dialCode)
+          // Remove the country code from the phone number
+          const phoneWithoutCode = value.substring(i)
+          setFormData(prev => ({
+            ...prev,
+            phone: phoneWithoutCode
+          }))
+          break
+        }
+      }
+    } 
+    // Detect Egyptian numbers (starting with 010, 011, 012, 015)
+    else if (value.match(/^0(10|11|12|15)/) && value.length >= 4) {
+      setCountryCode('+20') // Egypt
+    }
+    // Detect Saudi numbers (starting with 05)
+    else if (value.match(/^05/) && value.length >= 3 && countryCode !== '+20') {
+      setCountryCode('+966') // Saudi Arabia
+    }
+    // Detect UAE numbers (starting with 05)
+    else if (value.match(/^05/) && value.length >= 3 && countryCode !== '+966' && countryCode !== '+20') {
+      setCountryCode('+971') // UAE
+    }
+    // Detect UK numbers (starting with 07)
+    else if (value.match(/^07/) && value.length >= 3) {
+      setCountryCode('+44') // UK
+    }
+    // Detect US/Canada numbers (starting with 1 and area code)
+    else if (value.match(/^1[2-9]/) && value.length >= 2) {
+      setCountryCode('+1') // US/Canada
+    }
+  }
+
+  const handleCountryCodeChange = (value: string) => {
+    setCountryCode(value)
+    setIsCountryPopoverOpen(false)
+    setIsDirty(true)
+  }
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value)
+  }
+
+  const handleChannelChange = (channel: keyof ContactFormData['channels'], value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      channels: {
+        ...prev.channels,
+        [channel]: value || undefined
+      }
     }))
     setIsDirty(true)
   }
@@ -106,6 +233,27 @@ export default function ContactsCreatePage() {
     }))
     setIsDirty(true)
   }
+
+  const availableChannels = [
+    { 
+      value: "whatsapp" as const, 
+      label: "WhatsApp", 
+      icon: "/icons/WhatsApp.svg",
+      placeholder: "Enter number or link"
+    },
+    { 
+      value: "instagram" as const, 
+      label: "Instagram", 
+      icon: "/icons/Instagram.svg",
+      placeholder: "Enter username or link"
+    },
+    { 
+      value: "messenger" as const, 
+      label: "Messenger", 
+      icon: "/icons/Messenger.png",
+      placeholder: "Enter username or link"
+    }
+  ]
 
   const handleSave = async () => {
     setIsSubmitting(true)
@@ -142,368 +290,476 @@ export default function ContactsCreatePage() {
 
   return (
     <PageWrapper isLoading={isInitialLoading}>
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={smoothTransition}
-      >
-        <PageHeaderWithActions
-          title="Create Contact"
-          description="Add a new lead or customer to your contacts"
-          isLoading={isInitialLoading}
-          actions={
-            <div className="flex items-center">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDiscard}
-                disabled={isSubmitting || isInitialLoading}
-                className=""
-              >
-                <X className="h-4 w-4" />
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleSave}
-                disabled={!canSave || !isDirty || isInitialLoading}
-                className=""
-              >
-                <Plus className="h-4 w-4" />
-                {isSubmitting ? "Creating..." : "Create Contact"}
-              </Button>
-            </div>
-          }
-        />
-      </motion.div>
-
-        {/* Content */}
-        <div className="flex flex-col">
-          {isInitialLoading ? (
-            <div className="grid grid-cols-1 lg:grid-cols-3">
-              <div className="lg:col-span-2 space-y-6">
-                <CardSkeleton />
-                <CardSkeleton />
-                <CardSkeleton />
-              </div>
-              <div className="space-y-6">
-                <CardSkeleton />
-                <CardSkeleton />
-              </div>
-            </div>
-          ) : (
-            <motion.div 
-              className="flex flex-col"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              transition={smoothTransition}
+      <PageHeaderWithActions
+        title="Create Contact"
+        description="Add a new lead or customer to your contacts"
+        isLoading={isInitialLoading}
+        actions={
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDiscard}
+              disabled={isSubmitting || isInitialLoading}
             >
-          <div>
-            <form className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3">
-              {/* Main Form */}
-              <div className="lg:col-span-2 space-y-6">
-                {/* Basic Information */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <User className="h-5 w-5" />
-                      Basic Information
-                    </CardTitle>
-                    <CardDescription>
-                      Essential contact details and profile type
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2">
-                      <Field>
-                        <FieldLabel htmlFor="firstName">First Name *</FieldLabel>
-                        <FieldContent>
-                          <InputGroup>
-                            <InputGroupInput
-                              id="firstName"
-                              value={formData.firstName}
-                              onChange={(e) => handleInputChange("firstName", e.target.value)}
-                              placeholder="Enter first name"
-                              required
-                            />
-                          </InputGroup>
-                        </FieldContent>
-                      </Field>
-                      <Field>
-                        <FieldLabel htmlFor="lastName">Last Name *</FieldLabel>
-                        <FieldContent>
-                          <InputGroup>
-                            <InputGroupInput
-                              id="lastName"
-                              value={formData.lastName}
-                              onChange={(e) => handleInputChange("lastName", e.target.value)}
-                              placeholder="Enter last name"
-                              required
-                            />
-                          </InputGroup>
-                        </FieldContent>
-                      </Field>
-                    </div>
+              <X className="h-4 w-4" />
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleSave}
+              disabled={!canSave || !isDirty || isInitialLoading}
+            >
+              <Plus className="h-4 w-4" />
+              {isSubmitting ? "Creating..." : "Create Contact"}
+            </Button>
+          </div>
+        }
+      />
 
+      <div className="flex flex-col gap-4">
+        {isInitialLoading ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2 grid gap-4">
+              <CardSkeleton />
+              <CardSkeleton />
+              <CardSkeleton />
+            </div>
+            <div className="grid gap-4 auto-rows-min">
+              <CardSkeleton />
+              <CardSkeleton />
+            </div>
+          </div>
+        ) : (
+          <motion.div 
+            className="grid grid-cols-1 lg:grid-cols-3 gap-4"
+            variants={pageVariants}
+            initial="initial"
+            animate="animate"
+            transition={smoothTransition}
+          >
+            {/* Main Form */}
+            <div className="lg:col-span-2 grid gap-4">
+              {/* Basic Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="h-5 w-5" />
+                    Basic Information
+                  </CardTitle>
+                  <CardDescription>
+                    Essential contact details and profile type
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Field>
-                      <FieldLabel htmlFor="profileType">Profile Type *</FieldLabel>
+                      <FieldLabel htmlFor="firstName">First Name *</FieldLabel>
                       <FieldContent>
-                        <Select
-                          value={formData.profileType}
-                          onValueChange={(value: "Lead" | "Customer") => handleInputChange("profileType", value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Lead">
-                              <div className="flex items-center">
-                                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                                Lead
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="Customer">
-                              <div className="flex items-center">
-                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                Customer
-                              </div>
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <InputGroup>
+                          <InputGroupInput
+                            id="firstName"
+                            value={formData.firstName}
+                            onChange={(e) => handleInputChange("firstName", e.target.value)}
+                            placeholder="Enter first name"
+                            required
+                          />
+                        </InputGroup>
                       </FieldContent>
                     </Field>
-                  </CardContent>
-                </Card>
-
-                {/* Contact Information */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <Phone className="h-5 w-5" />
-                      Contact Information
-                    </CardTitle>
-                    <CardDescription>
-                      At least one contact method is required
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2">
-                      <Field>
-                        <FieldLabel htmlFor="email">Email Address</FieldLabel>
-                        <FieldContent>
-                          <InputGroup>
-                            <InputGroupAddon>
-                              <Mail className="h-4 w-4" />
-                            </InputGroupAddon>
-                            <InputGroupInput
-                              id="email"
-                              type="email"
-                              value={formData.email}
-                              onChange={(e) => handleInputChange("email", e.target.value)}
-                              placeholder="Enter email address"
-                            />
-                          </InputGroup>
-                        </FieldContent>
-                      </Field>
-                      <Field>
-                        <FieldLabel htmlFor="phone">Phone Number</FieldLabel>
-                        <FieldContent>
-                          <InputGroup>
-                            <InputGroupAddon>
-                              <Phone className="h-4 w-4" />
-                            </InputGroupAddon>
-                            <InputGroupInput
-                              id="phone"
-                              type="tel"
-                              value={formData.phone}
-                              onChange={(e) => handleInputChange("phone", e.target.value)}
-                              placeholder="Enter phone number"
-                            />
-                          </InputGroup>
-                        </FieldContent>
-                      </Field>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2">
-                      <Field>
-                        <FieldLabel htmlFor="country">Country</FieldLabel>
-                        <FieldContent>
-                          <InputGroup>
-                            <InputGroupInput
-                              id="country"
-                              value={formData.country}
-                              onChange={(e) => handleInputChange("country", e.target.value)}
-                              placeholder="Enter country"
-                            />
-                          </InputGroup>
-                        </FieldContent>
-                      </Field>
-                      <Field>
-                        <FieldLabel htmlFor="region">Region</FieldLabel>
-                        <FieldContent>
-                          <InputGroup>
-                            <InputGroupInput
-                              id="region"
-                              value={formData.region}
-                              onChange={(e) => handleInputChange("region", e.target.value)}
-                              placeholder="Enter region/state"
-                            />
-                          </InputGroup>
-                        </FieldContent>
-                      </Field>
-                    </div>
-
                     <Field>
-                      <FieldLabel htmlFor="address">Address</FieldLabel>
+                      <FieldLabel htmlFor="lastName">Last Name *</FieldLabel>
                       <FieldContent>
-                        <div className="relative">
-                          <MapPin className="absolute left-3 top-3 text-muted-foreground h-4 w-4" />
-                          <textarea
-                            id="address"
-                            value={formData.address}
-                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleInputChange("address", e.target.value)}
-                            placeholder="Enter full address"
-                            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pl-10"
+                        <InputGroup>
+                          <InputGroupInput
+                            id="lastName"
+                            value={formData.lastName}
+                            onChange={(e) => handleInputChange("lastName", e.target.value)}
+                            placeholder="Enter last name"
+                            required
+                          />
+                        </InputGroup>
+                      </FieldContent>
+                    </Field>
+                  </div>
+
+                  <Field>
+                    <FieldLabel htmlFor="profileType">Profile Type *</FieldLabel>
+                    <FieldContent>
+                      <Select
+                        value={formData.profileType}
+                        onValueChange={(value: "Lead" | "Customer") => handleInputChange("profileType", value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Lead">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                              Lead
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="Customer">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              Customer
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FieldContent>
+                  </Field>
+                </CardContent>
+              </Card>
+
+              {/* Contact Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Phone className="h-5 w-5" />
+                    Contact Information
+                  </CardTitle>
+                  <CardDescription>
+                    At least one contact method is required
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Field>
+                      <FieldLabel htmlFor="email">Email Address</FieldLabel>
+                      <FieldContent>
+                        <InputGroup>
+                          <InputGroupAddon>
+                            <Mail className="h-4 w-4" />
+                          </InputGroupAddon>
+                          <InputGroupInput
+                            id="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) => handleInputChange("email", e.target.value)}
+                            placeholder="Enter email address"
+                          />
+                        </InputGroup>
+                      </FieldContent>
+                    </Field>
+                    <Field>
+                      <FieldLabel htmlFor="phone">Phone Number</FieldLabel>
+                      <FieldContent>
+                        <div className="flex">
+                          <Popover open={isCountryPopoverOpen} onOpenChange={setIsCountryPopoverOpen}>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "justify-between font-normal h-9 px-3",
+                                  "w-[130px] rounded-r-none border-r-0",
+                                  "bg-transparent hover:bg-muted/50",
+                                  "text-black hover:text-black"
+                                )}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <CircleFlag 
+                                    countryCode={selectedCountry.code} 
+                                    height="16" 
+                                    width="16" 
+                                  />
+                                  <span className="text-sm">{selectedCountry.dialCode}</span>
+                                </div>
+                                <ChevronDown className="h-4 w-4 opacity-50" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent 
+                              className="w-[300px] p-0" 
+                              align="start"
+                              onOpenAutoFocus={(e) => e.preventDefault()}
+                            >
+                              <div className="flex flex-col">
+                                <div className="flex flex-col">
+                                  <div>
+                                    <Field>
+                                      <FieldContent>
+                                        <InputGroup className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none">
+                                          <InputGroupAddon>
+                                            <Search className="h-3 w-3" />
+                                          </InputGroupAddon>
+                                          <InputGroupInput
+                                            placeholder="Search countries..."
+                                            value={searchQuery}
+                                            onChange={handleSearchChange}
+                                            className="h-6 text-sm"
+                                            autoFocus={false}
+                                          />
+                                        </InputGroup>
+                                      </FieldContent>
+                                    </Field>
+                                  </div>
+                                  <div className="border-t border-border" />
+                                </div>
+                                
+                                <div className="relative">
+                                  <div className="max-h-72 overflow-y-auto p-1">
+                                    {filteredCountries.length > 0 ? (
+                                      filteredCountries.map((country) => (
+                                        <div 
+                                          key={country.code} 
+                                          className={cn(
+                                            "flex items-center gap-2 p-2 hover:bg-accent rounded-sm cursor-pointer",
+                                            country.dialCode === countryCode && "bg-accent"
+                                          )}
+                                          onClick={() => handleCountryCodeChange(country.dialCode)}
+                                        >
+                                          <CircleFlag countryCode={country.code} height="16" width="16" />
+                                          <span className="text-sm">{country.name}</span>
+                                          <span className="text-sm text-muted-foreground ml-auto">{country.dialCode}</span>
+                                        </div>
+                                      ))
+                                    ) : (
+                                      <div className="px-2 py-1 text-sm text-muted-foreground text-center">
+                                        No results found
+                                      </div>
+                                    )}
+                                  </div>
+                                  
+                                  {filteredCountries.length > 6 && (
+                                    <div className="absolute bottom-0 inset-x-0 flex justify-center bg-gradient-to-t from-white via-white/80 to-transparent py-1 pointer-events-none">
+                                      <ChevronDown className="h-4 w-4 text-muted-foreground animate-bounce" />
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                          <Input
+                            id="phone"
+                            type="tel"
+                            placeholder="Enter phone number"
+                            value={formData.phone}
+                            onChange={handlePhoneNumberChange}
+                            autoComplete="tel"
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            spellCheck="false"
+                            className="flex-1 rounded-l-none h-9"
                           />
                         </div>
                       </FieldContent>
                     </Field>
-                  </CardContent>
-                </Card>
+                  </div>
 
-                {/* Company Information */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <Building className="h-5 w-5" />
-                      Company Information
-                    </CardTitle>
-                    <CardDescription>
-                      Optional company details
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2">
-                      <Field>
-                        <FieldLabel htmlFor="company">Company</FieldLabel>
-                        <FieldContent>
-                          <InputGroup>
-                            <InputGroupInput
-                              id="company"
-                              value={formData.company}
-                              onChange={(e) => handleInputChange("company", e.target.value)}
-                              placeholder="Enter company name"
-                            />
-                          </InputGroup>
-                        </FieldContent>
-                      </Field>
-                      <Field>
-                        <FieldLabel htmlFor="jobTitle">Job Title</FieldLabel>
-                        <FieldContent>
-                          <InputGroup>
-                            <InputGroupInput
-                              id="jobTitle"
-                              value={formData.jobTitle}
-                              onChange={(e) => handleInputChange("jobTitle", e.target.value)}
-                              placeholder="Enter job title"
-                            />
-                          </InputGroup>
-                        </FieldContent>
-                      </Field>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Field>
+                      <FieldLabel htmlFor="country">Country</FieldLabel>
+                      <FieldContent>
+                        <InputGroup>
+                          <InputGroupInput
+                            id="country"
+                            value={formData.country}
+                            onChange={(e) => handleInputChange("country", e.target.value)}
+                            placeholder="Enter country"
+                          />
+                        </InputGroup>
+                      </FieldContent>
+                    </Field>
+                    <Field>
+                      <FieldLabel htmlFor="region">Region</FieldLabel>
+                      <FieldContent>
+                        <InputGroup>
+                          <InputGroupInput
+                            id="region"
+                            value={formData.region}
+                            onChange={(e) => handleInputChange("region", e.target.value)}
+                            placeholder="Enter region/state"
+                          />
+                        </InputGroup>
+                      </FieldContent>
+                    </Field>
+                  </div>
 
-              {/* Sidebar */}
-              <div className="space-y-6">
-                {/* Tags */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <Tag className="h-5 w-5" />
-                      Tags
-                    </CardTitle>
-                    <CardDescription>
-                      Add tags to categorize this contact
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <InputGroup>
-                      <InputGroupInput
-                        value={newTag}
-                        onChange={(e) => setNewTag(e.target.value)}
-                        placeholder="Add a tag"
-                        onKeyPress={(e: React.KeyboardEvent) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault()
-                            addTag()
-                          }
-                        }}
-                      />
-                      <InputGroupAddon align="inline-end">
-                        <InputGroupButton
-                          onClick={addTag}
-                          disabled={!newTag.trim()}
-                          variant="outline"
-                          size="xs"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </InputGroupButton>
-                      </InputGroupAddon>
-                    </InputGroup>
-                    
-                    {formData.tags.length > 0 && (
-                      <div className="flex flex-wrap">
-                        {formData.tags.map((tag) => (
-                          <Badge
-                            key={tag}
-                            variant="secondary"
-                            className="flex items-center"
-                          >
-                            {tag}
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removeTag(tag)}
-                              className="ml-1 hover:bg-gray-200 rounded-full p-0.5 h-auto w-auto"
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </Badge>
-                        ))}
+                  <Field>
+                    <FieldLabel htmlFor="address">Address</FieldLabel>
+                    <FieldContent>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-3 text-muted-foreground h-4 w-4 z-10" />
+                        <Textarea
+                          id="address"
+                          value={formData.address}
+                          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleInputChange("address", e.target.value)}
+                          placeholder="Enter full address"
+                          className="pl-10 min-h-[80px]"
+                        />
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
+                    </FieldContent>
+                  </Field>
+                </CardContent>
+              </Card>
 
-                {/* Notes */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Notes</CardTitle>
-                    <CardDescription>
-                      Additional information about this contact
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <textarea
-                      value={formData.notes}
-                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleInputChange("notes", e.target.value)}
-                      placeholder="Add any additional notes..."
-                      className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    />
-                  </CardContent>
-                </Card>
-              </div>
+              {/* Company Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building className="h-5 w-5" />
+                    Company Information
+                  </CardTitle>
+                  <CardDescription>
+                    Optional company details
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Field>
+                      <FieldLabel htmlFor="company">Company</FieldLabel>
+                      <FieldContent>
+                        <InputGroup>
+                          <InputGroupInput
+                            id="company"
+                            value={formData.company}
+                            onChange={(e) => handleInputChange("company", e.target.value)}
+                            placeholder="Enter company name"
+                          />
+                        </InputGroup>
+                      </FieldContent>
+                    </Field>
+                    <Field>
+                      <FieldLabel htmlFor="jobTitle">Job Title</FieldLabel>
+                      <FieldContent>
+                        <InputGroup>
+                          <InputGroupInput
+                            id="jobTitle"
+                            value={formData.jobTitle}
+                            onChange={(e) => handleInputChange("jobTitle", e.target.value)}
+                            placeholder="Enter job title"
+                          />
+                        </InputGroup>
+                      </FieldContent>
+                    </Field>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-            </form>
-          </div>
-            </motion.div>
-          )}
-        </div>
-      </PageWrapper>
+
+            {/* Sidebar */}
+            <div className="grid gap-4 auto-rows-min">
+              {/* Channels */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5" />
+                    Channels
+                  </CardTitle>
+                  <CardDescription>
+                    Add communication channel URLs or usernames
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {availableChannels.map((channel) => (
+                    <InputGroup key={channel.value}>
+                      <InputGroupAddon>
+                        <img
+                          src={channel.icon}
+                          alt={`${channel.label} icon`}
+                          className="w-4 h-4 flex-shrink-0"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      </InputGroupAddon>
+                      <InputGroupAddon className="min-w-[90px] justify-start">
+                        <span className="text-sm font-medium">{channel.label}</span>
+                      </InputGroupAddon>
+                      <InputGroupInput
+                        id={channel.value}
+                        value={formData.channels[channel.value] || ""}
+                        onChange={(e) => handleChannelChange(channel.value, e.target.value)}
+                        placeholder={channel.placeholder}
+                      />
+                    </InputGroup>
+                  ))}
+                </CardContent>
+              </Card>
+
+              {/* Tags */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Tag className="h-5 w-5" />
+                    Tags
+                  </CardTitle>
+                  <CardDescription>
+                    Add tags to categorize this contact
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <InputGroup>
+                    <InputGroupInput
+                      value={newTag}
+                      onChange={(e) => setNewTag(e.target.value)}
+                      placeholder="Add a tag"
+                      onKeyPress={(e: React.KeyboardEvent) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault()
+                          addTag()
+                        }
+                      }}
+                    />
+                    <InputGroupAddon align="inline-end">
+                      <InputGroupButton
+                        onClick={addTag}
+                        disabled={!newTag.trim()}
+                        variant="outline"
+                        size="xs"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </InputGroupButton>
+                    </InputGroupAddon>
+                  </InputGroup>
+                  
+                  {formData.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {formData.tags.map((tag) => (
+                        <Badge
+                          key={tag}
+                          variant="secondary"
+                          className="flex items-center gap-1"
+                        >
+                          {tag}
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeTag(tag)}
+                            className="ml-1 hover:bg-gray-200 rounded-full p-0.5 h-auto w-auto"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Notes */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Notes</CardTitle>
+                  <CardDescription>
+                    Additional information about this contact
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Textarea
+                    value={formData.notes}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleInputChange("notes", e.target.value)}
+                    placeholder="Add any additional notes..."
+                    className="min-h-[120px]"
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          </motion.div>
+        )}
+      </div>
+    </PageWrapper>
   )
 }

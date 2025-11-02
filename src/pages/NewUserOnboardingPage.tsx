@@ -63,7 +63,6 @@ const onboardingSteps = [
       { id: "channel-3", label: "Email", iconType: "lucide", icon: "Mail" },
       { id: "channel-4", label: "Voice", iconType: "lucide", icon: "Phone" },
       { id: "channel-5", label: "Messenger", iconType: "img", icon: "/icons/Messenger.png" },
-      { id: "channel-6", label: "Telegram", iconType: "svg", icon: "/icons/Telegram.svg" },
     ],
     multiSelect: true,
   },
@@ -418,18 +417,6 @@ export default function NewUserOnboardingPage() {
                                             {/* Messenger logo */}
                                             <div className="w-1 h-1 bg-gradient-to-b from-blue-400 to-blue-600 rounded-full flex items-center justify-center mr-0.5 relative overflow-hidden">
                                               <div className="absolute inset-0.5 bg-white transform rotate-45 translate-y-0.5"></div>
-                                            </div>
-                                            <div className="flex-1">
-                                              <div className="w-1/2 h-0.5 bg-slate-700 rounded-full mb-0.5"></div>
-                                              <div className="w-2/3 h-0.5 bg-slate-400 rounded-full"></div>
-                                            </div>
-                                          </div>
-                                          
-                                          {/* Telegram user */}
-                                          <div className="flex items-center hover:bg-blue-50/30 border-l-2 border-transparent rounded-sm p-0.5">
-                                            {/* Telegram logo */}
-                                            <div className="w-1 h-1 bg-blue-500 rounded-full flex items-center justify-center mr-0.5 relative overflow-hidden">
-                                              <div className="absolute right-0 bottom-0 w-0.5 h-0.5 bg-white transform rotate-45"></div>
                                             </div>
                                             <div className="flex-1">
                                               <div className="w-1/2 h-0.5 bg-slate-700 rounded-full mb-0.5"></div>
