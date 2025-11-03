@@ -1,76 +1,104 @@
-import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
-import { CardSkeleton } from "./card"
 
-const emptyVariants = cva(
-  "flex min-h-[400px] flex-col items-center justify-center rounded-md border p-8 text-center",
+function Empty({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="empty"
+      className={cn(
+        "flex min-w-0 flex-1 flex-col items-center justify-center gap-6 rounded-lg border border-dashed p-6 text-center text-balance md:p-12",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function EmptyHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="empty-header"
+      className={cn(
+        "flex max-w-sm flex-col items-center gap-2 text-center",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+const emptyMediaVariants = cva(
+  "flex shrink-0 items-center justify-center mb-2 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "border-dashed",
-        card: "border-none bg-card text-card-foreground shadow-sm",
-      },
-      size: {
-        default: "px-4 py-10",
-        sm: "px-3 py-8",
-        lg: "px-6 py-12",
+        default: "bg-transparent",
+        icon: "bg-muted text-foreground flex size-10 shrink-0 items-center justify-center rounded-lg [&_svg:not([class*='size-'])]:size-6",
       },
     },
     defaultVariants: {
       variant: "default",
-      size: "default",
     },
   }
 )
 
-export interface EmptyProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof emptyVariants> {
-  icon?: React.ReactNode
-  title: string
-  description?: string
-  isLoading?: boolean
-}
-
-function Empty({
+function EmptyMedia({
   className,
-  variant,
-  size,
-  icon,
-  title,
-  description,
-  isLoading = false,
+  variant = "default",
   ...props
-}: EmptyProps) {
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 px-4">
-        <CardSkeleton />
-      </div>
-    )
-  }
-
+}: React.ComponentProps<"div"> & VariantProps<typeof emptyMediaVariants>) {
   return (
     <div
-      className={cn(emptyVariants({ variant, size }), className)}
+      data-slot="empty-icon"
+      data-variant={variant}
+      className={cn(emptyMediaVariants({ variant, className }))}
       {...props}
-    >
-      {icon && (
-        <div className="bg-muted flex h-20 w-20 items-center justify-center rounded-full">
-          {icon}
-        </div>
-      )}
-      <h3 className="mt-6 text-lg font-semibold">{title}</h3>
-      {description && (
-        <p className="mt-2 text-sm text-muted-foreground max-w-md">
-          {description}
-        </p>
-      )}
-      {props.children && <div className="mt-6">{props.children}</div>}
-    </div>
+    />
   )
 }
 
-export { Empty, emptyVariants }
+function EmptyTitle({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="empty-title"
+      className={cn("text-lg font-medium tracking-tight", className)}
+      {...props}
+    />
+  )
+}
+
+function EmptyDescription({ className, ...props }: React.ComponentProps<"p">) {
+  return (
+    <div
+      data-slot="empty-description"
+      className={cn(
+        "text-muted-foreground [&>a:hover]:text-primary text-sm/relaxed [&>a]:underline [&>a]:underline-offset-4",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function EmptyContent({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="empty-content"
+      className={cn(
+        "flex w-full max-w-sm min-w-0 flex-col items-center gap-4 text-sm text-balance",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyContent,
+  EmptyMedia,
+}

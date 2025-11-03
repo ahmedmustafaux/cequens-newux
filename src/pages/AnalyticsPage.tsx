@@ -1,4 +1,5 @@
-import { ComingSoon } from "@/components/coming-soon";
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty"
+import { FileQuestion } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { PageWrapper } from "@/components/page-wrapper";
 import { TimeFilter } from "@/components/time-filter";
@@ -57,7 +58,17 @@ export default function AnalyticsPage() {
             <TableSkeleton rows={4} columns={4} />
           </>
         ) : (
-          <ComingSoon />
+          <Empty>
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <FileQuestion />
+          </EmptyMedia>
+          <EmptyTitle>Coming Soon</EmptyTitle>
+          <EmptyDescription>
+            This feature is currently under development and will be available soon.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
         )}
       </div>
     </PageWrapper>

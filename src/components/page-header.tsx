@@ -162,7 +162,7 @@ export function PageHeader({
         // Check if it's a create page, segments, tags, or contact detail page
         if (segment === "create") {
           breadcrumbs.push({
-            label: "Create new audience member",
+            label: "Create new contact",
             href: currentPath,
             isCurrent: isLast
           })
@@ -181,7 +181,7 @@ export function PageHeader({
         } else {
           // This is a contact detail page, show "Audience member details"
           breadcrumbs.push({
-            label: "Audience member details",
+            label: "Contact details",
             href: currentPath,
             isCurrent: isLast
           })
