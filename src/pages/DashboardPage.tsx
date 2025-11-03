@@ -83,8 +83,8 @@ export default function DashboardPage() {
         ) : (
           <>
             <SectionCards timeRange={timeRange} isLoading={isDataLoading} />
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <DashboardChart timeRange={timeRange} isLoading={isDataLoading} className="lg:col-span-2" />
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+              <DashboardChart timeRange={timeRange} isLoading={isDataLoading} className="xl:col-span-2" />
               <DashboardPieChart timeRange={timeRange} isLoading={isDataLoading} />
             </div>
           </>

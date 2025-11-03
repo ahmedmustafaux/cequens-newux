@@ -61,7 +61,7 @@ export function DashboardChart({ timeRange, isLoading = false, className }: Dash
                 <button
                   key={metric}
                   data-active={activeMetric === metric}
-                  className="data-[active=true]:bg-muted/50 relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-4 py-4 text-left even:border-l sm:border-t-0 sm:border-l sm:px-4 sm:py-6 min-w-[160px] cursor-pointer hover:bg-muted/50 transition"
+                  className="data-[active=true]:bg-muted/50 relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-3 py-3 text-left even:border-l sm:border-t-0 sm:border-l sm:px-4 sm:py-6 min-w-[120px] sm:min-w-[160px] cursor-pointer hover:bg-muted/50 transition"
                   onClick={() => setActiveMetric(metric)}
                 >
                   <span className="text-muted-foreground text-xs whitespace-nowrap">
@@ -105,6 +105,10 @@ export function DashboardChart({ timeRange, isLoading = false, className }: Dash
                   axisLine={false}
                   tickMargin={8}
                   interval={timeRange === "7d" ? 0 : timeRange === "30d" ? 4 : 9} // Adjust interval based on time range
+                  tick={{ fontSize: 12 }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
                 />
                 <YAxis 
                   fontSize={12}

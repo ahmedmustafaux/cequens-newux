@@ -282,41 +282,38 @@ export function PageHeader({
                 </Breadcrumb>
               )}
             </div>
-            {/* Center - Search Bar (Hidden on mobile, absolute positioning for perfect centering on desktop) */}
-            {!isMobile && (
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl px-4 lg:px-6 pointer-events-none">
-                {showSearch && (
-                  <div className="w-full pointer-events-auto">
-                    <Field>
-                      <FieldContent>
-                        <InputGroup className="bg-muted/50 border-muted-foreground/20 focus-visible:bg-background focus-visible:border-ring transition-all duration-200 w-full cursor-pointer">
-                          <InputGroupAddon>
-                            <Search className="h-4 w-4" />
-                          </InputGroupAddon>
-                          <InputGroupInput
-                            type="text"
-                            placeholder={searchPlaceholder}
-                            value={searchValue}
-                            onChange={(e) => onSearchChange?.(e.target.value)}
-                            onFocus={onSearchFocus}
-                            className="pr-20 h-8 text-sm cursor-pointer"
-                          />
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
-                            <KbdGroup className="opacity-60">
-                              <Kbd className="text-xs h-5">{navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}</Kbd>
-                              <Kbd className="text-xs h-5">K</Kbd>
-                            </KbdGroup>
-                          </div>
-                        </InputGroup>
-                      </FieldContent>
-                    </Field>
-                  </div>
-                )}
-              </div>
-            )}
-            
-            {/* Right side - Mobile Search Icon & Notification Bell */}
+            {/* Right side - Search & Notification Bell */}
             <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
+              {/* Desktop Search - Compact */}
+              {!isMobile && showSearch && (
+                <Field className="w-auto">
+                  <FieldContent>
+                    <InputGroup className="bg-muted/50 border-muted-foreground/20 focus-visible:bg-background focus-visible:border-ring transition-all duration-200 cursor-pointer w-auto gap-4">
+                      <div className="flex items-center gap-2">
+                        <InputGroupAddon>
+                          <Search className="h-3.5 w-3.5" />
+                        </InputGroupAddon>
+                        <InputGroupInput
+                          type="text"
+                          placeholder="Search, discover, or create"
+                          value={searchValue}
+                          onChange={(e) => onSearchChange?.(e.target.value)}
+                          onFocus={onSearchFocus}
+                          className="h-8 text-sm cursor-pointer w-auto pr-0 pl-0"
+                          style={{ width: '200px' }}
+                        />
+                      </div>
+                      <div className="flex items-center pr-2 pointer-events-none">
+                        <KbdGroup className="opacity-60">
+                          <Kbd className="text-[10px] h-4 px-1">{navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}</Kbd>
+                          <Kbd className="text-[10px] h-4 px-1">K</Kbd>
+                        </KbdGroup>
+                      </div>
+                    </InputGroup>
+                  </FieldContent>
+                </Field>
+              )}
+              
               {/* Mobile Search Icon */}
               {isMobile && showSearch && (
                 <Tooltip>
@@ -335,6 +332,7 @@ export function PageHeader({
                   </TooltipContent>
                 </Tooltip>
               )}
+              
               {/* Notification Bell */}
               <NotificationBell />
             </div>
