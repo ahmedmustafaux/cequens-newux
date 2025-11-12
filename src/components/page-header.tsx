@@ -247,7 +247,7 @@ export function PageHeader({
         <header className="flex h-(--header-height) shrink-0 items-center border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) relative max-w-full overflow-x-hidden rounded-t-xl overflow-hidden">
           <div className="flex w-full items-center px-4 lg:px-6 py-4 min-w-0">
             {/* Left side - Sidebar trigger and breadcrumbs */}
-            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            <div className="flex items-center gap-2 sm:gap-2 flex-shrink-0">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <SidebarTrigger className="-ml-1" />
@@ -283,7 +283,7 @@ export function PageHeader({
               )}
             </div>
             {/* Right side - Search & Notification Bell */}
-            <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
+            <div className="flex items-center gap-2 ml-auto">
               {/* Desktop Search - Compact */}
               {!isMobile && showSearch && (
                 <Field className="w-auto">
