@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Item, ItemContent, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { toast } from "sonner"
+import { OnboardingTemplateSelection, IndustryTemplate } from "@/components/onboarding-template-selection"
 
 // Define interfaces for option types
 interface BaseOption {
@@ -105,6 +106,8 @@ const onboardingSteps = [
 ]
 
 export default function NewUserOnboardingPage() {
+  const [showTemplateSelection, setShowTemplateSelection] = useState(true)
+  const [selectedTemplate, setSelectedTemplate] = useState<IndustryTemplate | null>(null)
   const [currentStep, setCurrentStep] = useState(0)
   const [selectedOptions, setSelectedOptions] = useState<Record<number, string[]>>({
     5: ["usage-1", "usage-2"] // Pre-select both options for the last question
@@ -122,6 +125,33 @@ export default function NewUserOnboardingPage() {
       navigate("/")
     }
   }, [user, navigate])
+
+  const handleTemplateSelect = (template: IndustryTemplate) => {
+    // Pre-fill selections based on template
+    setSelectedOptions({
+      1: template.goals,
+      2: template.channels,
+      3: [template.teamSize],
+      4: [template.industry],
+      5: ["usage-1", "usage-2"] // Keep both usage options selected
+    })
+    
+    setSelectedTemplate(template)
+    setShowTemplateSelection(false)
+    
+    toast.success(`${template.name} template selected!`, {
+      description: "Your preferences have been pre-filled. You can customize them in the next steps.",
+      duration: 3000,
+    })
+  }
+
+  const handleStartFromScratch = () => {
+    setSelectedTemplate(null)
+    setSelectedOptions({
+      5: ["usage-1", "usage-2"] // Only pre-select usage options
+    })
+    setShowTemplateSelection(false)
+  }
 
   const handleOptionSelect = (optionId: string) => {
     const step = onboardingSteps[currentStep]
@@ -176,6 +206,10 @@ export default function NewUserOnboardingPage() {
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep(prev => prev - 1)
+    } else if (currentStep === 0) {
+      // Go back to template selection
+      setShowTemplateSelection(true)
+      setSelectedTemplate(null)
     }
   }
 
@@ -233,6 +267,17 @@ export default function NewUserOnboardingPage() {
     return buildingPhrases[index]
   }
 
+  // Show template selection screen first
+  if (showTemplateSelection) {
+    return (
+      <OnboardingTemplateSelection
+        onTemplateSelect={handleTemplateSelect}
+        onStartFromScratch={handleStartFromScratch}
+      />
+    )
+  }
+
+  // Show wizard after template selection
   return (
     <div className="min-h-screen flex items-start justify-center p-4 pt-24">
       <Card className="w-full max-w-2xl shadow-lg bg-white rounded-2xl overflow-hidden fixed top-16 z-10">
@@ -264,6 +309,15 @@ export default function NewUserOnboardingPage() {
                   Step {currentStep + 1} of {onboardingSteps.length}
                 </span>
               </div>
+
+              {/* Show template badge if selected */}
+              {selectedTemplate && (
+                <div className="flex items-center justify-center mb-2">
+                  <Badge variant="secondary" className="text-xs">
+                    {selectedTemplate.icon} {selectedTemplate.name} Template
+                  </Badge>
+                </div>
+              )}
 
               {/* Question */}
               <motion.div
@@ -562,16 +616,12 @@ export default function NewUserOnboardingPage() {
 
               {/* Navigation buttons */}
               <div className="flex justify-between pt-2">
-                {currentStep > 0 ? (
-                  <Button
-                    variant="outline"
-                    onClick={handleBack}
-                  >
-                    Back
-                  </Button>
-                ) : (
-                  <div></div> /* Empty div to maintain flex spacing */
-                )}
+                <Button
+                  variant="outline"
+                  onClick={handleBack}
+                >
+                  Back
+                </Button>
                 <Button
                   onClick={handleNext}
                   disabled={!canProceed()}
