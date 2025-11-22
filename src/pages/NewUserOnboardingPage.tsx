@@ -14,6 +14,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Item, ItemContent, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { toast } from "sonner"
 import { OnboardingTemplateSelection, IndustryTemplate } from "@/components/onboarding-template-selection"
+import { OnboardingIndustryOverview } from "@/components/onboarding-industry-overview"
 
 // Define interfaces for option types
 interface BaseOption {
@@ -42,34 +43,11 @@ const hasIcon = (option: Option): option is IconOption => {
 };
 
 // Define the onboarding questions and options
+// Reordered: Company size first, then usage type
 const onboardingSteps = [
   {
     id: 1,
-    question: "What's your primary goal with our platform?",
-    options: [
-      { id: "goal-1", label: "Customer engagement" },
-      { id: "goal-2", label: "Marketing campaigns" },
-      { id: "goal-3", label: "Support automation" },
-      { id: "goal-4", label: "Lead generation" },
-      { id: "goal-5", label: "Internal communications" },
-    ],
-    multiSelect: true,
-  },
-  {
-    id: 2,
-    question: "Which channels do you plan to use?",
-    options: [
-      { id: "channel-1", label: "SMS", iconType: "lucide", icon: "MessageSquare" },
-      { id: "channel-2", label: "WhatsApp", iconType: "svg", icon: "/icons/WhatsApp.svg" },
-      { id: "channel-3", label: "Email", iconType: "lucide", icon: "Mail" },
-      { id: "channel-4", label: "Voice", iconType: "lucide", icon: "Phone" },
-      { id: "channel-5", label: "Messenger", iconType: "img", icon: "/icons/Messenger.png" },
-    ],
-    multiSelect: true,
-  },
-  {
-    id: 3,
-    question: "What's your team size?",
+    question: "What's your company size?",
     options: [
       { id: "team-1", label: "Just me" },
       { id: "team-2", label: "2-5 people" },
@@ -80,21 +58,7 @@ const onboardingSteps = [
     multiSelect: false,
   },
   {
-    id: 4,
-    question: "Which industry are you in?",
-    options: [
-      { id: "industry-1", label: "E-commerce" },
-      { id: "industry-2", label: "Healthcare" },
-      { id: "industry-3", label: "Finance" },
-      { id: "industry-4", label: "Education" },
-      { id: "industry-5", label: "Technology" },
-      { id: "industry-6", label: "Retail" },
-      { id: "industry-7", label: "Other" },
-    ],
-    multiSelect: false,
-  },
-  {
-    id: 5,
+    id: 2,
     question: "How will you use our platform?",
     options: [
       { id: "usage-1", label: "API Integrations (Developers)" },
@@ -107,10 +71,11 @@ const onboardingSteps = [
 
 export default function NewUserOnboardingPage() {
   const [showTemplateSelection, setShowTemplateSelection] = useState(true)
+  const [showIndustryOverview, setShowIndustryOverview] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<IndustryTemplate | null>(null)
   const [currentStep, setCurrentStep] = useState(0)
   const [selectedOptions, setSelectedOptions] = useState<Record<number, string[]>>({
-    5: ["usage-1", "usage-2"] // Pre-select both options for the last question
+    2: ["usage-1", "usage-2"] // Pre-select both options for the usage question
   })
   const [isCompleted, setIsCompleted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -129,28 +94,33 @@ export default function NewUserOnboardingPage() {
   const handleTemplateSelect = (template: IndustryTemplate) => {
     // Pre-fill selections based on template
     setSelectedOptions({
-      1: template.goals,
-      2: template.channels,
-      3: [template.teamSize],
-      4: [template.industry],
-      5: ["usage-1", "usage-2"] // Keep both usage options selected
+      1: [template.teamSize], // Company size
+      2: ["usage-1", "usage-2"] // Usage options
     })
     
     setSelectedTemplate(template)
     setShowTemplateSelection(false)
-    
-    toast.success(`${template.name} template selected!`, {
-      description: "Your preferences have been pre-filled. You can customize them in the next steps.",
-      duration: 3000,
-    })
+    setShowIndustryOverview(true) // Show industry overview instead of going to wizard
   }
 
   const handleStartFromScratch = () => {
     setSelectedTemplate(null)
     setSelectedOptions({
-      5: ["usage-1", "usage-2"] // Only pre-select usage options
+      2: ["usage-1", "usage-2"] // Only pre-select usage options
     })
     setShowTemplateSelection(false)
+    setShowIndustryOverview(false)
+  }
+
+  const handleContinueFromOverview = () => {
+    setShowIndustryOverview(false)
+    // Start the wizard from step 0
+  }
+
+  const handleBackFromOverview = () => {
+    setShowIndustryOverview(false)
+    setShowTemplateSelection(true)
+    setSelectedTemplate(null)
   }
 
   const handleOptionSelect = (optionId: string) => {
@@ -206,6 +176,9 @@ export default function NewUserOnboardingPage() {
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep(prev => prev - 1)
+    } else if (currentStep === 0 && selectedTemplate) {
+      // Go back to industry overview if template was selected
+      setShowIndustryOverview(true)
     } else if (currentStep === 0) {
       // Go back to template selection
       setShowTemplateSelection(true)
@@ -277,7 +250,18 @@ export default function NewUserOnboardingPage() {
     )
   }
 
-  // Show wizard after template selection
+  // Show industry overview if template was selected
+  if (showIndustryOverview && selectedTemplate) {
+    return (
+      <OnboardingIndustryOverview
+        template={selectedTemplate}
+        onContinue={handleContinueFromOverview}
+        onBack={handleBackFromOverview}
+      />
+    )
+  }
+
+  // Show wizard after template selection or industry overview
   return (
     <div className="min-h-screen flex items-start justify-center p-4 pt-24">
       <Card className="w-full max-w-2xl shadow-lg bg-white rounded-2xl overflow-hidden fixed top-16 z-10">
@@ -366,7 +350,7 @@ export default function NewUserOnboardingPage() {
                                     
                                     {/* Code/API visual */}
                                     <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4/5 h-3/5">
-                                      {/* Terminal header with title */}
+                                      {/* Terminal header */}
                                       <div className="w-full h-1.5 bg-slate-700 rounded-t-md flex items-center justify-between px-1">
                                         <div className="flex items-center">
                                           <div className="w-0.5 h-0.5 rounded-full bg-red-400 mr-0.5"></div>
@@ -377,52 +361,35 @@ export default function NewUserOnboardingPage() {
                                         <div className="w-1/6 h-0.5 bg-transparent"></div>
                                       </div>
                                       
-                                      {/* Terminal body with code */}
+                                      {/* Terminal body */}
                                       <div className="w-full h-full bg-slate-800 rounded-b-md p-1 flex flex-col justify-start">
-                                        {/* Command prompt line */}
                                         <div className="flex items-center mb-0.5">
                                           <div className="w-1 h-0.5 bg-green-500 rounded-full mr-0.5"></div>
                                           <div className="w-2/3 h-0.5 bg-slate-600 rounded-full"></div>
                                         </div>
-                                        
-                                        {/* Response lines with syntax highlighting */}
                                         <div className="flex items-center mb-0.5">
                                           <div className="w-1/6 h-0.5 bg-purple-500 rounded-full mr-0.5"></div>
                                           <div className="w-1/4 h-0.5 bg-blue-400 rounded-full mr-0.5"></div>
                                           <div className="w-1/3 h-0.5 bg-yellow-400 rounded-full"></div>
                                         </div>
-                                        
                                         <div className="flex items-center mb-0.5">
                                           <div className="w-1/5 h-0.5 bg-blue-400 rounded-full mr-0.5"></div>
                                           <div className="w-2/5 h-0.5 bg-green-400 rounded-full"></div>
                                         </div>
-                                        
-                                        <div className="flex items-center mb-0.5">
-                                          <div className="w-1/6 h-0.5 bg-red-400 rounded-full mr-0.5"></div>
-                                          <div className="w-1/2 h-0.5 bg-blue-400 rounded-full"></div>
-                                        </div>
-                                        
-                                        <div className="flex items-center">
-                                          <div className="w-1/4 h-0.5 bg-purple-500 rounded-full mr-0.5"></div>
-                                          <div className="w-1/3 h-0.5 bg-yellow-400 rounded-full"></div>
-                                        </div>
-                                        
-                                        {/* Cursor */}
                                         <div className="w-0.5 h-0.5 bg-white mt-0.5 animate-pulse"></div>
                                       </div>
                                     </div>
                                     
-                                    {/* Code brackets decoration */}
                                     <div className="absolute bottom-1 right-2 text-xs text-slate-400 opacity-30">{"{ }"}</div>
                                   </>
                                 )}
                                 
                                 {option.id === "usage-2" && (
                                   <>
-                                    {/* Interfaced Apps (CRM Teams) - Chat with user cards from different channels */}
+                                    {/* Interfaced Apps (CRM Teams) */}
                                     <div className="absolute top-0 left-0 right-0 h-1.5 bg-gray-200"></div>
                                     
-                                    {/* Multi-channel chat interface */}
+                                    {/* Chat interface */}
                                     <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4/5 h-3/5 shadow-sm">
                                       {/* App header */}
                                       <div className="w-full h-1.5 bg-white border-b border-slate-200 rounded-t-md flex items-center justify-between px-1">
@@ -435,43 +402,12 @@ export default function NewUserOnboardingPage() {
                                         </div>
                                       </div>
                                       
-                                      {/* App body - split view */}
+                                      {/* App body */}
                                       <div className="w-full h-full bg-slate-50 rounded-b-md flex">
-                                        {/* Left sidebar - user cards from different channels */}
-                                        <div className="w-1/3 h-full bg-white border-r border-slate-200 flex flex-col p-0.5 space-y-0.5 overflow-hidden">
-                                          {/* WhatsApp user */}
+                                        {/* Sidebar */}
+                                        <div className="w-1/3 h-full bg-white border-r border-slate-200 flex flex-col p-0.5 space-y-0.5">
                                           <div className="flex items-center bg-green-50/50 border-l-2 border-green-500 rounded-sm p-0.5">
-                                            {/* WhatsApp logo */}
-                                            <div className="w-1 h-1 bg-white rounded-full flex items-center justify-center mr-0.5 relative overflow-hidden">
-                                              <div className="absolute inset-0.5 bg-green-500 rounded-full flex items-center justify-center">
-                                                <div className="w-0.5 h-0.5 bg-white transform rotate-45"></div>
-                                              </div>
-                                            </div>
-                                            <div className="flex-1">
-                                              <div className="w-1/2 h-0.5 bg-slate-700 rounded-full mb-0.5"></div>
-                                              <div className="w-2/3 h-0.5 bg-slate-400 rounded-full"></div>
-                                            </div>
-                                          </div>
-                                          
-                                          {/* Instagram user */}
-                                          <div className="flex items-center hover:bg-pink-50/30 border-l-2 border-transparent rounded-sm p-0.5">
-                                            {/* Instagram logo */}
-                                            <div className="w-1 h-1 bg-gradient-to-tr from-yellow-500 via-pink-500 to-purple-500 rounded-full flex items-center justify-center mr-0.5 relative overflow-hidden">
-                                              <div className="absolute inset-0.5 bg-white rounded-full"></div>
-                                              <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-pink-500 rounded-full"></div>
-                                            </div>
-                                            <div className="flex-1">
-                                              <div className="w-1/2 h-0.5 bg-slate-700 rounded-full mb-0.5"></div>
-                                              <div className="w-2/3 h-0.5 bg-slate-400 rounded-full"></div>
-                                            </div>
-                                          </div>
-                                          
-                                          {/* Messenger user */}
-                                          <div className="flex items-center hover:bg-blue-50/30 border-l-2 border-transparent rounded-sm p-0.5">
-                                            {/* Messenger logo */}
-                                            <div className="w-1 h-1 bg-gradient-to-b from-blue-400 to-blue-600 rounded-full flex items-center justify-center mr-0.5 relative overflow-hidden">
-                                              <div className="absolute inset-0.5 bg-white transform rotate-45 translate-y-0.5"></div>
-                                            </div>
+                                            <div className="w-1 h-1 bg-green-500 rounded-full mr-0.5"></div>
                                             <div className="flex-1">
                                               <div className="w-1/2 h-0.5 bg-slate-700 rounded-full mb-0.5"></div>
                                               <div className="w-2/3 h-0.5 bg-slate-400 rounded-full"></div>
@@ -479,54 +415,18 @@ export default function NewUserOnboardingPage() {
                                           </div>
                                         </div>
                                         
-                                        {/* Right side - active chat */}
+                                        {/* Chat area */}
                                         <div className="flex-1 flex flex-col">
-                                          {/* Chat header */}
-                                          <div className="h-1.5 bg-white border-b border-slate-200 flex items-center px-0.5 justify-between">
-                                            <div className="flex items-center">
-                                              {/* WhatsApp logo */}
-                                              <div className="w-0.75 h-0.75 bg-white rounded-full flex items-center justify-center mr-0.5 relative overflow-hidden">
-                                                <div className="absolute inset-0.5 bg-green-500 rounded-full flex items-center justify-center">
-                                                  <div className="w-0.25 h-0.25 bg-white transform rotate-45"></div>
-                                                </div>
-                                              </div>
-                                              <div className="w-1/4 h-0.5 bg-slate-700 rounded-full"></div>
-                                            </div>
-                                            <div className="flex items-center space-x-0.5">
-                                              <div className="w-0.5 h-0.5 rounded-full bg-green-500"></div>
-                                              <div className="w-0.5 h-0.5 rounded-full bg-slate-400"></div>
-                                            </div>
-                                          </div>
-                                          
-                                          {/* Chat messages */}
-                                          <div className="flex-1 p-0.5 flex flex-col justify-end space-y-0.5 bg-slate-50">
-                                            {/* Incoming message */}
+                                          <div className="flex-1 p-0.5 flex flex-col justify-end space-y-0.5">
                                             <div className="flex items-start">
-                                              <div className="w-0.75 h-0.75 rounded-full bg-slate-200 flex items-center justify-center mt-0.5 mr-0.5 overflow-hidden">
-                                                <div className="w-0.5 h-0.5 bg-slate-400"></div>
-                                              </div>
-                                              <div className="bg-white border border-slate-200 rounded-md rounded-tl-none p-0.5 max-w-[70%]">
-                                                <div className="w-full h-0.5 bg-slate-500 rounded-full mb-0.5"></div>
-                                                <div className="w-2/3 h-0.5 bg-slate-500 rounded-full"></div>
+                                              <div className="bg-white border border-slate-200 rounded-md p-0.5 max-w-[70%]">
+                                                <div className="w-full h-0.5 bg-slate-500 rounded-full"></div>
                                               </div>
                                             </div>
-                                            
-                                            {/* Outgoing message */}
                                             <div className="flex items-start justify-end">
-                                              <div className="bg-green-100 border border-green-200 rounded-md rounded-tr-none p-0.5 max-w-[70%]">
-                                                <div className="w-full h-0.5 bg-green-600/60 rounded-full mb-0.5"></div>
-                                                <div className="w-3/4 h-0.5 bg-green-600/60 rounded-full"></div>
+                                              <div className="bg-green-100 border border-green-200 rounded-md p-0.5 max-w-[70%]">
+                                                <div className="w-full h-0.5 bg-green-600/60 rounded-full"></div>
                                               </div>
-                                              <div className="w-0.5 h-0.5 rounded-full bg-green-500 mt-0.5 ml-0.5"></div>
-                                            </div>
-                                          </div>
-                                          
-                                          {/* Message input area */}
-                                          <div className="h-1.5 bg-white border-t border-slate-200 flex items-center px-0.5 justify-between">
-                                            <div className="w-3/4 h-0.5 bg-slate-200 rounded-full"></div>
-                                            <div className="flex items-center">
-                                              <div className="w-0.5 h-0.5 rounded-full bg-slate-400 mr-0.5"></div>
-                                              <div className="w-0.5 h-0.5 rounded-full bg-green-500"></div>
                                             </div>
                                           </div>
                                         </div>
@@ -585,27 +485,6 @@ export default function NewUserOnboardingPage() {
                             )}
                             <span>{option.label}</span>
                           </div>
-                          
-                          {/* Icon on the right side */}
-                          {currentStep === 1 && hasIcon(option) && (
-                            <div className="flex items-center justify-center w-6 h-6">
-                              {option.iconType === "lucide" && option.icon === "MessageSquare" && (
-                                <MessageSquare className="w-5 h-5 text-gray-500" />
-                              )}
-                              {option.iconType === "lucide" && option.icon === "Mail" && (
-                                <Mail className="w-5 h-5 text-gray-500" />
-                              )}
-                              {option.iconType === "lucide" && option.icon === "Phone" && (
-                                <Phone className="w-5 h-5 text-gray-500" />
-                              )}
-                              {option.iconType === "svg" && (
-                                <img src={option.icon} alt={option.label} className="w-5 h-5" />
-                              )}
-                              {option.iconType === "img" && (
-                                <img src={option.icon} alt={option.label} className="w-5 h-5" />
-                              )}
-                            </div>
-                          )}
                         </div>
                       </div>
                     ))}

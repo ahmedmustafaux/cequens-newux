@@ -4,7 +4,7 @@ import { Check, Sparkles, MessageSquare, Mail, Phone } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { smoothTransition, pageVariants } from "@/lib/transitions"
+import { smoothTransition } from "@/lib/transitions"
 
 // Channel icon mapping
 const channelIcons: Record<string, { icon: React.ReactNode; label: string }> = {
@@ -137,37 +137,24 @@ export function OnboardingTemplateSelection({
   onTemplateSelect, 
   onStartFromScratch 
 }: OnboardingTemplateSelectionProps) {
-  const stepVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -20 }
-  }
-
   return (
     <div className="min-h-screen flex items-start justify-center p-4 pt-24">
       <Card className="w-full max-w-5xl shadow-lg bg-white rounded-2xl overflow-hidden fixed top-16 z-10">
         <CardContent className="p-4">
           <motion.div
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            variants={pageVariants}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
             transition={smoothTransition}
             className="space-y-6"
           >
             {/* Header */}
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              variants={stepVariants}
-              transition={{ duration: 0.3 }}
-              className="space-y-1"
-            >
+            <div className="space-y-1">
               <h1 className="text-xl font-semibold">Welcome to Cequens!</h1>
               <p className="text-sm text-muted-foreground">
                 Choose a template that matches your industry or start from scratch to customize everything.
               </p>
-            </motion.div>
+            </div>
 
             {/* Industry Templates Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -251,20 +238,14 @@ export function OnboardingTemplateSelection({
             </div>
 
             {/* Divider */}
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              variants={stepVariants}
-              transition={{ duration: 0.3, delay: 0.4 }}
-              className="relative"
-            >
+            <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-gray-200" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-white px-3 text-muted-foreground font-medium">Or</span>
               </div>
-            </motion.div>
+            </div>
 
             {/* Start from Scratch Button */}
             <div>
