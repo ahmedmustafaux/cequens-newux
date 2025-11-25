@@ -8,6 +8,15 @@ import {
   Users,
   Calendar,
   Clock,
+  Download,
+  Upload,
+  Settings,
+  Zap,
+  Filter,
+  Tag,
+  FileText,
+  TrendingUp,
+  AlertCircle,
 } from "lucide-react"
 import {
   Dialog,
@@ -18,7 +27,6 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 
 interface SyncHistory {
@@ -199,12 +207,15 @@ export function ContactsImportDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col" 
+        className={cn(
+          "max-h-[85vh] overflow-hidden flex flex-col gap-2",
+          selectedIntegration?.connected ? "max-w-5xl" : "max-w-2xl"
+        )}
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <DialogHeader className="px-6 pt-6 pb-4">
           {selectedIntegration ? (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
                 size="sm"
@@ -247,14 +258,14 @@ export function ContactsImportDialog({
           )}
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 pb-6">
+        <div className="flex-1 px-6 pb-6">
           {selectedIntegration ? (
             // Integration Detail View
             <div className="space-y-6">
               {selectedIntegration.connected ? (
                 <>
-                  {/* Stats */}
-                  <div className="grid grid-cols-2 gap-4">
+                  {/* Stats Grid */}
+                  <div className="grid grid-cols-4 gap-4">
                     <div className="p-4 rounded-lg border bg-card">
                       <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
                         <Users className="w-4 h-4" />
@@ -269,69 +280,186 @@ export function ContactsImportDialog({
                         <Clock className="w-4 h-4" />
                         Last Sync
                       </div>
-                      <div className="text-2xl font-semibold">
+                      <div className="text-lg font-semibold">
                         {selectedIntegration.lastSync ? formatDate(selectedIntegration.lastSync) : "Never"}
+                      </div>
+                    </div>
+                    <div className="p-4 rounded-lg border bg-card">
+                      <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                        <TrendingUp className="w-4 h-4" />
+                        Growth
+                      </div>
+                      <div className="text-2xl font-semibold text-green-600">
+                        +12%
+                      </div>
+                    </div>
+                    <div className="p-4 rounded-lg border bg-card">
+                      <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                        <Zap className="w-4 h-4" />
+                        Auto-Sync
+                      </div>
+                      <div className="text-lg font-semibold">
+                        Daily
                       </div>
                     </div>
                   </div>
 
-                  {/* Sync Button */}
-                  <Button 
-                    className="w-full gap-2" 
-                    onClick={handleSync}
-                    disabled={isSyncing}
-                  >
-                    {isSyncing ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Syncing...
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="w-4 h-4" />
-                        Sync Now
-                      </>
-                    )}
-                  </Button>
-
-                  <Separator />
-
-                  {/* Sync History */}
-                  <div>
-                    <h3 className="text-sm font-medium mb-3">Sync History</h3>
-                    <div className="space-y-2">
-                      {selectedIntegration.syncHistory && selectedIntegration.syncHistory.length > 0 ? (
-                        selectedIntegration.syncHistory.map((history) => (
-                          <div
-                            key={history.id}
-                            className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                  <div className="grid grid-cols-3 gap-6">
+                    {/* Left Column - Actions & Use Cases */}
+                    <div className="col-span-2 space-y-6">
+                      {/* Quick Actions */}
+                      <div>
+                        <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                          <Zap className="w-4 h-4" />
+                          Quick Actions
+                        </h3>
+                        <div className="grid grid-cols-2 gap-3">
+                          <Button 
+                            variant="outline" 
+                            className="justify-start gap-2 h-auto py-3"
+                            onClick={handleSync}
+                            disabled={isSyncing}
                           >
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                <Calendar className="w-4 h-4 text-primary" />
-                              </div>
-                              <div>
-                                <div className="text-sm font-medium">
-                                  {history.contactsImported.toLocaleString()} contacts imported
+                            {isSyncing ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <div className="text-left">
+                                  <div className="font-medium">Syncing...</div>
+                                  <div className="text-xs text-muted-foreground">Please wait</div>
                                 </div>
-                                <div className="text-xs text-muted-foreground">
-                                  {formatDate(history.date)}
+                              </>
+                            ) : (
+                              <>
+                                <RefreshCw className="w-4 h-4" />
+                                <div className="text-left">
+                                  <div className="font-medium">Sync Now</div>
+                                  <div className="text-xs text-muted-foreground">Update contacts</div>
+                                </div>
+                              </>
+                            )}
+                          </Button>
+                          <Button variant="outline" className="justify-start gap-2 h-auto py-3">
+                            <Download className="w-4 h-4" />
+                            <div className="text-left">
+                              <div className="font-medium">Export Data</div>
+                              <div className="text-xs text-muted-foreground">Download CSV</div>
+                            </div>
+                          </Button>
+                          <Button variant="outline" className="justify-start gap-2 h-auto py-3">
+                            <Filter className="w-4 h-4" />
+                            <div className="text-left">
+                              <div className="font-medium">Filter Sync</div>
+                              <div className="text-xs text-muted-foreground">Set conditions</div>
+                            </div>
+                          </Button>
+                          <Button variant="outline" className="justify-start gap-2 h-auto py-3">
+                            <Settings className="w-4 h-4" />
+                            <div className="text-left">
+                              <div className="font-medium">Configure</div>
+                              <div className="text-xs text-muted-foreground">Sync settings</div>
+                            </div>
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Use Cases */}
+                      <div>
+                        <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                          <FileText className="w-4 h-4" />
+                          Common Use Cases
+                        </h3>
+                        <div className="space-y-2">
+                          <div className="p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer">
+                            <div className="flex items-start gap-3">
+                              <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <Upload className="w-4 h-4 text-blue-600" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="font-medium text-sm">Automated Contact Import</div>
+                                <div className="text-xs text-muted-foreground mt-0.5">
+                                  Automatically sync new contacts from {selectedIntegration.name} to your contact list daily
                                 </div>
                               </div>
                             </div>
-                            <Badge 
-                              variant="outline" 
-                              className={cn("capitalize", getStatusColor(history.status))}
-                            >
-                              {history.status}
-                            </Badge>
                           </div>
-                        ))
-                      ) : (
-                        <div className="text-center py-8 text-muted-foreground text-sm">
-                          No sync history yet
+                          <div className="p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer">
+                            <div className="flex items-start gap-3">
+                              <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <Tag className="w-4 h-4 text-purple-600" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="font-medium text-sm">Smart Segmentation</div>
+                                <div className="text-xs text-muted-foreground mt-0.5">
+                                  Automatically tag and segment contacts based on {selectedIntegration.name} data
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer">
+                            <div className="flex items-start gap-3">
+                              <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <RefreshCw className="w-4 h-4 text-green-600" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="font-medium text-sm">Two-Way Sync</div>
+                                <div className="text-xs text-muted-foreground mt-0.5">
+                                  Keep contact information synchronized between both platforms
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                      )}
+                      </div>
+                    </div>
+
+                    {/* Right Column - Sync History */}
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                          <Calendar className="w-4 h-4" />
+                          Sync History
+                        </h3>
+                        <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+                          {selectedIntegration.syncHistory && selectedIntegration.syncHistory.length > 0 ? (
+                            selectedIntegration.syncHistory.map((history) => (
+                              <div
+                                key={history.id}
+                                className="p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                              >
+                                <div className="flex items-start justify-between gap-2 mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                      {history.status === "success" ? (
+                                        <CheckCircle2 className="w-3 h-3 text-green-600" />
+                                      ) : history.status === "failed" ? (
+                                        <AlertCircle className="w-3 h-3 text-red-600" />
+                                      ) : (
+                                        <AlertCircle className="w-3 h-3 text-yellow-600" />
+                                      )}
+                                    </div>
+                                    <Badge 
+                                      variant="outline" 
+                                      className={cn("capitalize text-xs", getStatusColor(history.status))}
+                                    >
+                                      {history.status}
+                                    </Badge>
+                                  </div>
+                                </div>
+                                <div className="text-sm font-medium">
+                                  {history.contactsImported.toLocaleString()} contacts
+                                </div>
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  {formatDate(history.date)}
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-center py-8 text-muted-foreground text-sm">
+                              No sync history yet
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </>
