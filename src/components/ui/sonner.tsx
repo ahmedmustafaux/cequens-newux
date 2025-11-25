@@ -11,6 +11,28 @@ const Toaster = ({ ...props }: ToasterProps) => {
     if (savedPosition) {
       setPosition(savedPosition as ToasterProps["position"])
     }
+    
+    // Listen for storage changes (when position is updated in settings)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "toast-position" && e.newValue) {
+        setPosition(e.newValue as ToasterProps["position"])
+      }
+    }
+    
+    // Listen for custom event (for same-tab updates)
+    const handlePositionChange = (e: CustomEvent) => {
+      if (e.detail) {
+        setPosition(e.detail as ToasterProps["position"])
+      }
+    }
+    
+    window.addEventListener("storage", handleStorageChange)
+    window.addEventListener("toast-position-changed" as any, handlePositionChange as any)
+    
+    return () => {
+      window.removeEventListener("storage", handleStorageChange)
+      window.removeEventListener("toast-position-changed" as any, handlePositionChange as any)
+    }
   }, [])
   
   return (

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from "react"
+import React, { createContext, useContext, useState, ReactNode } from "react"
 import { toast } from "sonner"
 // Notification type definition
 export interface Notification {
@@ -38,26 +38,6 @@ export function NotificationProvider({
   children,
   maxNotifications = 10
 }: NotificationProviderProps) {
-  // Track the user's preferred notification position
-  const [toastPosition, setToastPosition] = useState<string>("top-right");
-  
-  // Load the saved position from localStorage
-  useEffect(() => {
-    const savedPosition = localStorage.getItem("toast-position");
-    if (savedPosition) {
-      setToastPosition(savedPosition);
-    }
-    
-    // Listen for changes to the toast position
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "toast-position" && e.newValue) {
-        setToastPosition(e.newValue);
-      }
-    };
-    
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
   // Static notifications with different dates
   const [notifications, setNotifications] = useState<Notification[]>([
     {
@@ -174,11 +154,10 @@ export function NotificationProvider({
     }
     setNotifications(prev => [newNotification, ...prev.slice(0, maxNotifications - 1)])
     
-    // Also show a toast notification with the user's preferred position
+    // Also show a toast notification using the global position from Toaster component
     const toastType = notification.type as "success" | "error" | "info" | "warning";
     toast[toastType](notification.title, {
-      description: notification.description,
-      position: toastPosition as any
+      description: notification.description
     });
   }
   

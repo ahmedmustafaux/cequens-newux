@@ -526,7 +526,7 @@ export function OnboardingIndustryOverview({
                 onClick={onContinue}
                 className="flex items-center"
               >
-                Continue Setup
+                Personalize my experience
                 <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
             </div>

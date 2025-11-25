@@ -25,6 +25,9 @@ import {
   Download,
   Upload,
   Search,
+  ChevronDown,
+  FileUp,
+  Cloud,
 } from "lucide-react"
 import { PageWrapper } from "@/components/page-wrapper"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -39,6 +42,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { ContactsImportDialog } from "@/components/contacts-import-dialog"
 import { 
   DataTable,
   DataTableHeader,
@@ -71,6 +81,8 @@ const ContactsPageContent = (): React.JSX.Element => {
   const [selectedTags, setSelectedTags] = React.useState<string[]>([])
   const [channelSearchQuery, setChannelSearchQuery] = React.useState("")
   const [tagSearchQuery, setTagSearchQuery] = React.useState("")
+  const [isImportDialogOpen, setIsImportDialogOpen] = React.useState(false)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
   
   // Dynamic page title
   usePageTitle("Audience")
@@ -312,8 +324,20 @@ const ContactsPageContent = (): React.JSX.Element => {
     option.label.toLowerCase().includes(tagSearchQuery.toLowerCase())
   )
 
-  const handleImport = () => {
-    // TODO: Implement import functionality
+  const handleCSVImport = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      // TODO: Implement CSV file processing
+      console.log("Selected file:", file.name)
+    }
+  }
+
+  const handleThirdPartyImport = () => {
+    setIsImportDialogOpen(true)
   }
 
   const handleExport = () => {
@@ -326,6 +350,19 @@ const ContactsPageContent = (): React.JSX.Element => {
 
   return (
     <>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".csv"
+        className="hidden"
+        onChange={handleFileChange}
+      />
+      
+      <ContactsImportDialog 
+        open={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
+      />
+
       <PageHeader
         title="Audience"
         description="Create and manage your audience."
@@ -333,10 +370,25 @@ const ContactsPageContent = (): React.JSX.Element => {
         isLoading={isDataLoading}
         customActions={
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="gap-2" onClick={handleImport}>
-              <Upload className="w-4 h-4" />
-              Import
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Upload className="w-4 h-4" />
+                  Import
+                  <ChevronDown className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleCSVImport}>
+                  <FileUp className="w-4 h-4 mr-2" />
+                  Import from CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleThirdPartyImport}>
+                  <Cloud className="w-4 h-4 mr-2" />
+                  Import from 3rd Party
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button variant="outline" size="sm" className="gap-2" onClick={handleExport}>
               <Download className="w-4 h-4" />
               Export

@@ -442,9 +442,12 @@ export default function NotificationsPage() {
                         onValueChange={(value) => {
                           setSettings(prev => ({ ...prev, notificationPosition: value }));
                           
+                          // Save to localStorage and dispatch event for immediate update
+                          localStorage.setItem("toast-position", value);
+                          window.dispatchEvent(new CustomEvent("toast-position-changed", { detail: value }));
+                          
                           // Show a test notification with the new position
                           toast.info("Notification position preview", {
-                            position: value as any,
                             description: "This is how notifications will appear"
                           });
                         }}
@@ -455,8 +458,9 @@ export default function NotificationsPage() {
                             className="w-full cursor-pointer group"
                             onClick={() => {
                               setSettings(prev => ({ ...prev, notificationPosition: "top-right" }));
+                              localStorage.setItem("toast-position", "top-right");
+                              window.dispatchEvent(new CustomEvent("toast-position-changed", { detail: "top-right" }));
                               toast.info("Notification position preview", {
-                                position: "top-right" as any,
                                 description: "This is how notifications will appear"
                               });
                             }}
@@ -491,8 +495,9 @@ export default function NotificationsPage() {
                             className="w-full cursor-pointer group"
                             onClick={() => {
                               setSettings(prev => ({ ...prev, notificationPosition: "bottom-right" }));
+                              localStorage.setItem("toast-position", "bottom-right");
+                              window.dispatchEvent(new CustomEvent("toast-position-changed", { detail: "bottom-right" }));
                               toast.info("Notification position preview", {
-                                position: "bottom-right" as any,
                                 description: "This is how notifications will appear"
                               });
                             }}
@@ -527,8 +532,9 @@ export default function NotificationsPage() {
                             className="w-full cursor-pointer group"
                             onClick={() => {
                               setSettings(prev => ({ ...prev, notificationPosition: "bottom-center" }));
+                              localStorage.setItem("toast-position", "bottom-center");
+                              window.dispatchEvent(new CustomEvent("toast-position-changed", { detail: "bottom-center" }));
                               toast.info("Notification position preview", {
-                                position: "bottom-center" as any,
                                 description: "This is how notifications will appear"
                               });
                             }}
@@ -566,13 +572,12 @@ export default function NotificationsPage() {
                       onClick={() => {
                         // Save notification position to localStorage
                         localStorage.setItem("toast-position", settings.notificationPosition);
+                        window.dispatchEvent(new CustomEvent("toast-position-changed", { detail: settings.notificationPosition }));
                         
                         setSettingsOpen(false);
                         
-                        // Use the selected position for this toast
-                        toast.success("Notification preferences saved", {
-                          position: settings.notificationPosition as any
-                        });
+                        // Use the global position for this toast
+                        toast.success("Notification preferences saved");
                       }}
                     >
                       Save preferences

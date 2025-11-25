@@ -113,8 +113,10 @@ export default function NewUserOnboardingPage() {
   }
 
   const handleContinueFromOverview = () => {
+    // Hide overview and show loading screen
     setShowIndustryOverview(false)
-    // Start the wizard from step 0
+    // Complete onboarding directly without going through wizard questions
+    completeOnboarding()
   }
 
   const handleBackFromOverview = () => {
