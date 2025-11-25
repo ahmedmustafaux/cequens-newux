@@ -62,17 +62,10 @@ const integrations: ThirdPartyIntegration[] = [
     connected: false,
   },
   {
-    id: "mailchimp",
-    name: "Mailchimp",
-    description: "Sync your Mailchimp audience",
-    logo: "https://eep.io/images/yzco4xsimv0y/5fwn0sCq5GCU04sMW6yGOA/c9a4cc8b5e8c8e4c2b0c9c8e8e8e8e8e/mailchimp-freddie-icon.png",
-    connected: false,
-  },
-  {
-    id: "google-contacts",
-    name: "Google Contacts",
-    description: "Import from Google Contacts",
-    logo: "https://www.gstatic.com/images/branding/product/1x/contacts_2020q4_48dp.png",
+    id: "shopify",
+    name: "Shopify",
+    description: "Sync customers from your Shopify store",
+    logo: "https://cdn.shopify.com/shopifycloud/brochure/assets/brand-assets/shopify-logo-primary-logo-456baa801ee66a0a435671082365958316831c9960c480451dd0330bcdae304f.svg",
     connected: false,
   },
 ]
@@ -206,7 +199,7 @@ export function ContactsImportDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col gap-4" 
+        className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col" 
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <DialogHeader className="px-6 pt-6 pb-4">
