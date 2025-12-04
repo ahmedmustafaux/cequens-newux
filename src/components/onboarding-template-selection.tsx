@@ -1,6 +1,6 @@
 import * as React from "react"
 import { motion } from "framer-motion"
-import { Check, Sparkles, MessageSquare, Mail, Phone } from "lucide-react"
+import { Check, Sparkles, MessageSquare, Mail, Phone, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -8,10 +8,10 @@ import { smoothTransition } from "@/lib/transitions"
 
 // Channel icon mapping
 const channelIcons: Record<string, { icon: React.ReactNode; label: string }> = {
-  "channel-1": { icon: <MessageSquare className="w-3.5 h-3.5" />, label: "SMS" },
+  "channel-1": { icon: <MessageSquare className="w-3.5 h-3.5 text-primary" />, label: "SMS" },
   "channel-2": { icon: <img src="/icons/WhatsApp.svg" alt="WhatsApp" className="w-3.5 h-3.5" />, label: "WhatsApp" },
-  "channel-3": { icon: <Mail className="w-3.5 h-3.5" />, label: "Email" },
-  "channel-4": { icon: <Phone className="w-3.5 h-3.5" />, label: "Voice" },
+  "channel-3": { icon: <Mail className="w-3.5 h-3.5 text-primary" />, label: "Email" },
+  "channel-4": { icon: <Phone className="w-3.5 h-3.5 text-primary" />, label: "Voice" },
   "channel-5": { icon: <img src="/icons/Messenger.png" alt="Messenger" className="w-3.5 h-3.5" />, label: "Messenger" },
 }
 
@@ -237,26 +237,31 @@ export function OnboardingTemplateSelection({
               ))}
             </div>
 
-            {/* Divider */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-gray-200" />
+            {/* Start from Scratch Card */}
+            <div
+              onClick={onStartFromScratch}
+              className="p-4 rounded-lg border border-dashed border-gray-300 hover:border-primary cursor-pointer transition-all bg-white group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Sparkles className="w-6 h-6 text-primary" />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-base group-hover:text-primary transition-colors">
+                    Your industry not listed?
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Answer a few questions to help us create a personalized experience for you
+                  </p>
+                </div>
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <ArrowRight className="w-4 h-4 text-primary" />
+                  </div>
+                </div>
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-3 text-muted-foreground font-medium">Or</span>
-              </div>
-            </div>
-
-            {/* Start from Scratch Button */}
-            <div>
-              <Button
-                variant="outline"
-                onClick={onStartFromScratch}
-                className="w-full"
-              >
-                <Sparkles className="w-4 h-4 mr-2" />
-                Start from Scratch & Customize Everything
-              </Button>
             </div>
           </motion.div>
         </CardContent>

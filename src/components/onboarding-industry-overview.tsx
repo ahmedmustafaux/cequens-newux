@@ -1,7 +1,7 @@
 import * as React from "react"
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Check, ChevronRight, ChevronLeft, MessageSquare, Mail, Phone, TrendingUp, Users, Clock } from "lucide-react"
+import { Check, ChevronRight, ChevronLeft, MessageSquare, Mail, Phone, TrendingUp, Users, Clock, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -357,14 +357,24 @@ export function OnboardingIndustryOverview({
                 description={template.description}
                 showBreadcrumbs={false}
               />
-              <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600 hover:bg-gray-100">
-                Industry Template
-              </Badge>
+              <div className="flex items-start gap-2">
+                <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600 hover:bg-gray-100">
+                  Industry Template
+                </Badge>
+              </div>
+              
+              {/* Info Note */}
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-blue-50 border border-blue-200">
+                <Info className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                <p className="text-xs text-blue-900">
+                  We'll personalize your experience based on this industry template, but you'll have full access to all our products and features.
+                </p>
+              </div>
             </div>
 
             {/* Use Cases Section */}
             <div className="space-y-3">
-              <h2 className="text-lg font-semibold">What you can do</h2>
+              <h2 className="text-lg font-semibold">Most common use cases</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {template.useCases.map((useCase, idx) => (
                   <div
@@ -385,7 +395,7 @@ export function OnboardingIndustryOverview({
             {/* Case Studies Section */}
             {caseStudies.length > 0 && (
               <div className="space-y-3">
-                <h2 className="text-lg font-semibold">Case studies</h2>
+                <h2 className="text-lg font-semibold">Case Studies</h2>
                 
                 {/* Carousel Container */}
                 <div className="relative">
@@ -526,7 +536,7 @@ export function OnboardingIndustryOverview({
                 onClick={onContinue}
                 className="flex items-center"
               >
-                Personalize my experience
+                Continue
                 <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
             </div>

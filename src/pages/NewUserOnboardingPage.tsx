@@ -42,11 +42,49 @@ const hasIcon = (option: Option): option is IconOption => {
   return 'iconType' in option && 'icon' in option;
 };
 
-// Define the onboarding questions and options
-// Reordered: Company size first, then usage type
+// Helper function to render icon based on type
+const renderIcon = (option: IconOption) => {
+  if (option.iconType === "lucide") {
+    const iconMap: Record<string, React.ReactNode> = {
+      MessageSquare: <MessageSquare className="w-4 h-4 fill-primary text-primary" />,
+      Mail: <Mail className="w-4 h-4 fill-primary text-primary" />,
+      Phone: <Phone className="w-4 h-4 fill-primary text-primary" />,
+    };
+    return iconMap[option.icon] || null;
+  } else if (option.iconType === "svg" || option.iconType === "img") {
+    return <img src={option.icon} alt={option.label} className="w-4 h-4" />;
+  }
+  return null;
+};
+
+// Define the onboarding questions and options (5 questions for "start from scratch")
 const onboardingSteps = [
   {
     id: 1,
+    question: "What's your primary goal with our platform?",
+    options: [
+      { id: "goal-1", label: "Customer engagement" },
+      { id: "goal-2", label: "Marketing campaigns" },
+      { id: "goal-3", label: "Support automation" },
+      { id: "goal-4", label: "Lead generation" },
+      { id: "goal-5", label: "Internal communications" },
+    ],
+    multiSelect: true,
+  },
+  {
+    id: 2,
+    question: "Which channels do you plan to use?",
+    options: [
+      { id: "channel-1", label: "SMS", iconType: "lucide", icon: "MessageSquare" },
+      { id: "channel-2", label: "WhatsApp", iconType: "svg", icon: "/icons/WhatsApp.svg" },
+      { id: "channel-3", label: "Email", iconType: "lucide", icon: "Mail" },
+      { id: "channel-4", label: "Voice", iconType: "lucide", icon: "Phone" },
+      { id: "channel-5", label: "Messenger", iconType: "img", icon: "/icons/Messenger.png" },
+    ],
+    multiSelect: true,
+  },
+  {
+    id: 3,
     question: "What's your company size?",
     options: [
       { id: "team-1", label: "Just me" },
@@ -58,7 +96,21 @@ const onboardingSteps = [
     multiSelect: false,
   },
   {
-    id: 2,
+    id: 4,
+    question: "Which industry are you in?",
+    options: [
+      { id: "industry-1", label: "E-commerce" },
+      { id: "industry-2", label: "Healthcare" },
+      { id: "industry-3", label: "Finance" },
+      { id: "industry-4", label: "Education" },
+      { id: "industry-5", label: "Technology" },
+      { id: "industry-6", label: "Retail" },
+      { id: "industry-7", label: "Other" },
+    ],
+    multiSelect: false,
+  },
+  {
+    id: 5,
     question: "How will you use our platform?",
     options: [
       { id: "usage-1", label: "API Integrations (Developers)" },
@@ -69,13 +121,20 @@ const onboardingSteps = [
   },
 ]
 
+// Short wizard steps (only Company size and Persona)
+const shortWizardSteps = [
+  onboardingSteps[2], // Company size (step 3)
+  onboardingSteps[4], // Persona/Usage (step 5)
+]
+
 export default function NewUserOnboardingPage() {
   const [showTemplateSelection, setShowTemplateSelection] = useState(true)
   const [showIndustryOverview, setShowIndustryOverview] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<IndustryTemplate | null>(null)
+  const [wizardMode, setWizardMode] = useState<'full' | 'short'>('full') // Track wizard mode
   const [currentStep, setCurrentStep] = useState(0)
   const [selectedOptions, setSelectedOptions] = useState<Record<number, string[]>>({
-    2: ["usage-1", "usage-2"] // Pre-select both options for the usage question
+    5: ["usage-1", "usage-2"] // Pre-select both options for the usage question (step 5)
   })
   const [isCompleted, setIsCompleted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -83,6 +142,9 @@ export default function NewUserOnboardingPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { completeOnboarding: markOnboardingComplete } = useOnboarding()
+
+  // Get the appropriate steps based on wizard mode
+  const activeSteps = wizardMode === 'short' ? shortWizardSteps : onboardingSteps
 
   // Redirect if not a new user
   useEffect(() => {
@@ -94,8 +156,11 @@ export default function NewUserOnboardingPage() {
   const handleTemplateSelect = (template: IndustryTemplate) => {
     // Pre-fill selections based on template
     setSelectedOptions({
-      1: [template.teamSize], // Company size
-      2: ["usage-1", "usage-2"] // Usage options
+      1: template.goals, // Primary goals
+      2: template.channels, // Channels
+      3: [template.teamSize], // Company size
+      4: [template.industry], // Industry
+      5: ["usage-1", "usage-2"] // Usage options
     })
     
     setSelectedTemplate(template)
@@ -105,18 +170,19 @@ export default function NewUserOnboardingPage() {
 
   const handleStartFromScratch = () => {
     setSelectedTemplate(null)
+    setWizardMode('full') // Use full wizard for "start from scratch"
     setSelectedOptions({
-      2: ["usage-1", "usage-2"] // Only pre-select usage options
+      5: ["usage-1", "usage-2"] // Only pre-select usage options (step 5)
     })
     setShowTemplateSelection(false)
     setShowIndustryOverview(false)
   }
 
   const handleContinueFromOverview = () => {
-    // Hide overview and show loading screen
+    // "Continue" button shows short wizard (2 questions)
+    setWizardMode('short') // Use short wizard (2 questions)
     setShowIndustryOverview(false)
-    // Complete onboarding directly without going through wizard questions
-    completeOnboarding()
+    setCurrentStep(0) // Start from first question of short wizard
   }
 
   const handleBackFromOverview = () => {
@@ -126,7 +192,7 @@ export default function NewUserOnboardingPage() {
   }
 
   const handleOptionSelect = (optionId: string) => {
-    const step = onboardingSteps[currentStep]
+    const step = activeSteps[currentStep]
     
     if (step.multiSelect) {
       // For multi-select, toggle the option
@@ -156,19 +222,19 @@ export default function NewUserOnboardingPage() {
   }
 
   const isOptionSelected = (optionId: string) => {
-    const step = onboardingSteps[currentStep]
+    const step = activeSteps[currentStep]
     const selections = selectedOptions[step.id] || []
     return selections.includes(optionId)
   }
 
   const canProceed = () => {
-    const step = onboardingSteps[currentStep]
+    const step = activeSteps[currentStep]
     const selections = selectedOptions[step.id] || []
     return selections.length > 0
   }
 
   const handleNext = () => {
-    if (currentStep < onboardingSteps.length - 1) {
+    if (currentStep < activeSteps.length - 1) {
       setCurrentStep(prev => prev + 1)
     } else {
       completeOnboarding()
@@ -280,7 +346,7 @@ export default function NewUserOnboardingPage() {
               {/* Progress indicator */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex-1 flex space-x-1">
-                  {onboardingSteps.map((step, index) => (
+                  {activeSteps.map((step, index) => (
                     <div
                       key={step.id}
                       className={`h-1 flex-1 rounded-full ${
@@ -292,7 +358,7 @@ export default function NewUserOnboardingPage() {
                   ))}
                 </div>
                 <span className="ml-3 text-xs text-gray-500">
-                  Step {currentStep + 1} of {onboardingSteps.length}
+                  Step {currentStep + 1} of {activeSteps.length}
                 </span>
               </div>
 
@@ -315,10 +381,10 @@ export default function NewUserOnboardingPage() {
                 transition={{ duration: 0.3 }}
               >
                 <h2 className="text-2xl font-bold mb-2 mt-12 ml-2">
-                  {onboardingSteps[currentStep].question}
+                  {activeSteps[currentStep].question}
                 </h2>
                 
-                {onboardingSteps[currentStep].multiSelect ? (
+                {activeSteps[currentStep].multiSelect ? (
                   <p className="text-xs text-muted-foreground mb-6 ml-2">
                     You can select multiple options
                   </p>
@@ -329,9 +395,10 @@ export default function NewUserOnboardingPage() {
                 )}
 
                 {/* Options */}
-                {onboardingSteps[currentStep].visualOptions ? (
+                {activeSteps[currentStep].visualOptions ? (
+                  // Visual options for usage question (step 5)
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    {onboardingSteps[currentStep].options.map(option => (
+                    {activeSteps[currentStep].options.map(option => (
                       <div
                         key={option.id}
                         onClick={() => handleOptionSelect(option.id)}
@@ -451,8 +518,9 @@ export default function NewUserOnboardingPage() {
                     ))}
                   </div>
                 ) : (
+                  // Standard options for other questions
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
-                    {onboardingSteps[currentStep].options.map(option => (
+                    {activeSteps[currentStep].options.map(option => (
                       <div
                         key={option.id}
                         onClick={() => handleOptionSelect(option.id)}
@@ -467,7 +535,7 @@ export default function NewUserOnboardingPage() {
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            {onboardingSteps[currentStep].multiSelect ? (
+                            {activeSteps[currentStep].multiSelect ? (
                               <Checkbox 
                                 checked={isOptionSelected(option.id)}
                                 className="pointer-events-none"
@@ -483,6 +551,11 @@ export default function NewUserOnboardingPage() {
                                 {isOptionSelected(option.id) && (
                                   <div className="h-1.5 w-1.5 rounded-full bg-white"></div>
                                 )}
+                              </div>
+                            )}
+                            {hasIcon(option) && (
+                              <div className="flex-shrink-0">
+                                {renderIcon(option)}
                               </div>
                             )}
                             <span>{option.label}</span>
@@ -508,7 +581,7 @@ export default function NewUserOnboardingPage() {
                   disabled={!canProceed()}
                   className="flex items-center"
                 >
-                  {currentStep === onboardingSteps.length - 1 ? (
+                  {currentStep === activeSteps.length - 1 ? (
                     "Complete"
                   ) : (
                     <>
