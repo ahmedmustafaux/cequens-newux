@@ -481,7 +481,7 @@ export function GettingStartedGuide({
                                   <div
                                     key={step.id}
                                     className={cn(
-                                      "flex items-start gap-2 p-4 rounded-lg border transition-colors",
+                                      "flex items-start gap-2 p-3 rounded-lg border transition-colors",
                                       isCompleted 
                                         ? "border-green-200 bg-green-50/50" 
                                         : "border-gray-100 bg-white hover:bg-gray-50/50"
@@ -492,7 +492,7 @@ export function GettingStartedGuide({
                                       className={cn(
                                         "w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors",
                                         isCompleted
-                                          ? "border-green-500 bg-green-500"
+                                          ? "border-green-600 bg-green-600"
                                           : "border-gray-300 hover:border-primary"
                                       )}
                                     >
@@ -515,7 +515,7 @@ export function GettingStartedGuide({
                                         <Button
                                           variant="link"
                                           size="sm"
-                                          className="h-auto p-0 mt-1.5 text-xs"
+                                          className="h-auto p-0 mt-4 text-xs"
                                           onClick={() => window.location.href = step.action!.href}
                                         >
                                           {step.action.label}
