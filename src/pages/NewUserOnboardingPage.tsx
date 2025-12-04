@@ -46,9 +46,9 @@ const hasIcon = (option: Option): option is IconOption => {
 const renderIcon = (option: IconOption) => {
   if (option.iconType === "lucide") {
     const iconMap: Record<string, React.ReactNode> = {
-      MessageSquare: <MessageSquare className="w-4 h-4 fill-primary text-primary" />,
-      Mail: <Mail className="w-4 h-4 fill-primary text-primary" />,
-      Phone: <Phone className="w-4 h-4 fill-primary text-primary" />,
+      MessageSquare: <MessageSquare className="w-4 h-4 text-primary" />,
+      Mail: <Mail className="w-4 h-4 text-primary" />,
+      Phone: <Phone className="w-4 h-4 text-primary" />,
     };
     return iconMap[option.icon] || null;
   } else if (option.iconType === "svg" || option.iconType === "img") {
@@ -57,7 +57,7 @@ const renderIcon = (option: IconOption) => {
   return null;
 };
 
-// Define the onboarding questions and options (5 questions for "start from scratch")
+// Define the onboarding questions and options (4 questions for "start from scratch")
 const onboardingSteps = [
   {
     id: 1,
@@ -97,20 +97,6 @@ const onboardingSteps = [
   },
   {
     id: 4,
-    question: "Which industry are you in?",
-    options: [
-      { id: "industry-1", label: "E-commerce" },
-      { id: "industry-2", label: "Healthcare" },
-      { id: "industry-3", label: "Finance" },
-      { id: "industry-4", label: "Education" },
-      { id: "industry-5", label: "Technology" },
-      { id: "industry-6", label: "Retail" },
-      { id: "industry-7", label: "Other" },
-    ],
-    multiSelect: false,
-  },
-  {
-    id: 5,
     question: "How will you use our platform?",
     options: [
       { id: "usage-1", label: "API Integrations (Developers)" },
@@ -124,7 +110,7 @@ const onboardingSteps = [
 // Short wizard steps (only Company size and Persona)
 const shortWizardSteps = [
   onboardingSteps[2], // Company size (step 3)
-  onboardingSteps[4], // Persona/Usage (step 5)
+  onboardingSteps[3], // Persona/Usage (step 4)
 ]
 
 export default function NewUserOnboardingPage() {
@@ -159,8 +145,7 @@ export default function NewUserOnboardingPage() {
       1: template.goals, // Primary goals
       2: template.channels, // Channels
       3: [template.teamSize], // Company size
-      4: [template.industry], // Industry
-      5: ["usage-1", "usage-2"] // Usage options
+      4: ["usage-1", "usage-2"] // Usage options
     })
     
     setSelectedTemplate(template)
@@ -172,7 +157,7 @@ export default function NewUserOnboardingPage() {
     setSelectedTemplate(null)
     setWizardMode('full') // Use full wizard for "start from scratch"
     setSelectedOptions({
-      5: ["usage-1", "usage-2"] // Only pre-select usage options (step 5)
+      4: ["usage-1", "usage-2"] // Only pre-select usage options (step 4)
     })
     setShowTemplateSelection(false)
     setShowIndustryOverview(false)
@@ -258,6 +243,15 @@ export default function NewUserOnboardingPage() {
     setIsCompleted(true)
     setIsLoading(true)
 
+    // Prepare onboarding data to save
+    const onboardingData = {
+      industry: selectedTemplate?.industry || "custom",
+      channels: selectedOptions[2] || [],
+      goals: selectedOptions[1] || [],
+      teamSize: selectedOptions[3]?.[0] || "",
+      usage: selectedOptions[4] || []
+    }
+
     // Simulate building the dashboard
     const interval = setInterval(() => {
       setBuildingProgress(prev => {
@@ -266,8 +260,8 @@ export default function NewUserOnboardingPage() {
           clearInterval(interval)
           setTimeout(() => {
             setIsLoading(false)
-            // Mark onboarding as completed
-            markOnboardingComplete()
+            // Mark onboarding as completed with data
+            markOnboardingComplete(onboardingData)
             // Redirect to dashboard after completion
             navigate("/")
           }, 1000)
@@ -455,48 +449,101 @@ export default function NewUserOnboardingPage() {
                                 
                                 {option.id === "usage-2" && (
                                   <>
-                                    {/* Interfaced Apps (CRM Teams) */}
-                                    <div className="absolute top-0 left-0 right-0 h-1.5 bg-gray-200"></div>
+                                    {/* Interfaced Apps (CRM Teams) - Dashboard Style */}
+                                    <div className="absolute top-0 left-0 right-0 h-1.5 bg-gray-100"></div>
                                     
-                                    {/* Chat interface */}
-                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4/5 h-3/5 shadow-sm">
-                                      {/* App header */}
-                                      <div className="w-full h-1.5 bg-white border-b border-slate-200 rounded-t-md flex items-center justify-between px-1">
-                                        <div className="flex items-center">
-                                          <div className="w-1 h-0.5 bg-primary rounded-full mr-1"></div>
+                                    {/* Dashboard interface */}
+                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] h-[75%]">
+                                      {/* Dashboard header */}
+                                      <div className="w-full h-1.5 bg-white border-b border-slate-200 flex items-center justify-between px-1">
+                                        <div className="flex items-center space-x-0.5">
+                                          <div className="w-1 h-0.5 bg-blue-500 rounded-full"></div>
+                                          <div className="w-0.5 h-0.5 bg-slate-300 rounded-full"></div>
+                                          <div className="w-0.5 h-0.5 bg-slate-300 rounded-full"></div>
                                         </div>
-                                        <div className="flex items-center space-x-1">
-                                          <div className="w-0.5 h-0.5 bg-slate-400 rounded-full"></div>
-                                          <div className="w-0.5 h-0.5 bg-slate-400 rounded-full"></div>
+                                        <div className="flex items-center space-x-0.5">
+                                          <div className="w-0.5 h-0.5 bg-slate-300 rounded-full"></div>
+                                          <div className="w-0.5 h-0.5 bg-slate-300 rounded-full"></div>
                                         </div>
                                       </div>
                                       
-                                      {/* App body */}
-                                      <div className="w-full h-full bg-slate-50 rounded-b-md flex">
-                                        {/* Sidebar */}
-                                        <div className="w-1/3 h-full bg-white border-r border-slate-200 flex flex-col p-0.5 space-y-0.5">
-                                          <div className="flex items-center bg-green-50/50 border-l-2 border-green-500 rounded-sm p-0.5">
-                                            <div className="w-1 h-1 bg-green-500 rounded-full mr-0.5"></div>
-                                            <div className="flex-1">
-                                              <div className="w-1/2 h-0.5 bg-slate-700 rounded-full mb-0.5"></div>
-                                              <div className="w-2/3 h-0.5 bg-slate-400 rounded-full"></div>
+                                      {/* Dashboard body */}
+                                      <div className="w-full h-full bg-slate-50/50 flex">
+                                        {/* Sidebar - Chat list */}
+                                        <div className="w-[35%] h-full bg-white border-r border-slate-200 flex flex-col p-0.5 space-y-0.5">
+                                          {/* Chat item 1 - WhatsApp */}
+                                          <div className="flex items-center bg-slate-100/50 rounded-sm p-0.5">
+                                            <div className="w-1 h-1 bg-green-500 rounded-full mr-0.5 flex-shrink-0"></div>
+                                            <div className="flex-1 min-w-0">
+                                              <div className="w-3/4 h-0.5 bg-slate-400 rounded-full mb-0.5"></div>
+                                              <div className="w-full h-0.5 bg-slate-300 rounded-full"></div>
+                                            </div>
+                                          </div>
+                                          
+                                          {/* Chat item 2 - Instagram */}
+                                          <div className="flex items-center rounded-sm p-0.5">
+                                            <div className="w-1 h-1 rounded-full mr-0.5 flex-shrink-0" style={{ background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)' }}></div>
+                                            <div className="flex-1 min-w-0">
+                                              <div className="w-2/3 h-0.5 bg-slate-300 rounded-full mb-0.5"></div>
+                                              <div className="w-4/5 h-0.5 bg-slate-200 rounded-full"></div>
+                                            </div>
+                                          </div>
+                                          
+                                          {/* Chat item 3 - Messenger */}
+                                          <div className="flex items-center rounded-sm p-0.5">
+                                            <div className="w-1 h-1 bg-blue-500 rounded-full mr-0.5 flex-shrink-0"></div>
+                                            <div className="flex-1 min-w-0">
+                                              <div className="w-2/3 h-0.5 bg-slate-300 rounded-full mb-0.5"></div>
+                                              <div className="w-3/4 h-0.5 bg-slate-200 rounded-full"></div>
+                                            </div>
+                                          </div>
+                                          
+                                          {/* Chat item 4 - WhatsApp */}
+                                          <div className="flex items-center rounded-sm p-0.5">
+                                            <div className="w-1 h-1 bg-green-500 rounded-full mr-0.5 flex-shrink-0"></div>
+                                            <div className="flex-1 min-w-0">
+                                              <div className="w-1/2 h-0.5 bg-slate-300 rounded-full mb-0.5"></div>
+                                              <div className="w-2/3 h-0.5 bg-slate-200 rounded-full"></div>
                                             </div>
                                           </div>
                                         </div>
                                         
-                                        {/* Chat area */}
+                                        {/* Main chat area */}
                                         <div className="flex-1 flex flex-col">
+                                          {/* Chat header */}
+                                          <div className="h-2 bg-white border-b border-slate-200 flex items-center px-0.5">
+                                            <div className="w-1 h-1 bg-green-500 rounded-full mr-0.5"></div>
+                                            <div className="w-1/4 h-0.5 bg-slate-400 rounded-full"></div>
+                                          </div>
+                                          
+                                          {/* Chat messages */}
                                           <div className="flex-1 p-0.5 flex flex-col justify-end space-y-0.5">
+                                            {/* Received message */}
                                             <div className="flex items-start">
-                                              <div className="bg-white border border-slate-200 rounded-md p-0.5 max-w-[70%]">
-                                                <div className="w-full h-0.5 bg-slate-500 rounded-full"></div>
+                                              <div className="bg-white border border-slate-200 rounded-sm p-0.5 max-w-[70%]">
+                                                <div className="w-full h-0.5 bg-slate-300 rounded-full mb-0.5"></div>
+                                                <div className="w-3/4 h-0.5 bg-slate-200 rounded-full"></div>
                                               </div>
                                             </div>
+                                            
+                                            {/* Sent message */}
                                             <div className="flex items-start justify-end">
-                                              <div className="bg-green-100 border border-green-200 rounded-md p-0.5 max-w-[70%]">
-                                                <div className="w-full h-0.5 bg-green-600/60 rounded-full"></div>
+                                              <div className="bg-slate-200 rounded-sm p-0.5 max-w-[70%]">
+                                                <div className="w-full h-0.5 bg-slate-400 rounded-full"></div>
                                               </div>
                                             </div>
+                                            
+                                            {/* Received message */}
+                                            <div className="flex items-start">
+                                              <div className="bg-white border border-slate-200 rounded-sm p-0.5 max-w-[60%]">
+                                                <div className="w-4/5 h-0.5 bg-slate-300 rounded-full"></div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                          
+                                          {/* Input area */}
+                                          <div className="h-1.5 bg-white border-t border-slate-200 flex items-center px-0.5">
+                                            <div className="flex-1 h-0.5 bg-slate-100 rounded-full"></div>
                                           </div>
                                         </div>
                                       </div>

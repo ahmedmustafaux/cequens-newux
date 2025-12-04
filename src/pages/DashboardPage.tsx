@@ -3,13 +3,18 @@ import { type DateRange } from "react-day-picker"
 import { SectionCards } from "@/components/section-cards"
 import { DashboardChart } from "@/components/dashboard-chart"
 import { DashboardPieChart } from "@/components/dashboard-pie-chart"
+import { GettingStartedGuide } from "@/components/getting-started-guide"
 import { TableSkeleton } from "@/components/ui/table"
 import { PageHeader } from "@/components/page-header"
 import { PageWrapper } from "@/components/page-wrapper"
 import { TimeFilter } from "@/components/time-filter"
 import { useTimeRangeTitle } from "@/hooks/use-dynamic-title"
+import { useOnboarding } from "@/contexts/onboarding-context"
+import { useAuth } from "@/hooks/use-auth"
 
 export default function DashboardPage() {
+  const { user } = useAuth()
+  const { onboardingData } = useOnboarding()
   const [dateRange, setDateRange] = React.useState<DateRange | undefined>(() => {
     const today = new Date();
     return {
@@ -18,6 +23,9 @@ export default function DashboardPage() {
     };
   })
   const [isDataLoading, setIsDataLoading] = React.useState(true)
+  
+  // Check if we should show the getting started guide
+  const shouldShowGettingStarted = user?.userType === "newUser" && onboardingData
 
   // Convert DateRange to timeRange string for components
   const getTimeRangeFromDateRange = (range: DateRange | undefined): string => {
@@ -90,6 +98,15 @@ export default function DashboardPage() {
           </>
         )}
       </div>
+
+      {/* Getting Started Guide Modal - Fixed position bottom right */}
+      {shouldShowGettingStarted && !isDataLoading && (
+        <GettingStartedGuide
+          industry={onboardingData.industry}
+          channels={onboardingData.channels}
+          goals={onboardingData.goals}
+        />
+      )}
     </PageWrapper>
   )
 }
