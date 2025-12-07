@@ -24,8 +24,11 @@ export default function DashboardPage() {
   })
   const [isDataLoading, setIsDataLoading] = React.useState(true)
   
+  // Check if user is a new user (just signed up)
+  const isNewUser = user?.userType === "newUser"
+  
   // Check if we should show the getting started guide
-  const shouldShowGettingStarted = user?.userType === "newUser" && onboardingData
+  const shouldShowGettingStarted = isNewUser && onboardingData
 
   // Convert DateRange to timeRange string for components
   const getTimeRangeFromDateRange = (range: DateRange | undefined): string => {
@@ -70,7 +73,7 @@ export default function DashboardPage() {
   return (
     <PageWrapper isLoading={isDataLoading}>
       <PageHeader
-        title="Overview"
+        title="Home"
         description="Monitor your communication platform performance"
         showBreadcrumbs={false}
         showFilters={true}
@@ -90,10 +93,10 @@ export default function DashboardPage() {
           </>
         ) : (
           <>
-            <SectionCards timeRange={timeRange} isLoading={isDataLoading} />
+            <SectionCards timeRange={timeRange} isLoading={isDataLoading} isEmpty={isNewUser} />
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-              <DashboardChart timeRange={timeRange} isLoading={isDataLoading} className="xl:col-span-2" />
-              <DashboardPieChart timeRange={timeRange} isLoading={isDataLoading} />
+              <DashboardChart timeRange={timeRange} isLoading={isDataLoading} isEmpty={isNewUser} className="xl:col-span-2" />
+              <DashboardPieChart timeRange={timeRange} isLoading={isDataLoading} isEmpty={isNewUser} />
             </div>
           </>
         )}

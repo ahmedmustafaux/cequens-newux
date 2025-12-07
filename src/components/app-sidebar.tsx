@@ -3,7 +3,7 @@ import * as React from "react"
 import { getAppName } from "@/lib/config"
 import {
   IconChartBar,
-  IconDashboard,
+  IconSmartHome,
   IconHelp,
   IconMessage,
   IconPhoneCall,
@@ -55,9 +55,9 @@ import {
 const data = {
   navMain: [
     {
-      title: "Dashboard",
+      title: "Home",
       url: "/",
-      icon: IconDashboard,
+      icon: IconSmartHome,
     },
     {
       title: "Campaigns",

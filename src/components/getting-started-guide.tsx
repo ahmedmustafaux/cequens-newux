@@ -360,12 +360,12 @@ export function GettingStartedGuide({
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3 flex-1">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <Sparkles className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
                 <CardTitle className="text-lg">Setup guide</CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-sm text-muted-foreground">
                   {completedCount} of {totalSteps} tasks complete
                 </p>
               </div>
@@ -435,7 +435,7 @@ export function GettingStartedGuide({
                           <div className={cn(
                             "w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0",
                             allStepsCompleted 
-                              ? "bg-green-500 text-white" 
+                              ? "bg-green-600 text-white" 
                               : "bg-gray-100 text-gray-600"
                           )}>
                             {allStepsCompleted ? (

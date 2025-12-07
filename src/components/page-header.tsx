@@ -141,10 +141,10 @@ export function PageHeader({
     const segments = pathname.split('/').filter(Boolean)
     const breadcrumbs: BreadcrumbItem[] = []
     
-    // For root path, show "Overview"
+    // For root path, show "Home"
     if (pathname === "/") {
       breadcrumbs.push({
-        label: "Overview",
+        label: "Home",
         href: "/",
         isCurrent: true
       })

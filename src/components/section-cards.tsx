@@ -15,9 +15,10 @@ import { getDashboardMetrics } from "@/data/mock-data"
 interface SectionCardsProps {
   timeRange: string
   isLoading?: boolean
+  isEmpty?: boolean
 }
 
-export function SectionCards({ timeRange, isLoading = false }: SectionCardsProps) {
+export function SectionCards({ timeRange, isLoading = false, isEmpty = false }: SectionCardsProps) {
   const getTimePeriodText = (range: string) => {
     switch (range) {
       case "7d":
@@ -53,18 +54,29 @@ export function SectionCards({ timeRange, isLoading = false }: SectionCardsProps
     )
   }
 
+  // Empty state values for new users
+  const emptyMetrics = {
+    messagesSent: { value: "0", change: "0%", trend: "up" as const },
+    deliveryRate: { value: "0%", change: "0%", trend: "up" as const },
+    activeSenders: { value: "0", change: "0%", trend: "up" as const },
+    responseRate: { value: "0%", change: "0%", trend: "up" as const },
+  }
+
+  const displayMetrics = isEmpty ? emptyMetrics : metrics
+  const cardClassName = isEmpty ? "@container/card opacity-50" : "@container/card"
+
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <Card className="@container/card">
+      <Card className={cardClassName}>
         <CardHeader>
           <CardDescription>Messages Sent</CardDescription>
           <CardTitle className="text-xl font-semibold tabular-nums @[250px]/card:text-2xl">
-            {metrics.messagesSent.value}
+            {displayMetrics.messagesSent.value}
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
-              {metrics.messagesSent.trend === "up" ? <IconTrendingUp /> : <IconTrendingDown />}
-              {metrics.messagesSent.change}
+              {displayMetrics.messagesSent.trend === "up" ? <IconTrendingUp /> : <IconTrendingDown />}
+              {displayMetrics.messagesSent.change}
             </Badge>
           </CardAction>
         </CardHeader>
@@ -74,16 +86,16 @@ export function SectionCards({ timeRange, isLoading = false }: SectionCardsProps
           </div>
         </CardFooter>
       </Card>
-      <Card className="@container/card">
+      <Card className={cardClassName}>
         <CardHeader>
           <CardDescription>Delivery Rate</CardDescription>
           <CardTitle className="text-xl font-semibold tabular-nums @[250px]/card:text-2xl">
-            {metrics.deliveryRate.value}
+            {displayMetrics.deliveryRate.value}
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
-              {metrics.deliveryRate.trend === "up" ? <IconTrendingUp /> : <IconTrendingDown />}
-              {metrics.deliveryRate.change}
+              {displayMetrics.deliveryRate.trend === "up" ? <IconTrendingUp /> : <IconTrendingDown />}
+              {displayMetrics.deliveryRate.change}
             </Badge>
           </CardAction>
         </CardHeader>
@@ -93,16 +105,16 @@ export function SectionCards({ timeRange, isLoading = false }: SectionCardsProps
           </div>
         </CardFooter>
       </Card>
-      <Card className="@container/card">
+      <Card className={cardClassName}>
         <CardHeader>
           <CardDescription>Active Senders</CardDescription>
           <CardTitle className="text-xl font-semibold tabular-nums @[250px]/card:text-2xl">
-            {metrics.activeSenders.value}
+            {displayMetrics.activeSenders.value}
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
-              {metrics.activeSenders.trend === "up" ? <IconTrendingUp /> : <IconTrendingDown />}
-              {metrics.activeSenders.change}
+              {displayMetrics.activeSenders.trend === "up" ? <IconTrendingUp /> : <IconTrendingDown />}
+              {displayMetrics.activeSenders.change}
             </Badge>
           </CardAction>
         </CardHeader>
@@ -110,16 +122,16 @@ export function SectionCards({ timeRange, isLoading = false }: SectionCardsProps
           <div className="text-muted-foreground">Engagement exceed targets</div>
         </CardFooter>
       </Card>
-      <Card className="@container/card">
+      <Card className={cardClassName}>
         <CardHeader>
           <CardDescription>Response Rate</CardDescription>
           <CardTitle className="text-xl font-semibold tabular-nums @[250px]/card:text-2xl">
-            {metrics.responseRate.value}
+            {displayMetrics.responseRate.value}
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
-              {metrics.responseRate.trend === "up" ? <IconTrendingUp /> : <IconTrendingDown />}
-              {metrics.responseRate.change}
+              {displayMetrics.responseRate.trend === "up" ? <IconTrendingUp /> : <IconTrendingDown />}
+              {displayMetrics.responseRate.change}
             </Badge>
           </CardAction>
         </CardHeader>

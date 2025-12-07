@@ -16,9 +16,10 @@ import { getChartData } from "@/data/mock-data"
 interface DashboardPieChartProps {
   timeRange: string
   isLoading?: boolean
+  isEmpty?: boolean
 }
 
-export function DashboardPieChart({ timeRange, isLoading = false }: DashboardPieChartProps) {
+export function DashboardPieChart({ timeRange, isLoading = false, isEmpty = false }: DashboardPieChartProps) {
   // Get chart data from mock data
   const chartData = getChartData(timeRange)
   
@@ -27,8 +28,8 @@ export function DashboardPieChart({ timeRange, isLoading = false }: DashboardPie
   }
 
   // Calculate totals for WhatsApp and SMS
-  const whatsappTotal = chartData.reduce((sum, item) => sum + item.whatsapp, 0)
-  const smsTotal = chartData.reduce((sum, item) => sum + item.sms, 0)
+  const whatsappTotal = isEmpty ? 0 : chartData.reduce((sum, item) => sum + item.whatsapp, 0)
+  const smsTotal = isEmpty ? 0 : chartData.reduce((sum, item) => sum + item.sms, 0)
 
   // Prepare data for pie chart - using only blue colors
   const pieData = [
@@ -42,7 +43,7 @@ export function DashboardPieChart({ timeRange, isLoading = false }: DashboardPie
       animate={isLoading ? "loading" : "animate"}
       transition={smoothTransition}
     >
-      <Card className="py-0">
+      <Card className={`py-0 ${isEmpty ? "opacity-50" : ""}`}>
         <CardHeader className="flex flex-col items-stretch border-b !p-0 sm:flex-row">
           <div className="flex flex-1 flex-col justify-center gap-1 px-4 pt-4 pb-3 sm:!py-6">
             <CardTitle>Message Distribution</CardTitle>
