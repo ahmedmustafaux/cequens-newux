@@ -1,5 +1,6 @@
 import * as React from "react"
 import { motion } from "framer-motion"
+import { useNavigate } from "react-router-dom"
 import { PageHeader } from "@/components/page-header"
 import { PageWrapper } from "@/components/page-wrapper"
 import { 
@@ -127,6 +128,7 @@ const channels: Channel[] = [
 ]
 
 export default function ChannelsPage() {
+  const navigate = useNavigate()
   const [isLoading, setIsLoading] = React.useState(true)
   const [activeChannels, setActiveChannels] = React.useState<string[]>([])
 
@@ -142,13 +144,21 @@ export default function ChannelsPage() {
   }, [])
 
   const handleChannelAction = (channelId: string, isActive: boolean) => {
-    if (isActive) {
-      // Navigate to channel settings
-      console.log(`Configure ${channelId}`)
-    } else {
-      // Activate channel
-      setActiveChannels(prev => [...prev, channelId])
-      console.log(`Activate ${channelId}`)
+    // Map channel IDs to their routes
+    const channelRoutes: Record<string, string> = {
+      whatsapp: "/channels/whatsapp",
+      messenger: "/channels/messenger",
+      instagram: "/channels/instagram",
+      email: "/channels/email",
+      phone: "/channels/call",
+      sms: "/channels/sms",
+      rcs: "/channels/rcs",
+      push: "/channels/push",
+    }
+
+    const route = channelRoutes[channelId]
+    if (route) {
+      navigate(route)
     }
   }
 
