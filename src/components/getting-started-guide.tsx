@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
   Check, 
@@ -11,7 +11,8 @@ import {
   Settings,
   Sparkles,
   Minimize2,
-  Maximize2
+  Maximize2,
+  Lock
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -55,9 +56,69 @@ export function GettingStartedGuide({
   goals = [],
   onDismiss 
 }: GettingStartedGuideProps) {
-  const [expandedSection, setExpandedSection] = useState<string | null>("section-1")
-  const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set())
-  const [isMinimized, setIsMinimized] = useState(false)
+  // LocalStorage keys
+  const STORAGE_KEY_COMPLETED = 'cequens-setup-guide-completed-steps'
+  const STORAGE_KEY_MINIMIZED = 'cequens-setup-guide-minimized'
+  const STORAGE_KEY_EXPANDED = 'cequens-setup-guide-expanded-section'
+
+  // Initialize state from localStorage
+  const [expandedSection, setExpandedSection] = useState<string | null>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_EXPANDED)
+      return saved ? saved : "section-1"
+    } catch {
+      return "section-1"
+    }
+  })
+
+  const [completedSteps, setCompletedSteps] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_COMPLETED)
+      return saved ? new Set(JSON.parse(saved)) : new Set()
+    } catch {
+      return new Set()
+    }
+  })
+
+  const [isMinimized, setIsMinimized] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_MINIMIZED)
+      return saved === 'true'
+    } catch {
+      return false
+    }
+  })
+
+  // Save completed steps to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_COMPLETED, JSON.stringify(Array.from(completedSteps)))
+    } catch (error) {
+      console.error('Failed to save completed steps:', error)
+    }
+  }, [completedSteps, STORAGE_KEY_COMPLETED])
+
+  // Save minimized state to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_MINIMIZED, String(isMinimized))
+    } catch (error) {
+      console.error('Failed to save minimized state:', error)
+    }
+  }, [isMinimized, STORAGE_KEY_MINIMIZED])
+
+  // Save expanded section to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      if (expandedSection) {
+        localStorage.setItem(STORAGE_KEY_EXPANDED, expandedSection)
+      } else {
+        localStorage.removeItem(STORAGE_KEY_EXPANDED)
+      }
+    } catch (error) {
+      console.error('Failed to save expanded section:', error)
+    }
+  }, [expandedSection, STORAGE_KEY_EXPANDED])
 
   // Generate personalized setup sections based on industry and selections
   const setupSections: SetupSection[] = React.useMemo(() => {
@@ -85,7 +146,7 @@ export function GettingStartedGuide({
         {
           id: "step-1-2",
           title: "Add your audience",
-          description: "Import contacts or create a segment",
+          description: "Add contacts or create a segment",
           completed: false,
           action: {
             label: "Add contacts",
@@ -477,6 +538,12 @@ export function GettingStartedGuide({
                               {section.steps.map((step, stepIndex) => {
                                 const isCompleted = completedSteps.has(step.id)
                                 
+                                // Check if this is the "Send campaign" step and if channel is configured
+                                const isChannelConfigStep = step.id === "step-1-1"
+                                const isSendCampaignStep = step.id === "step-1-3"
+                                const isChannelConfigured = completedSteps.has("step-1-1")
+                                const isLocked = isSendCampaignStep && !isChannelConfigured
+                                
                                 return (
                                   <div
                                     key={step.id}
@@ -484,15 +551,20 @@ export function GettingStartedGuide({
                                       "flex items-start gap-2 p-3 rounded-lg border transition-colors",
                                       isCompleted 
                                         ? "border-green-200 bg-green-50/50" 
+                                        : isLocked
+                                        ? "border-gray-100 bg-gray-50/30 opacity-60"
                                         : "border-gray-100 bg-white hover:bg-gray-50/50"
                                     )}
                                   >
                                     <button
-                                      onClick={() => toggleStepCompletion(step.id)}
+                                      onClick={() => !isLocked && toggleStepCompletion(step.id)}
+                                      disabled={isLocked}
                                       className={cn(
                                         "w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors",
                                         isCompleted
                                           ? "border-green-600 bg-green-600"
+                                          : isLocked
+                                          ? "border-gray-300 bg-gray-100 cursor-not-allowed"
                                           : "border-gray-300 hover:border-primary"
                                       )}
                                     >
@@ -502,16 +574,27 @@ export function GettingStartedGuide({
                                     </button>
 
                                     <div className="flex-1 min-w-0">
-                                      <h4 className={cn(
-                                        "font-medium text-xs",
-                                        isCompleted && "line-through text-muted-foreground"
-                                      )}>
-                                        {step.title}
-                                      </h4>
+                                      <div className="flex items-center gap-1.5">
+                                        <h4 className={cn(
+                                          "font-medium text-xs",
+                                          isCompleted && "line-through text-muted-foreground"
+                                        )}>
+                                          {step.title}
+                                        </h4>
+                                        {isLocked && (
+                                          <Lock className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                                        )}
+                                      </div>
                                       <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
                                         {step.description}
                                       </p>
-                                      {step.action && !isCompleted && (
+                                      {isLocked && (
+                                        <div className="mt-2 flex items-start gap-1.5 p-2 bg-gray-50 border border-gray-200 rounded text-xs text-gray-600">
+                                          <span className="font-medium">⚠️</span>
+                                          <span>Configure a channel first to unlock this step</span>
+                                        </div>
+                                      )}
+                                      {step.action && !isCompleted && !isLocked && (
                                         <Button
                                           variant="link"
                                           size="sm"
