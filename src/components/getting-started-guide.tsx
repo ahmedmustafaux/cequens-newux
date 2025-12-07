@@ -2,23 +2,30 @@ import * as React from "react"
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
-  Check, 
-  ChevronDown, 
-  ChevronRight, 
-  MessageSquare, 
-  Users, 
-  Send,
-  Settings,
-  Sparkles,
-  Minimize2,
-  Maximize2,
-  Lock
-} from "lucide-react"
+  IconCheck, 
+  IconChevronDown, 
+  IconChevronRight, 
+  IconMessage, 
+  IconUsers, 
+  IconSend,
+  IconSettings,
+  IconSparkles,
+  IconMinimize,
+  IconMaximize,
+  IconLock
+} from "@tabler/icons-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { smoothTransition } from "@/lib/transitions"
 import { cn } from "@/lib/utils"
+import { Alert } from "./ui/alert"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 // Define setup step interface
 interface SetupStep {
@@ -129,7 +136,7 @@ export function GettingStartedGuide({
       id: "section-1",
       title: "Send your first campaign",
       description: "Get started by sending your first message to customers",
-      icon: <Send className="w-5 h-5" />,
+      icon: <IconSend className="w-5 h-5" />,
       steps: [
         {
           id: "step-1-1",
@@ -169,10 +176,10 @@ export function GettingStartedGuide({
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="relative">
               <div className="w-16 h-16 bg-white rounded-lg shadow-md flex items-center justify-center">
-                <Send className="w-8 h-8 text-primary" />
+                <IconSend className="w-8 h-8 text-primary" />
               </div>
               <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                <Check className="w-4 h-4 text-white" />
+                <IconCheck className="w-4 h-4 text-white" />
               </div>
             </div>
           </div>
@@ -186,7 +193,7 @@ export function GettingStartedGuide({
         id: "section-2",
         title: "Set up your store",
         description: "Configure your e-commerce integrations",
-        icon: <Settings className="w-5 h-5" />,
+        icon: <IconSettings className="w-5 h-5" />,
         steps: [
           {
             id: "step-2-1",
@@ -225,7 +232,7 @@ export function GettingStartedGuide({
         id: "section-2",
         title: "Configure healthcare workflows",
         description: "Set up patient communication",
-        icon: <Settings className="w-5 h-5" />,
+        icon: <IconSettings className="w-5 h-5" />,
         steps: [
           {
             id: "step-2-1",
@@ -264,7 +271,7 @@ export function GettingStartedGuide({
         id: "section-2",
         title: "Configure financial services",
         description: "Set up secure banking communications",
-        icon: <Settings className="w-5 h-5" />,
+        icon: <IconSettings className="w-5 h-5" />,
         steps: [
           {
             id: "step-2-1",
@@ -304,7 +311,7 @@ export function GettingStartedGuide({
         id: "section-2",
         title: "Customize your setup",
         description: "Configure platform features",
-        icon: <Settings className="w-5 h-5" />,
+        icon: <IconSettings className="w-5 h-5" />,
         steps: [
           {
             id: "step-2-1",
@@ -345,7 +352,7 @@ export function GettingStartedGuide({
       id: "section-3",
       title: "Invite your team",
       description: "Collaborate with team members",
-      icon: <Users className="w-5 h-5" />,
+      icon: <IconUsers className="w-5 h-5" />,
       steps: [
         {
           id: "step-3-1",
@@ -417,12 +424,12 @@ export function GettingStartedGuide({
       className="fixed bottom-6 right-6 z-50 w-full max-w-md"
       style={{ width: 'calc(25vw - 1.5rem)', minWidth: '480px', maxWidth: '600px' }}
     >
-      <Card className="shadow-2xl border-2">
+      <Card className="shadow-2xl border-2 overflow-hidden">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3 flex-1">
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Sparkles className="w-5 h-5 text-primary" />
+                <IconSparkles className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
                 <CardTitle className="text-lg">Setup guide</CardTitle>
@@ -440,18 +447,18 @@ export function GettingStartedGuide({
                 title={isMinimized ? "Maximize" : "Minimize"}
               >
                 {isMinimized ? (
-                  <Maximize2 className="h-4 w-4" />
+                  <IconMaximize className="h-4 w-4" />
                 ) : (
-                  <Minimize2 className="h-4 w-4" />
+                  <IconMinimize className="h-4 w-4" />
                 )}
               </Button>
             </div>
           </div>
 
           {/* Progress bar */}
-          {!isMinimized && (
-            <div className="mt-4">
-              <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+          <div className="mt-4">
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
                 <motion.div
                   className="h-full bg-primary"
                   initial={{ width: 0 }}
@@ -459,8 +466,13 @@ export function GettingStartedGuide({
                   transition={{ duration: 0.5, ease: "easeOut" }}
                 />
               </div>
+              {isMinimized && (
+                <p className="text-xs text-muted-foreground whitespace-nowrap">
+                  {progressPercentage}% complete
+                </p>
+              )}
             </div>
-          )}
+          </div>
         </CardHeader>
 
         <AnimatePresence>
@@ -500,7 +512,7 @@ export function GettingStartedGuide({
                               : "bg-gray-100 text-gray-600"
                           )}>
                             {allStepsCompleted ? (
-                              <Check className="w-4 h-4" />
+                              <IconCheck className="w-4 h-4" />
                             ) : (
                               section.icon
                             )}
@@ -518,7 +530,7 @@ export function GettingStartedGuide({
                               animate={{ rotate: isExpanded ? 180 : 0 }}
                               transition={{ duration: 0.2 }}
                             >
-                              <ChevronDown className="w-4 h-4 text-gray-400" />
+                              <IconChevronDown className="w-4 h-4 text-gray-400" />
                             </motion.div>
                           </div>
                         </div>
@@ -551,8 +563,6 @@ export function GettingStartedGuide({
                                       "flex items-start gap-2 p-3 rounded-lg border transition-colors",
                                       isCompleted 
                                         ? "border-green-200 bg-green-50/50" 
-                                        : isLocked
-                                        ? "border-gray-100 bg-gray-50/30 opacity-60"
                                         : "border-gray-100 bg-white hover:bg-gray-50/50"
                                     )}
                                   >
@@ -569,7 +579,7 @@ export function GettingStartedGuide({
                                       )}
                                     >
                                       {isCompleted && (
-                                        <Check className="w-2.5 h-2.5 text-white" />
+                                        <IconCheck className="w-2.5 h-2.5 text-white" />
                                       )}
                                     </button>
 
@@ -582,28 +592,36 @@ export function GettingStartedGuide({
                                           {step.title}
                                         </h4>
                                         {isLocked && (
-                                          <Lock className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                                          <IconLock className="w-3 h-3 text-muted-foreground flex-shrink-0" />
                                         )}
                                       </div>
                                       <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
                                         {step.description}
                                       </p>
-                                      {isLocked && (
-                                        <div className="mt-2 flex items-start gap-1.5 p-2 bg-gray-50 border border-gray-200 rounded text-xs text-gray-600">
-                                          <span className="font-medium">⚠️</span>
-                                          <span>Configure a channel first to unlock this step</span>
-                                        </div>
-                                      )}
-                                      {step.action && !isCompleted && !isLocked && (
-                                        <Button
-                                          variant="link"
-                                          size="sm"
-                                          className="h-auto p-0 mt-4 text-xs"
-                                          onClick={() => window.location.href = step.action!.href}
-                                        >
-                                          {step.action.label}
-                                          <ChevronRight className="w-3 h-3 ml-0.5" />
-                                        </Button>
+                                      {step.action && !isCompleted && (
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <span className="inline-block mt-4">
+                                                <Button
+                                                  variant="link"
+                                                  size="sm"
+                                                  className="h-auto p-0 text-xs"
+                                                  onClick={() => !isLocked && (window.location.href = step.action!.href)}
+                                                  disabled={isLocked}
+                                                >
+                                                  {step.action.label}
+                                                  <IconChevronRight className="w-3 h-3 ml-0.5" />
+                                                </Button>
+                                              </span>
+                                            </TooltipTrigger>
+                                            {isLocked && (
+                                              <TooltipContent>
+                                                <p>You must configure a channel first</p>
+                                              </TooltipContent>
+                                            )}
+                                          </Tooltip>
+                                        </TooltipProvider>
                                       )}
                                     </div>
                                   </div>
