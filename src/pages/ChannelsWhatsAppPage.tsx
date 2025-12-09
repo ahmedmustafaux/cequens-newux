@@ -46,14 +46,6 @@ interface ConfigStep {
   status: "completed" | "current" | "upcoming"
 }
 
-interface ResourceLink {
-  title: string
-  description: string
-  href: string
-  icon: React.ReactNode
-  type: "documentation" | "video" | "guide" | "tip"
-}
-
 export default function ChannelsWhatsAppPage() {
   const [isLoading, setIsLoading] = React.useState(true)
   const [currentStep, setCurrentStep] = React.useState(0)
@@ -105,45 +97,6 @@ export default function ChannelsWhatsAppPage() {
     },
   ]
 
-  // Resources for the right panel
-  const resources: ResourceLink[] = [
-    {
-      title: "WhatsApp Cloud API Documentation",
-      description: "Official Meta docs for WhatsApp Business API",
-      href: "https://developers.facebook.com/docs/whatsapp/cloud-api/get-started",
-      icon: <BookOpen className="w-4 h-4" />,
-      type: "documentation"
-    },
-    {
-      title: "Business Management API",
-      description: "Learn how to manage your WhatsApp Business",
-      href: "https://developers.facebook.com/docs/whatsapp/business-management-api",
-      icon: <FileText className="w-4 h-4" />,
-      type: "documentation"
-    },
-    {
-      title: "Getting Started Video",
-      description: "Watch a step-by-step setup tutorial",
-      href: "https://www.youtube.com/watch?v=example",
-      icon: <Video className="w-4 h-4" />,
-      type: "video"
-    },
-    {
-      title: "Best Practices Guide",
-      description: "Tips for optimizing your WhatsApp messaging",
-      href: "#",
-      icon: <Lightbulb className="w-4 h-4" />,
-      type: "guide"
-    },
-    {
-      title: "Common Issues & Solutions",
-      description: "Troubleshoot common setup problems",
-      href: "#",
-      icon: <HelpCircle className="w-4 h-4" />,
-      type: "tip"
-    },
-  ]
-
   React.useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false)
@@ -180,10 +133,6 @@ export default function ChannelsWhatsAppPage() {
     }, 1500)
   }
 
-  const handleSaveConfiguration = () => {
-    toast.success("Configuration saved successfully!")
-  }
-
   const renderStepIcon = (step: ConfigStep, index: number) => {
     if (step.status === "completed") {
       return (
@@ -206,11 +155,6 @@ export default function ChannelsWhatsAppPage() {
     )
   }
 
-  const getResourceIconColor = (type: string) => {
-    // All icons in grayscale
-    return "text-gray-600 bg-gray-50"
-  }
-
   return (
     <PageWrapper isLoading={isLoading}>
       <PageHeader
@@ -227,777 +171,532 @@ export default function ChannelsWhatsAppPage() {
           exit="exit"
           className="flex gap-6"
         >
-          {/* Main Content - 2/3 width */}
+          {/* Left Panel - 2/3 width - New Sections */}
           <div className="flex-1 min-w-0 space-y-6">
-            {/* Wizard Progress */}
+            {/* Section 1: Meta Business OAuth */}
             <Card>
-              <CardContent className="pt-6">
-                <div className="space-y-4">
-                  {steps.map((step, index) => (
-                    <div key={step.id} className="flex items-start gap-4">
-                      <div className="flex flex-col items-center">
-                        {renderStepIcon(step, index)}
-                        {index < steps.length - 1 && (
-                          <div
-                            className={cn(
-                              "w-0.5 h-16 mt-2",
-                              step.status === "completed"
-                                ? "bg-green-600"
-                                : "bg-gray-200"
-                            )}
-                          />
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <img 
+                    src="/logos/meta.svg" 
+                    alt="Meta" 
+                    className="w-5 h-5"
+                  />
+                  <CardTitle>Meta Business Account</CardTitle>
+                </div>
+                <CardDescription>
+                  Connect your Meta Business Account to access WhatsApp Business API
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Not authenticated state */}
+                {!formData.businessAccountId && (
+                  <div className="space-y-4">
+                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                      <div className="flex gap-3">
+                        <AlertCircle className="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" />
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium text-gray-900">
+                            Authentication Required
+                          </p>
+                          <p className="text-sm text-gray-700">
+                            Connect your Meta Business Account to enable WhatsApp Business API integration. You'll be redirected to Meta's secure authentication page.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col items-center justify-center py-8 space-y-4">
+                      <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
+                        <img 
+                          src="/logos/meta.svg" 
+                          alt="Meta" 
+                          className="w-8 h-8"
+                        />
+                      </div>
+                      <div className="text-center space-y-2">
+                        <h3 className="font-semibold text-lg">Connect to Meta</h3>
+                        <p className="text-sm text-muted-foreground max-w-md">
+                          Authorize Cequens to access your Meta Business Account and manage WhatsApp Business API
+                        </p>
+                      </div>
+                      <Button 
+                        size="lg" 
+                        className="mt-4"
+                        onClick={() => {
+                          // Simulate OAuth - in real app this would redirect to Meta
+                          setFormData(prev => ({ 
+                            ...prev, 
+                            businessAccountId: "123456789012345",
+                            displayName: "My Business"
+                          }))
+                          toast.success("Connected to Meta Business Account")
+                        }}
+                      >
+                        <img 
+                          src="/logos/meta.svg" 
+                          alt="Meta" 
+                          className="w-4 h-4 mr-2"
+                        />
+                        Authenticate with Meta
+                      </Button>
+                      <p className="text-xs text-center text-muted-foreground">
+                        Secure OAuth 2.0 authentication via Meta
+                      </p>
+                    </div>
+
+                    <Separator />
+
+                    <div className="space-y-3">
+                      <p className="text-sm font-medium">What you'll need:</p>
+                      <ul className="space-y-2 text-sm text-muted-foreground">
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-gray-600 flex-shrink-0 mt-0.5" />
+                          <span>A verified Meta Business Account</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-gray-600 flex-shrink-0 mt-0.5" />
+                          <span>Admin access to the Business Manager</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-gray-600 flex-shrink-0 mt-0.5" />
+                          <span>WhatsApp Business Account created in Meta</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Authenticated state */}
+                {formData.businessAccountId && (
+                  <div className="space-y-4">
+                    <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+                      <div className="flex gap-3">
+                        <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                        <div className="space-y-2 flex-1">
+                          <p className="text-sm font-medium text-green-900">
+                            Successfully Connected
+                          </p>
+                          <p className="text-sm text-green-700">
+                            Your Meta Business Account is now connected and authorized
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 p-4 rounded-lg border border-gray-200">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium">Account Name</p>
+                          <p className="text-lg font-semibold">
+                            {formData.displayName || "Business Account"}
+                          </p>
+                        </div>
+                        <Badge className="bg-green-600">
+                          <div className="w-1.5 h-1.5 rounded-full bg-white mr-1.5" />
+                          Active
+                        </Badge>
+                      </div>
+
+                      <Separator />
+
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-muted-foreground mb-1">Business Account ID</p>
+                          <p className="font-mono text-xs break-all">
+                            {formData.businessAccountId}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground mb-1">Connected Since</p>
+                          <p className="font-medium">
+                            {new Date().toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+
+                      <Separator />
+
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          className="flex-1"
+                          onClick={() => window.open('https://business.facebook.com', '_blank')}
+                        >
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                          Manage in Meta
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="flex-1"
+                          onClick={() => {
+                            setFormData(prev => ({ ...prev, businessAccountId: "", displayName: "" }))
+                            toast.info("Disconnected from Meta Business Account")
+                          }}
+                        >
+                          Disconnect
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Section 2: Channel Health & Status */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5 text-gray-600" />
+                  <CardTitle>WhatsApp Channel Status</CardTitle>
+                </div>
+                <CardDescription>
+                  Monitor and manage your WhatsApp Business channel
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* No channel configured */}
+                {!formData.phoneNumberId && (
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
+                    <Phone className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                    <p className="text-sm font-medium text-gray-900 mb-1">
+                      No Channel Configured
+                    </p>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Connect your Meta Business Account and complete the setup to configure your WhatsApp channel
+                    </p>
+                    {!formData.businessAccountId && (
+                      <p className="text-xs text-muted-foreground">
+                        Start by authenticating with Meta above
+                      </p>
+                    )}
+                    {formData.businessAccountId && (
+                      <Button 
+                        size="sm" 
+                        className="mt-2"
+                        onClick={() => {
+                          setFormData(prev => ({ 
+                            ...prev, 
+                            phoneNumberId: "987654321",
+                            phoneNumber: "+1234567890"
+                          }))
+                          toast.success("Channel configured")
+                        }}
+                      >
+                        Configure Channel
+                      </Button>
+                    )}
+                  </div>
+                )}
+                
+                {/* Channel configured */}
+                {formData.phoneNumberId && (
+                  <div className="space-y-4">
+                    {/* Channel Overview */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-4 rounded-lg border border-gray-200 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Phone className="w-4 h-4 text-gray-600" />
+                          <p className="text-xs text-muted-foreground">Phone Number</p>
+                        </div>
+                        <p className="text-lg font-semibold">
+                          {formData.phoneNumber || "Not set"}
+                        </p>
+                      </div>
+                      <div className="p-4 rounded-lg border border-gray-200 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="w-4 h-4 text-gray-600" />
+                          <p className="text-xs text-muted-foreground">Display Name</p>
+                        </div>
+                        <p className="text-lg font-semibold">
+                          {formData.displayName || "Not set"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Health Status */}
+                    <div className="rounded-lg border border-gray-200 p-4 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium">Channel Health</h4>
+                        <Badge className="bg-green-600">
+                          <div className="w-1.5 h-1.5 rounded-full bg-white mr-1.5" />
+                          Healthy
+                        </Badge>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <p className="text-xs text-muted-foreground">Quality Rating</p>
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-semibold text-green-600">High</span>
+                              <span className="text-xs text-muted-foreground">95%</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div className="bg-green-600 h-2 rounded-full" style={{ width: '95%' }} />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-xs text-muted-foreground">Message Limit</p>
+                          <p className="text-2xl font-bold">1K</p>
+                          <p className="text-xs text-muted-foreground">per day</p>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-xs text-muted-foreground">Status</p>
+                          <p className="text-2xl font-bold text-green-600">✓</p>
+                          <p className="text-xs text-muted-foreground">Verified</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Recent Activity */}
+                    <div className="rounded-lg border border-gray-200 p-4 space-y-3">
+                      <h4 className="font-medium text-sm">Recent Activity</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Messages Sent (24h)</span>
+                          <span className="font-semibold">247</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Messages Received (24h)</span>
+                          <span className="font-semibold">189</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Delivery Rate</span>
+                          <span className="font-semibold text-green-600">98.5%</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Channel Actions */}
+                    <div className="flex gap-2">
+                      <Button variant="outline" className="flex-1">
+                        <Phone className="w-4 h-4 mr-2" />
+                        Change Number
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="flex-1"
+                        onClick={() => {
+                          setFormData(prev => ({ 
+                            ...prev, 
+                            phoneNumberId: "",
+                            phoneNumber: ""
+                          }))
+                          toast.info("Channel disconnected")
+                        }}
+                      >
+                        Disconnect Channel
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Section 3: API Testing & Validation */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Webhook className="w-5 h-5 text-gray-600" />
+                  <CardTitle>API Testing & Validation</CardTitle>
+                </div>
+                <CardDescription>
+                  Test your WhatsApp API configuration and send test messages
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {(!formData.businessAccountId || !formData.phoneNumberId) && (
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-6 text-center">
+                    <AlertCircle className="w-10 h-10 text-gray-400 mx-auto mb-3" />
+                    <p className="text-sm font-medium text-gray-900 mb-1">
+                      Configuration Required
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Complete the Meta authentication and channel setup to access testing tools
+                    </p>
+                  </div>
+                )}
+
+                {formData.businessAccountId && formData.phoneNumberId && (
+                  <div className="space-y-4">
+                    {/* Connection Test */}
+                    <div className="rounded-lg border border-gray-200 p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium text-sm">Connection Test</h4>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            Verify API credentials and connectivity
+                          </p>
+                        </div>
+                        <Button size="sm" onClick={handleTestConnection}>
+                          Test Connection
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Send Test Message */}
+                    <div className="rounded-lg border border-gray-200 p-4 space-y-3">
+                      <h4 className="font-medium text-sm">Send Test Message</h4>
+                      <div className="space-y-2">
+                        <Label htmlFor="testPhone" className="text-xs">
+                          Recipient Phone Number
+                        </Label>
+                        <Input
+                          id="testPhone"
+                          placeholder="+1234567890"
+                          className="text-sm"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="testMessage" className="text-xs">
+                          Message
+                        </Label>
+                        <Input
+                          id="testMessage"
+                          placeholder="Hello from Cequens!"
+                          className="text-sm"
+                        />
+                      </div>
+                      <Button size="sm" className="w-full" onClick={() => toast.success("Test message sent!")}>
+                        <MessageSquare className="w-4 h-4 mr-2" />
+                        Send Test Message
+                      </Button>
+                    </div>
+
+                    {/* Webhook Validation */}
+                    <div className="rounded-lg border border-gray-200 p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium text-sm">Webhook Status</h4>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {formData.webhookUrl || "Not configured"}
+                          </p>
+                        </div>
+                        {formData.webhookUrl && (
+                          <Badge variant="outline" className="text-green-600 border-green-600">
+                            <CheckCircle2 className="w-3 h-3 mr-1" />
+                            Active
+                          </Badge>
                         )}
                       </div>
-                      <div className="flex-1 pb-4">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4
-                            className={cn(
-                              "font-semibold",
-                              step.status === "current"
-                                ? "text-foreground"
-                                : step.status === "completed"
-                                ? "text-green-600"
-                                : "text-muted-foreground"
-                            )}
-                          >
-                            {step.title}
-                          </h4>
+                      {formData.webhookUrl && (
+                        <Button size="sm" variant="outline" className="w-full">
+                          Test Webhook
+                        </Button>
+                      )}
+                    </div>
+
+                    <Separator />
+
+                    {/* Quick Links */}
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium text-gray-900">Developer Resources</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="text-xs justify-start"
+                          onClick={() => window.open('https://developers.facebook.com/docs/whatsapp', '_blank')}
+                        >
+                          <BookOpen className="w-3 h-3 mr-1.5" />
+                          API Docs
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="text-xs justify-start"
+                          onClick={() => window.open('https://developers.facebook.com/docs/whatsapp/api/webhooks', '_blank')}
+                        >
+                          <Webhook className="w-3 h-3 mr-1.5" />
+                          Webhooks
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="text-xs justify-start"
+                          onClick={() => toast.info("Opening API console...")}
+                        >
+                          <Key className="w-3 h-3 mr-1.5" />
+                          API Keys
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="text-xs justify-start"
+                          onClick={() => toast.info("Opening support...")}
+                        >
+                          <HelpCircle className="w-3 h-3 mr-1.5" />
+                          Support
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Panel - 1/3 width - Wizard Steps */}
+          <div className="w-1/3 min-w-[320px] max-w-[400px]">
+            <div className="sticky top-6 space-y-6">
+              {/* Wizard Progress */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Setup Wizard</CardTitle>
+                  <CardDescription>
+                    Follow these steps to complete your configuration
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <div className="space-y-4">
+                    {steps.map((step, index) => (
+                      <div key={step.id} className="flex items-start gap-4">
+                        <div className="flex flex-col items-center">
+                          {renderStepIcon(step, index)}
+                          {index < steps.length - 1 && (
+                            <div
+                              className={cn(
+                                "w-0.5 h-16 mt-2",
+                                step.status === "completed"
+                                  ? "bg-green-600"
+                                  : "bg-gray-200"
+                              )}
+                            />
+                          )}
+                        </div>
+                        <div className="flex-1 pb-4">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4
+                              className={cn(
+                                "font-semibold text-sm",
+                                step.status === "current"
+                                  ? "text-foreground"
+                                  : step.status === "completed"
+                                  ? "text-green-600"
+                                  : "text-muted-foreground"
+                              )}
+                            >
+                              {step.title}
+                            </h4>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {step.description}
+                          </p>
                           {step.status === "current" && (
-                            <Badge className="text-xs">Current Step</Badge>
+                            <Badge className="text-xs mt-2">In Progress</Badge>
                           )}
                           {step.status === "completed" && (
-                            <Badge variant="outline" className="text-xs text-green-600 border-green-600">
+                            <Badge variant="outline" className="text-xs text-green-600 border-green-600 mt-2">
                               Completed
                             </Badge>
                           )}
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          {step.description}
-                        </p>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Step Content */}
-            {/* Step 0: Meta Business Account */}
-            {currentStep === 0 && (
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Building2 className="w-5 h-5 text-gray-600" />
-                    <CardTitle>Meta Business Account Setup</CardTitle>
-                  </div>
-                  <CardDescription>
-                    You need a Meta Business Account to use WhatsApp Business API
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                    <div className="flex gap-3">
-                      <AlertCircle className="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" />
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium text-gray-900">
-                          Before you begin
-                        </p>
-                        <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
-                          <li>You must have a Facebook Business Manager account</li>
-                          <li>Your business must be verified by Meta</li>
-                          <li>You need admin access to the Business Manager</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="font-medium mb-3">Steps to create Meta Business Account:</h4>
-                      <ol className="space-y-3 text-sm text-muted-foreground">
-                        <li className="flex gap-3">
-                          <span className="font-medium text-foreground">1.</span>
-                          <span>
-                            Go to{" "}
-                            <a
-                              href="https://business.facebook.com"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline inline-flex items-center gap-1"
-                            >
-                              Facebook Business Manager
-                              <ExternalLink className="w-3 h-3" />
-                            </a>
-                          </span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="font-medium text-foreground">2.</span>
-                          <span>Click "Create Account" and follow the setup wizard</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="font-medium text-foreground">3.</span>
-                          <span>Provide your business details and verify your business</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="font-medium text-foreground">4.</span>
-                          <span>Once created, copy your Business Account ID from Settings</span>
-                        </li>
-                      </ol>
-                    </div>
-
-                    <Separator />
-
-                    <div className="space-y-2">
-                      <Label htmlFor="businessAccountId">
-                        Meta Business Account ID
-                      </Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="businessAccountId"
-                          placeholder="Enter your Business Account ID"
-                          value={formData.businessAccountId}
-                          onChange={(e) =>
-                            handleInputChange("businessAccountId", e.target.value)
-                          }
-                        />
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() =>
-                            handleCopy(
-                              formData.businessAccountId,
-                              "Business Account ID"
-                            )
-                          }
-                          disabled={!formData.businessAccountId}
-                        >
-                          <Copy className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Find this in Business Settings → Business Info
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end gap-3">
-                    <Button
-                      onClick={handleNextStep}
-                      disabled={!formData.businessAccountId}
-                    >
-                      Continue
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Step 1: WhatsApp Business Account */}
-            {currentStep === 1 && (
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <MessageSquare className="w-5 h-5 text-gray-600" />
-                    <CardTitle>WhatsApp Business Account</CardTitle>
-                  </div>
-                  <CardDescription>
-                    Create a WhatsApp Business Account within your Meta Business Account
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="font-medium mb-3">Create WhatsApp Business Account:</h4>
-                      <ol className="space-y-3 text-sm text-muted-foreground">
-                        <li className="flex gap-3">
-                          <span className="font-medium text-foreground">1.</span>
-                          <span>
-                            Go to{" "}
-                            <a
-                              href="https://business.facebook.com/wa/manage/home"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline inline-flex items-center gap-1"
-                            >
-                              WhatsApp Manager
-                              <ExternalLink className="w-3 h-3" />
-                            </a>
-                          </span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="font-medium text-foreground">2.</span>
-                          <span>Click "Create a WhatsApp Business Account"</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="font-medium text-foreground">3.</span>
-                          <span>Select your Meta Business Account</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="font-medium text-foreground">4.</span>
-                          <span>Complete the business profile information</span>
-                        </li>
-                      </ol>
-                    </div>
-
-                    <Separator />
-
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="displayName">Business Display Name</Label>
-                        <Input
-                          id="displayName"
-                          placeholder="Your Business Name"
-                          value={formData.displayName}
-                          onChange={(e) =>
-                            handleInputChange("displayName", e.target.value)
-                          }
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          This name will be visible to your customers
-                        </p>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="about">About (Optional)</Label>
-                        <Input
-                          id="about"
-                          placeholder="Brief description of your business"
-                          value={formData.about}
-                          onChange={(e) => handleInputChange("about", e.target.value)}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          A short description that appears in your business profile
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <Button variant="outline" onClick={handlePreviousStep}>
-                      <ArrowLeft className="w-4 h-4 mr-2" />
-                      Back
-                    </Button>
-                    <Button
-                      onClick={handleNextStep}
-                      disabled={!formData.displayName}
-                    >
-                      Continue
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Step 2: Phone Number */}
-            {currentStep === 2 && (
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Phone className="w-5 h-5 text-gray-600" />
-                    <CardTitle>Phone Number Configuration</CardTitle>
-                  </div>
-                  <CardDescription>
-                    Add and verify a phone number for your WhatsApp Business Account
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                    <div className="flex gap-3">
-                      <AlertCircle className="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" />
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium text-gray-900">
-                          Phone Number Requirements
-                        </p>
-                        <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
-                          <li>Must be able to receive SMS or voice calls</li>
-                          <li>Cannot be already registered with WhatsApp</li>
-                          <li>Must be a valid phone number (not VoIP)</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="font-medium mb-3">Add Phone Number:</h4>
-                      <ol className="space-y-3 text-sm text-muted-foreground">
-                        <li className="flex gap-3">
-                          <span className="font-medium text-foreground">1.</span>
-                          <span>In WhatsApp Manager, go to "Phone Numbers"</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="font-medium text-foreground">2.</span>
-                          <span>Click "Add Phone Number"</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="font-medium text-foreground">3.</span>
-                          <span>Enter your phone number and verify via SMS or call</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="font-medium text-foreground">4.</span>
-                          <span>Copy the Phone Number ID after verification</span>
-                        </li>
-                      </ol>
-                    </div>
-
-                    <Separator />
-
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="phoneNumber">Phone Number</Label>
-                        <Input
-                          id="phoneNumber"
-                          placeholder="+1234567890"
-                          value={formData.phoneNumber}
-                          onChange={(e) =>
-                            handleInputChange("phoneNumber", e.target.value)
-                          }
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Include country code (e.g., +1 for US)
-                        </p>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="phoneNumberId">Phone Number ID</Label>
-                        <div className="flex gap-2">
-                          <Input
-                            id="phoneNumberId"
-                            placeholder="Enter Phone Number ID from WhatsApp Manager"
-                            value={formData.phoneNumberId}
-                            onChange={(e) =>
-                              handleInputChange("phoneNumberId", e.target.value)
-                            }
-                          />
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() =>
-                              handleCopy(formData.phoneNumberId, "Phone Number ID")
-                            }
-                            disabled={!formData.phoneNumberId}
-                          >
-                            <Copy className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Find this in WhatsApp Manager → Phone Numbers
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <Button variant="outline" onClick={handlePreviousStep}>
-                      <ArrowLeft className="w-4 h-4 mr-2" />
-                      Back
-                    </Button>
-                    <Button
-                      onClick={handleNextStep}
-                      disabled={!formData.phoneNumber || !formData.phoneNumberId}
-                    >
-                      Continue
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Step 3: API Credentials */}
-            {currentStep === 3 && (
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Key className="w-5 h-5 text-gray-600" />
-                    <CardTitle>API Access Credentials</CardTitle>
-                  </div>
-                  <CardDescription>
-                    Generate and configure your API access token
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                    <div className="flex gap-3">
-                      <Shield className="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" />
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium text-gray-900">
-                          Security Notice
-                        </p>
-                        <p className="text-sm text-gray-700">
-                          Keep your access token secure. Never share it publicly or commit it to version control.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="font-medium mb-3">Generate Access Token:</h4>
-                      <ol className="space-y-3 text-sm text-muted-foreground">
-                        <li className="flex gap-3">
-                          <span className="font-medium text-foreground">1.</span>
-                          <span>
-                            Go to{" "}
-                            <a
-                              href="https://developers.facebook.com/apps"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline inline-flex items-center gap-1"
-                            >
-                              Meta for Developers
-                              <ExternalLink className="w-3 h-3" />
-                            </a>
-                          </span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="font-medium text-foreground">2.</span>
-                          <span>Create a new app or select existing app</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="font-medium text-foreground">3.</span>
-                          <span>Add WhatsApp product to your app</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="font-medium text-foreground">4.</span>
-                          <span>Generate a permanent access token with whatsapp_business_messaging permission</span>
-                        </li>
-                      </ol>
-                    </div>
-
-                    <Separator />
-
-                    <div className="space-y-2">
-                      <Label htmlFor="accessToken">Access Token</Label>
-                      <div className="flex gap-2">
-                        <div className="relative flex-1">
-                          <Input
-                            id="accessToken"
-                            type={showAccessToken ? "text" : "password"}
-                            placeholder="Enter your permanent access token"
-                            value={formData.accessToken}
-                            onChange={(e) =>
-                              handleInputChange("accessToken", e.target.value)
-                            }
-                          />
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="absolute right-0 top-0 h-full"
-                            onClick={() => setShowAccessToken(!showAccessToken)}
-                          >
-                            {showAccessToken ? (
-                              <EyeOff className="w-4 h-4" />
-                            ) : (
-                              <Eye className="w-4 h-4" />
-                            )}
-                          </Button>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() =>
-                            handleCopy(formData.accessToken, "Access Token")
-                          }
-                          disabled={!formData.accessToken}
-                        >
-                          <Copy className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        This token is used to authenticate API requests
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <Button variant="outline" onClick={handlePreviousStep}>
-                      <ArrowLeft className="w-4 h-4 mr-2" />
-                      Back
-                    </Button>
-                    <Button
-                      onClick={handleNextStep}
-                      disabled={!formData.accessToken}
-                    >
-                      Continue
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Step 4: Webhook Setup */}
-            {currentStep === 4 && (
-              <>
-                <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Webhook className="w-5 h-5 text-gray-600" />
-                    <CardTitle>Webhook Configuration</CardTitle>
-                  </div>
-                    <CardDescription>
-                      Set up webhooks to receive incoming messages and status updates
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                    <div className="flex gap-3">
-                      <AlertCircle className="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" />
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium text-gray-900">
-                          Webhook Requirements
-                        </p>
-                        <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
-                          <li>Must be publicly accessible HTTPS URL</li>
-                          <li>Must respond to verification requests</li>
-                          <li>Should handle POST requests for incoming messages</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-
-                    <div className="space-y-4">
-                      <div>
-                        <h4 className="font-medium mb-3">Configure Webhook:</h4>
-                        <ol className="space-y-3 text-sm text-muted-foreground">
-                          <li className="flex gap-3">
-                            <span className="font-medium text-foreground">1.</span>
-                            <span>In your Meta App, go to WhatsApp → Configuration</span>
-                          </li>
-                          <li className="flex gap-3">
-                            <span className="font-medium text-foreground">2.</span>
-                            <span>Click "Edit" in the Webhook section</span>
-                          </li>
-                          <li className="flex gap-3">
-                            <span className="font-medium text-foreground">3.</span>
-                            <span>Enter your webhook URL and verify token</span>
-                          </li>
-                          <li className="flex gap-3">
-                            <span className="font-medium text-foreground">4.</span>
-                            <span>Subscribe to messages, message_status, and other relevant fields</span>
-                          </li>
-                        </ol>
-                      </div>
-
-                      <Separator />
-
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="webhookUrl">Webhook URL</Label>
-                          <div className="flex gap-2">
-                            <Input
-                              id="webhookUrl"
-                              placeholder="https://your-domain.com/webhooks/whatsapp"
-                              value={formData.webhookUrl}
-                              onChange={(e) =>
-                                handleInputChange("webhookUrl", e.target.value)
-                              }
-                            />
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() =>
-                                handleCopy(formData.webhookUrl, "Webhook URL")
-                              }
-                              disabled={!formData.webhookUrl}
-                            >
-                              <Copy className="w-4 h-4" />
-                            </Button>
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            Your server endpoint to receive webhook events
-                          </p>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="webhookVerifyToken">Verify Token</Label>
-                          <div className="flex gap-2">
-                            <div className="relative flex-1">
-                              <Input
-                                id="webhookVerifyToken"
-                                type={showWebhookToken ? "text" : "password"}
-                                placeholder="Enter a secure verify token"
-                                value={formData.webhookVerifyToken}
-                                onChange={(e) =>
-                                  handleInputChange("webhookVerifyToken", e.target.value)
-                                }
-                              />
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="absolute right-0 top-0 h-full"
-                                onClick={() => setShowWebhookToken(!showWebhookToken)}
-                              >
-                                {showWebhookToken ? (
-                                  <EyeOff className="w-4 h-4" />
-                                ) : (
-                                  <Eye className="w-4 h-4" />
-                                )}
-                              </Button>
-                            </div>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() =>
-                                handleCopy(
-                                  formData.webhookVerifyToken,
-                                  "Verify Token"
-                                )
-                              }
-                              disabled={!formData.webhookVerifyToken}
-                            >
-                              <Copy className="w-4 h-4" />
-                            </Button>
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            A secret token to verify webhook requests
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between">
-                      <Button variant="outline" onClick={handlePreviousStep}>
-                        <ArrowLeft className="w-4 h-4 mr-2" />
-                        Back
-                      </Button>
-                      <Button
-                        onClick={handleTestConnection}
-                        disabled={!formData.webhookUrl || !formData.webhookVerifyToken}
-                      >
-                        Test Connection
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Summary Card */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Configuration Summary</CardTitle>
-                    <CardDescription>
-                      Review your WhatsApp Business API configuration
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid gap-4">
-                      <div className="grid grid-cols-3 gap-4 text-sm">
-                        <span className="text-muted-foreground">Business Account ID:</span>
-                        <span className="col-span-2 font-mono text-xs break-all">
-                          {formData.businessAccountId || "Not set"}
-                        </span>
-                      </div>
-                      <Separator />
-                      <div className="grid grid-cols-3 gap-4 text-sm">
-                        <span className="text-muted-foreground">Display Name:</span>
-                        <span className="col-span-2">{formData.displayName || "Not set"}</span>
-                      </div>
-                      <Separator />
-                      <div className="grid grid-cols-3 gap-4 text-sm">
-                        <span className="text-muted-foreground">Phone Number:</span>
-                        <span className="col-span-2">{formData.phoneNumber || "Not set"}</span>
-                      </div>
-                      <Separator />
-                      <div className="grid grid-cols-3 gap-4 text-sm">
-                        <span className="text-muted-foreground">Phone Number ID:</span>
-                        <span className="col-span-2 font-mono text-xs break-all">
-                          {formData.phoneNumberId || "Not set"}
-                        </span>
-                      </div>
-                      <Separator />
-                      <div className="grid grid-cols-3 gap-4 text-sm">
-                        <span className="text-muted-foreground">Webhook URL:</span>
-                        <span className="col-span-2 font-mono text-xs break-all">
-                          {formData.webhookUrl || "Not set"}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="pt-4">
-                      <Button className="w-full" size="lg" onClick={handleSaveConfiguration}>
-                        <CheckCircle2 className="w-4 h-4 mr-2" />
-                        Save Configuration
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </>
-            )}
-          </div>
-
-          {/* Right Panel - Fixed 1/3 width for Resources */}
-          <div className="w-1/3 min-w-[320px] max-w-[400px]">
-            <div className="sticky top-6 space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Additional Resources</CardTitle>
-                  <CardDescription>
-                    Helpful guides and documentation
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {resources.map((resource, index) => (
-                    <a
-                      key={index}
-                      href={resource.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-start gap-3 p-3 rounded-lg border hover:bg-accent transition-colors group"
-                    >
-                      <div className={cn(
-                        "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 border border-gray-200",
-                        getResourceIconColor(resource.type)
-                      )}>
-                        {resource.icon}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-sm transition-colors">
-                            {resource.title}
-                          </p>
-                          <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {resource.description}
-                        </p>
-                      </div>
-                    </a>
-                  ))}
-                </CardContent>
-              </Card>
-
-              {/* Sandbox Trial Card */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Sandbox Trial</CardTitle>
-                  <CardDescription>
-                      Try out WhatsApp Business API features in Meta's sandbox environment before going live.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-              
-                  <div className="space-y-3">
-                    <ul className="text-sm text-black space-y-2">
-                      <li className="flex items-start gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-gray-600 flex-shrink-0 mt-0.5" />
-                        <span>Test messaging without affecting production</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-gray-600 flex-shrink-0 mt-0.5" />
-                        <span>Pre-configured test phone numbers</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-gray-600 flex-shrink-0 mt-0.5" />
-                        <span>No verification required to start</span>
-                      </li>
-                    </ul>
-                    <Button className="w-full" variant="outline">
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Start Sandbox Trial
-                    </Button>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
