@@ -76,7 +76,7 @@ export function FilterSelect({
             "justify-between font-normal h-10 sm:h-9 px-3",
             "min-w-fit w-auto max-w-[300px]",
             "border-dashed border border-gray-300",
-            "bg-transparent hover:bg-muted/50 hover:border-gray-400",
+            "bg-white hover:bg-muted/50 hover:border-gray-400",
             "text-black hover:text-black",
             className
           )}

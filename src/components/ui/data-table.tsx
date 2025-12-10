@@ -2,16 +2,7 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { 
-  Field, 
-  FieldContent 
-} from "@/components/ui/field"
-import { 
-  InputGroup, 
-  InputGroupInput, 
-  InputGroupAddon 
-} from "@/components/ui/input-group"
-import { ChevronLeft, ChevronRight, Search, ArrowUpDownIcon, Columns3 } from "lucide-react"
+import { ChevronLeft, ChevronRight, ArrowUpDownIcon, Columns3 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AutoHighlight } from "@/components/ui/highlight"
 import { TableHeader, TableHead, TableRow } from "@/components/ui/table"
@@ -30,6 +21,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { FilterSelect } from "@/components/ui/filter-select"
+import { SearchInput } from "@/components/ui/search-input"
 import { useTableSearch } from "@/hooks/use-table-search"
 import { TableSkeleton } from "@/components/ui/table"
 interface FilterOption {
@@ -142,26 +134,15 @@ function DataTable({
                 {/* Search Bar with Controls on Small Screens */}
                 {searchConfig && (
                   <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <div className="flex-1 sm:w-auto sm:min-w-[320px]">
-                      <Field>
-                        <FieldContent>
-                      <InputGroup>
-                        <InputGroupAddon>
-                          <Search className="h-4 w-4" />
-                        </InputGroupAddon>
-                        <InputGroupInput
-                          placeholder={searchConfig.placeholder || "Search..."}
-                          value={searchConfig.table.getState().globalFilter ?? ""}
-                          onChange={(event) => {
-                            const searchValue = event.target.value
-                            // Use global filter for OR logic across multiple columns
-                            searchConfig.table.setGlobalFilter(searchValue)
-                          }}
-                        />
-                      </InputGroup>
-                        </FieldContent>
-                      </Field>
-                    </div>
+                    <SearchInput
+                      placeholder={searchConfig.placeholder || "Search..."}
+                      value={searchConfig.table.getState().globalFilter ?? ""}
+                      onChange={(searchValue) => {
+                        // Use global filter for OR logic across multiple columns
+                        searchConfig.table.setGlobalFilter(searchValue)
+                      }}
+                      minWidth="320px"
+                    />
                     
                     {/* Toggle Column and Sorting Controls - Only on Small Screens */}
                     {showControls && searchConfig?.table && (

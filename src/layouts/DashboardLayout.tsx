@@ -52,7 +52,7 @@ function DashboardContent({ children }: { children: ReactNode }) {
     <SidebarProvider
       style={
         {
-          "--sidebar-width": "calc(var(--spacing) * 72)",
+          "--sidebar-width": "calc(var(--spacing) * 64)",
           "--header-height": "calc(var(--spacing) * 14)",
           "--header-height-mobile": "calc(var(--spacing) * 18)",
           "--section-gap": "calc(var(--spacing) * 8)", // Add consistent gap between sections
@@ -61,9 +61,9 @@ function DashboardContent({ children }: { children: ReactNode }) {
     >
       <div className="flex h-screen w-full m-0 p-0">
         <AppSidebar variant="inset" />
-        <SidebarInset className="flex flex-1 flex-col bg-white m-0">
+        <SidebarInset className="flex flex-1 flex-col bg-gray-50 m-0 border border-gray-200">
           {/* Sticky Header */}
-          <div className="sticky top-0 z-1 w-full bg-white backdrop-blur-sm border-b border-border/40 rounded-t-xl overflow-hidden">
+          <div className="sticky top-0 z-1 w-full bg-gray-50 backdrop-blur-sm border-b border-gray-100 rounded-t-xl overflow-hidden">
             <PageHeader
               showBreadcrumbs={true}
               showSearch={true}
