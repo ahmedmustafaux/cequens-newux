@@ -56,13 +56,15 @@ interface GettingStartedGuideProps {
   channels?: string[]
   goals?: string[]
   onDismiss?: () => void
+  inline?: boolean // If true, renders inline instead of fixed position
 }
 
 export function GettingStartedGuide({ 
   industry = "ecommerce",
   channels = [],
   goals = [],
-  onDismiss 
+  onDismiss,
+  inline = false
 }: GettingStartedGuideProps) {
   // LocalStorage keys
   const STORAGE_KEY_COMPLETED = 'cequens-setup-guide-completed-steps'
@@ -70,10 +72,11 @@ export function GettingStartedGuide({
   const STORAGE_KEY_EXPANDED = 'cequens-setup-guide-expanded-section'
 
   // Initialize state from localStorage
+  // In inline mode, default to first section expanded
   const [expandedSection, setExpandedSection] = useState<string | null>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_EXPANDED)
-      return saved ? saved : "section-1"
+      return saved ? saved : "section-1" // Default to first section
     } catch {
       return "section-1"
     }
@@ -450,75 +453,259 @@ export function GettingStartedGuide({
     })
   }
 
+  const containerClasses = inline 
+    ? "relative w-full" 
+    : "fixed bottom-6 right-6 z-50 w-full max-w-md"
+  
+  const containerStyle = inline 
+    ? undefined 
+    : { width: 'calc(25vw - 1.5rem)', minWidth: '480px', maxWidth: '600px' }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 20, scale: 0.95 }}
       transition={{ duration: 0.3 }}
-      className="fixed bottom-6 right-6 z-50 w-full max-w-md"
-      style={{ width: 'calc(25vw - 1.5rem)', minWidth: '480px', maxWidth: '600px' }}
+      className={containerClasses}
+      style={containerStyle}
     >
-      <Card className="shadow-2xl border-2 border-border overflow-hidden">
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-3 flex-1">
-              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Sparkles className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <CardTitle className="text-lg">Setup guide</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  {completedCount} of {totalSteps} tasks complete
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsMinimized(!isMinimized)}
-                className="h-8 w-8 p-0"
-                title={isMinimized ? "Maximize" : "Minimize"}
-              >
-                {isMinimized ? (
-                  <Maximize2 className="h-4 w-4" />
-                ) : (
-                  <Minimize2 className="h-4 w-4" />
+      {inline ? (
+        // Inline mode: no card wrapper, collapsible sections
+        <div className="space-y-3">
+          {setupSections.map((section, sectionIndex) => {
+            const isExpanded = expandedSection === section.id
+            const sectionCompletedSteps = section.steps.filter(step => 
+              completedSteps.has(step.id)
+            ).length
+            const allStepsCompleted = sectionCompletedSteps === section.steps.length
+
+            return (
+              <div
+                key={section.id}
+                className={cn(
+                  "border rounded-lg overflow-hidden bg-card",
+                  allStepsCompleted ? "border-success/30 bg-success/5" : "border-border"
                 )}
-              </Button>
-            </div>
-          </div>
+              >
+                {/* Section Header - Clickable to toggle */}
+                <div
+                  onClick={() => toggleSection(section.id)}
+                  className="w-full p-3 flex items-center justify-between hover:bg-accent cursor-pointer text-left transition-colors"
+                >
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <div className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",
+                      allStepsCompleted 
+                        ? "bg-success text-success-foreground" 
+                        : "bg-muted text-muted-foreground"
+                    )}>
+                      {allStepsCompleted ? (
+                        <Check className="w-4 h-4" />
+                      ) : (
+                        <span className="[&>svg]:w-5 [&>svg]:h-5">
+                          {section.icon}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className={cn(
+                        "font-semibold truncate",
+                        "text-sm"
+                      )}>
+                        {section.title}
+                      </h3>
+                      {section.description && (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {section.description}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <Badge variant="secondary" className="text-xs">
+                        {sectionCompletedSteps}/{section.steps.length}
+                      </Badge>
+                      <motion.div
+                        animate={{ rotate: isExpanded ? 180 : 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                      </motion.div>
+                    </div>
+                  </div>
+                </div>
 
-          {/* Progress bar */}
-          <div className="mt-4">
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                <motion.div
-                  className="h-full bg-primary"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${progressPercentage}%` }}
-                  transition={{ duration: 0.5, ease: "easeOut" }}
-                />
+                {/* Section Content - Collapsible with animation */}
+                <AnimatePresence initial={false}>
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <div className="px-3 pb-3 space-y-2">
+                        {section.steps.map((step, stepIndex) => {
+                          const isCompleted = completedSteps.has(step.id)
+                          
+                          const isChannelConfigStep = step.id === "step-1-1"
+                          const isSendCampaignStep = step.id === "step-1-3"
+                          const isChannelConfigured = completedSteps.has("step-1-1")
+                          const isLocked = isSendCampaignStep && !isChannelConfigured
+                          
+                          return (
+                            <div
+                              key={step.id}
+                              className={cn(
+                                "group relative flex items-start gap-3 p-3 rounded-lg border transition-all",
+                                "overflow-hidden",
+                                isCompleted 
+                                  ? "border-success/30 bg-success/5" 
+                                  : "border-border bg-card"
+                              )}
+                            >
+                              {/* Gray gradient hover effect */}
+                              {!isCompleted && (
+                                <div className="absolute inset-0 bg-gradient-to-r from-muted/0 via-muted/50 to-muted/0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
+                              )}
+                              <div className="relative z-10 flex items-start gap-3 w-full">
+                                <button
+                                  onClick={() => !isLocked && toggleStepCompletion(step.id)}
+                                  disabled={isLocked}
+                                  className={cn(
+                                    "w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0",
+                                    isCompleted
+                                      ? "border-success bg-success"
+                                      : isLocked
+                                        ? "border-muted-foreground/30 bg-muted cursor-not-allowed"
+                                        : "border-border hover:border-border-primary"
+                                  )}
+                                >
+                                  {isCompleted && (
+                                    <Check className="w-3 h-3 text-success-foreground" />
+                                  )}
+                                </button>
+
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-1.5">
+                                    <h4 className={cn(
+                                      "font-semibold text-sm",
+                                      isCompleted && "line-through text-muted-foreground"
+                                    )}>
+                                      {step.title}
+                                    </h4>
+                                    {isLocked && (
+                                      <Lock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-muted-foreground mt-0.5">
+                                    {step.description}
+                                  </p>
+                                  {step.action && !isCompleted && (
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <span className="inline-block mt-2">
+                                            <Button
+                                              variant="link"
+                                              size="sm"
+                                              className="text-sm h-auto p-0"
+                                              onClick={(e) => {
+                                                e.stopPropagation()
+                                                if (!isLocked) {
+                                                  window.location.href = step.action!.href
+                                                }
+                                              }}
+                                              disabled={isLocked}
+                                            >
+                                              {step.action.label}
+                                              <ChevronRight className="w-4 h-4 ml-0.5" />
+                                            </Button>
+                                          </span>
+                                        </TooltipTrigger>
+                                        {isLocked && (
+                                          <TooltipContent>
+                                            <p>You must configure a channel first</p>
+                                          </TooltipContent>
+                                        )}
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-              {isMinimized && (
-                <p className="text-xs text-muted-foreground whitespace-nowrap">
-                  {progressPercentage}% complete
-                </p>
-              )}
+            )
+          })}
+        </div>
+      ) : (
+        // Floating widget mode: use Card wrapper
+        <Card className="shadow-2xl border-2 border-border overflow-hidden">
+          <CardHeader className="pb-3">
+            <div className="flex items-start justify-between">
+              <div className="flex items-start gap-3 flex-1">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <CardTitle className="text-lg">Setup guide</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    {completedCount} of {totalSteps} tasks complete
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsMinimized(!isMinimized)}
+                  className="h-8 w-8 p-0"
+                  title={isMinimized ? "Maximize" : "Minimize"}
+                >
+                  {isMinimized ? (
+                    <Maximize2 className="h-4 w-4" />
+                  ) : (
+                    <Minimize2 className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
             </div>
-          </div>
-        </CardHeader>
 
-        <AnimatePresence>
-          {!isMinimized && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <CardContent className="space-y-2 max-h-[calc(100vh-16rem)] overflow-y-auto">
+            {/* Progress bar */}
+            <div className="mt-4">
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-primary"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progressPercentage}%` }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                  />
+                </div>
+                {isMinimized && (
+                  <p className="text-xs text-muted-foreground whitespace-nowrap">
+                    {progressPercentage}% complete
+                  </p>
+                )}
+              </div>
+            </div>
+          </CardHeader>
+
+          <AnimatePresence>
+            {!isMinimized && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <CardContent className="space-y-4 max-h-[calc(100vh-16rem)] overflow-y-auto">
                 {setupSections.map((section, sectionIndex) => {
                   const isExpanded = expandedSection === section.id
                   const sectionCompletedSteps = section.steps.filter(step => 
@@ -535,9 +722,9 @@ export function GettingStartedGuide({
                       )}
                     >
                       {/* Section Header */}
-                      <button
+                      <div
                         onClick={() => toggleSection(section.id)}
-                        className="w-full p-3 flex items-center justify-between hover:bg-accent text-left"
+                        className="w-full p-4 flex items-center justify-between hover:bg-accent cursor-pointer text-left"
                       >
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                           <div className={cn(
@@ -549,11 +736,13 @@ export function GettingStartedGuide({
                             {allStepsCompleted ? (
                               <Check className="w-4 h-4" />
                             ) : (
-                              section.icon
+                              <span className="[&>svg]:w-4 [&>svg]:h-4">
+                                {section.icon}
+                              </span>
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-sm truncate">
+                            <h3 className="font-semibold truncate text-sm">
                               {section.title}
                             </h3>
                           </div>
@@ -569,7 +758,7 @@ export function GettingStartedGuide({
                             </motion.div>
                           </div>
                         </div>
-                      </button>
+                      </div>
 
                       {/* Section Content */}
                       <AnimatePresence initial={false}>
@@ -581,11 +770,9 @@ export function GettingStartedGuide({
                             transition={{ duration: 0.2 }}
                           >
                             <div className="px-3 pb-3 space-y-2">
-                              {/* Steps */}
                               {section.steps.map((step, stepIndex) => {
                                 const isCompleted = completedSteps.has(step.id)
                                 
-                                // Check if this is the "Send campaign" step and if channel is configured
                                 const isChannelConfigStep = step.id === "step-1-1"
                                 const isSendCampaignStep = step.id === "step-1-3"
                                 const isChannelConfigured = completedSteps.has("step-1-1")
@@ -609,8 +796,8 @@ export function GettingStartedGuide({
                                         isCompleted
                                           ? "border-success bg-success"
                                           : isLocked
-                                          ? "border-muted-foreground/30 bg-muted cursor-not-allowed"
-                                          : "border-border hover:border-border-primary"
+                                            ? "border-muted-foreground/30 bg-muted cursor-not-allowed"
+                                            : "border-border hover:border-border-primary"
                                       )}
                                     >
                                       {isCompleted && (
@@ -674,6 +861,7 @@ export function GettingStartedGuide({
           )}
         </AnimatePresence>
       </Card>
+      )}
     </motion.div>
   )
 }
