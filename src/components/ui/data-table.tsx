@@ -377,7 +377,7 @@ function DataTable({
                               className={cn(
                                 "px-2 py-1 text-sm font-medium rounded-md transition-colors cursor-pointer",
                                 views.selectedView === view.value
-                                  ? "bg-gray-200 text-gray-700"
+                                  ? "bg-gray-100 text-gray-700"
                                   : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
                               )}
                             >
