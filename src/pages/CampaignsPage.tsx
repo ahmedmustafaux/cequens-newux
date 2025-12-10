@@ -363,12 +363,13 @@ function CampaignsPageContent() {
                       showCount={table.getRowModel().rows.length}
                       selectedCountOnCurrentPage={table.getRowModel().rows.filter(row => row.getIsSelected()).length}
                       audience="campaigns"
+                      columnCount={table.getVisibleFlatColumns().length}
                       rightActions={
                         <>
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-7 px-2.5 text-sm"
+                            className="h-6 px-2 text-xs"
                             onClick={() => {
                               // TODO: Implement duplicate functionality
                             }}
@@ -378,7 +379,7 @@ function CampaignsPageContent() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-7 px-2.5 text-sm"
+                            className="h-6 px-2 text-xs"
                             onClick={() => {
                               // TODO: Implement see analytics functionality
                             }}

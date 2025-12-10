@@ -521,6 +521,7 @@ const DataTableSelectionHeader = React.forwardRef<HTMLTableSectionElement, {
   audience?: string
   rightActions?: React.ReactNode
   className?: string
+  columnCount?: number
 }>(({ 
   selectedCount, 
   onClearSelection, 
@@ -529,17 +530,20 @@ const DataTableSelectionHeader = React.forwardRef<HTMLTableSectionElement, {
   totalCount,
   showCount,
   selectedCountOnCurrentPage,
-  audience = "this store",
+  audience = "contacts",
   rightActions,
-  className 
+  className,
+  columnCount = 99
 }, ref) => {
   const allPageItemsSelected = selectedCountOnCurrentPage !== undefined 
     ? selectedCountOnCurrentPage >= (showCount ?? totalCount)
     : false
+  // Calculate colSpan: total columns minus the select column (which is always 1)
+  const colSpan = columnCount > 1 ? columnCount - 1 : 99
   return (
     <TableHeader ref={ref} className={className}>
       <TableRow className="bg-gray-50 transition-colors">
-        <TableHead className="w-12 px-4 py-2.5 [&>[role=checkbox]]:translate-y-[2px]">
+        <TableHead>
           <Checkbox
             checked={
               selectedCount === 0 
@@ -557,13 +561,13 @@ const DataTableSelectionHeader = React.forwardRef<HTMLTableSectionElement, {
             }}
           />
         </TableHead>
-        <TableHead colSpan={99} className="px-4 py-2.5">
-          <div className="flex items-center gap-3">
+        <TableHead colSpan={colSpan}>
+          <div className="flex items-center gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap text-sm font-medium transition-colors cursor-pointer text-foreground hover:text-accent-foreground h-7 px-2.5">
+                  <button className="inline-flex items-center justify-center gap-1 whitespace-nowrap text-sm font-medium transition-colors cursor-pointer text-foreground hover:text-accent-foreground h-6">
                     {selectedCount} selected
-                    <ChevronDown className="h-4 w-4" />
+                    <ChevronDown className="h-3.5 w-3.5" />
                   </button>
                 </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
@@ -589,14 +593,14 @@ const DataTableSelectionHeader = React.forwardRef<HTMLTableSectionElement, {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 px-2.5 text-sm"
+                    className="h-6 px-2 text-xs"
                   >
                     Export
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 px-2.5 text-sm text-red-600 hover:text-red-700 hover:border-red-300"
+                    className="h-6 px-2 text-xs text-red-600 hover:text-red-700 hover:border-red-300"
                   >
                     Delete
                   </Button>
@@ -636,7 +640,7 @@ function DataTableRow({ children, className, selected, onClick }: DataTableRowPr
   return (
     <tr 
       className={cn(
-        "border-b transition-colors hover:bg-gray-100 data-[state=selected]:bg-gray-100", // Use same background as body
+        "border-b transition-colors hover:bg-gray-100 data-[state=selected]:bg-gray-50", // Use same background as body
         selected && "bg-gray-100", // Apply selected state styling
         className
       )}
@@ -651,7 +655,7 @@ function DataTableRow({ children, className, selected, onClick }: DataTableRowPr
 function DataTableHead({ children, className, width }: DataTableHeadProps) {
   return (
     <th className={cn(
-      "text-foreground px-4 py-2.5 text-left align-middle font-medium [&:has([role=checkbox])]:pr-0 [&:has([role=checkbox])]:w-12 [&>[role=checkbox]]:translate-y-[2px]",
+      "text-foreground px-4 py-2 text-left align-middle font-medium [&:has([role=checkbox])]:pr-0 [&:has([role=checkbox])]:w-12 [&>[role=checkbox]]:translate-y-[2px]",
       width && `w-${width}`,
       className
     )}>
