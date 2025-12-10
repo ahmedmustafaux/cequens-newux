@@ -13,6 +13,20 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  optimizeDeps: {
+    exclude: ['react-circle-flags'],
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      'framer-motion',
+      'lucide-react',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-select',
+      '@radix-ui/react-tabs',
+      'sonner',
+    ],
+  },
   server: {
     port: 3000,
     // Enable history API fallback for SPA routing

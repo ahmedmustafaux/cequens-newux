@@ -7,6 +7,7 @@ import {
   pageVariants, 
   smoothTransition
 } from "@/lib/transitions"
+import { getActiveChannels } from "@/lib/channel-utils"
 import {
   Card,
   CardContent,
@@ -41,89 +42,102 @@ interface Channel {
   category: "recommended" | "other"
   color: string
   features?: string[]
+  products?: ("campaigns" | "inbox" | "API" | "Flow builder" | "AI Assist" | "Verify")[]
+  popular?: boolean
 }
 
 // Channels data
 const channels: Channel[] = [
   {
-    id: "messenger",
-    name: "Messenger",
-    description: "Give proactive help, self-service, and personal assistance via chat on your website.",
-    iconUrl: "/icons/Messenger.png",
-    status: "available",
-    category: "recommended",
-    color: "",
-    features: ["Real-time chat", "Automated responses", "Rich media support"]
-  },
-  {
-    id: "email",
-    name: "Email",
-    description: "Respond to customer queries and start conversations with email.",
-    icon: Mail,
-    status: "available",
-    category: "recommended",
-    color: "",
-    features: ["Bulk campaigns", "Templates", "Analytics"]
-  },
-  {
-    id: "phone",
-    name: "Phone",
-    description: "Initiate phone calls, video calls and screen sharing to quickly help your customers.",
-    icon: Phone,
-    status: "available",
-    category: "recommended",
-    color: "",
-    features: ["Voice calls", "Video calls", "Call recording"]
-  },
-  {
     id: "whatsapp",
     name: "WhatsApp",
-    description: "Respond to WhatsApp messages and interact with customers directly from your inbox.",
+    description: "WhatsApp Business API messaging",
     iconUrl: "/icons/WhatsApp.svg",
     status: "available",
     category: "other",
     color: "",
-    features: ["Business API", "Templates", "Media sharing"]
+    features: ["Business API", "Templates", "Media sharing"],
+    products: ["API", "inbox", "campaigns", "Flow builder", "AI Assist", "Verify"],
+    popular: true
   },
   {
     id: "instagram",
     name: "Instagram",
-    description: "Respond to Instagram messages and interact with customers directly from your inbox.",
+    description: "Instagram Direct Messages and comments",
     iconUrl: "/icons/Instagram.svg",
     status: "available",
     category: "other",
     color: "",
-    features: ["Direct messages", "Story replies", "Comments"]
+    features: ["Direct messages", "Story replies", "Comments"],
+    products: ["inbox", "AI Assist"],
+    popular: true
+  },
+  {
+    id: "messenger",
+    name: "Messenger",
+    description: "Chat with customers on your website",
+    iconUrl: "/icons/Messenger.png",
+    status: "available",
+    category: "recommended",
+    color: "",
+    features: ["Real-time chat", "Automated responses", "Rich media support"],
+    products: ["inbox", "AI Assist"]
   },
   {
     id: "sms",
     name: "SMS",
-    description: "Send text messages to customers for notifications and marketing campaigns.",
+    description: "Text messaging for notifications and campaigns",
     icon: Smartphone,
     status: "available",
     category: "other",
     color: "",
-    features: ["Bulk SMS", "Two-way messaging", "Delivery reports"]
+    features: ["Bulk SMS", "Two-way messaging", "Delivery reports"],
+    products: ["campaigns", "API", "inbox", "Flow builder", "Verify"],
+    popular: true
+  },
+  {
+    id: "email",
+    name: "Email",
+    description: "Respond to customer queries via email",
+    icon: Mail,
+    status: "available",
+    category: "recommended",
+    color: "",
+    features: ["Bulk campaigns", "Templates", "Analytics"],
+    products: ["campaigns", "Flow builder", "AI Assist"]
+  },
+  {
+    id: "phone",
+    name: "Phone",
+    description: "Voice and video calls with screen sharing",
+    icon: Phone,
+    status: "available",
+    category: "recommended",
+    color: "",
+    features: ["Voice calls", "Video calls", "Call recording"],
+    products: ["Verify", "AI Assist"]
   },
   {
     id: "rcs",
     name: "RCS",
-    description: "Rich Communication Services for enhanced messaging with media and interactive elements.",
+    description: "Rich messaging with media and interactive elements",
     icon: Send,
     status: "available",
     category: "other",
     color: "",
-    features: ["Rich media", "Interactive buttons", "Read receipts"]
+    features: ["Rich media", "Interactive buttons", "Read receipts"],
+    products: ["Flow builder", "AI Assist"]
   },
   {
     id: "push",
     name: "Push Notifications",
-    description: "Send push notifications to mobile and web app users for instant engagement.",
+    description: "Mobile and web push notifications",
     icon: Bell,
     status: "available",
     category: "other",
     color: "",
-    features: ["Mobile push", "Web push", "Segmentation"]
+    features: ["Mobile push", "Web push", "Segmentation"],
+    products: ["campaigns", "API", "Flow builder", "AI Assist"]
   },
 ]
 
@@ -132,15 +146,27 @@ export default function ChannelsPage() {
   const [isLoading, setIsLoading] = React.useState(true)
   const [activeChannels, setActiveChannels] = React.useState<string[]>([])
 
-  // Simulate initial data loading
+  // Load active channels from localStorage
   React.useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false)
-      // Simulate some active channels
-      setActiveChannels(["messenger", "email"])
+      // Load active channels from localStorage (defaults to empty array)
+      setActiveChannels(getActiveChannels())
     }, 400)
 
     return () => clearTimeout(timer)
+  }, [])
+
+  // Listen for active channels changes from other components
+  React.useEffect(() => {
+    const handleActiveChannelsChange = (event: CustomEvent) => {
+      setActiveChannels(event.detail.channelIds)
+    }
+
+    window.addEventListener('activeChannelsChanged', handleActiveChannelsChange as EventListener)
+    return () => {
+      window.removeEventListener('activeChannelsChanged', handleActiveChannelsChange as EventListener)
+    }
   }, [])
 
   const handleChannelAction = (channelId: string, isActive: boolean) => {
@@ -173,11 +199,7 @@ export default function ChannelsPage() {
       )
     }
     
-    return (
-      <Badge variant="outline" className="border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100">
-        Inactive
-      </Badge>
-    )
+    return null
   }
 
   const renderChannelIcon = (channel: Channel) => {
@@ -203,6 +225,49 @@ export default function ChannelsPage() {
     }
     
     return null
+  }
+
+  const toTitleCase = (str: string) => {
+    // If already has mixed case (like "Flow builder" or "AI Assist"), preserve it
+    if (str !== str.toLowerCase() && str !== str.toUpperCase()) {
+      return str
+    }
+    // Handle multi-word strings
+    if (str.includes(' ')) {
+      return str.split(' ').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+      ).join(' ')
+    }
+    // Single word: first letter uppercase, rest lowercase
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+  }
+
+  const renderAllBadges = (channel: Channel) => {
+    const products = channel.products || []
+    
+    if (products.length === 0) {
+      return null
+    }
+
+    // All badges are now in products array
+    const allBadges = products.map(product => toTitleCase(product))
+
+    return (
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground font-medium">Compatible with</p>
+        <div className="flex flex-wrap gap-2">
+          {allBadges.map((badge) => (
+            <Badge
+              key={badge}
+              variant="secondary"
+              className="text-xs px-2 py-0.5 h-5 bg-gray-100 text-gray-700 border-gray-200"
+            >
+              {badge}
+            </Badge>
+          ))}
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -260,24 +325,22 @@ export default function ChannelsPage() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1.5">
                                 <CardTitle className="text-base">{channel.name}</CardTitle>
+                                {channel.popular && (
+                                  <Badge variant="outline" className="border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100 text-xs">
+                                    Popular
+                                  </Badge>
+                                )}
                                 {getStatusBadge(channel)}
                               </div>
-                              <CardDescription className="line-clamp-1 text-xs">
+                              <CardDescription className="truncate text-xs">
                                 {channel.description}
                               </CardDescription>
                             </div>
                           </div>
                         </CardHeader>
-                        {channel.features && (
+                        {renderAllBadges(channel) && (
                           <CardContent>
-                            <div className="space-y-1">
-                              {channel.features.slice(0, 2).map((feature, idx) => (
-                                <div key={idx} className="flex items-center gap-2 text-xs text-muted-foreground">
-                                  <div className="w-1 h-1 rounded-full bg-primary" />
-                                  {feature}
-                                </div>
-                              ))}
-                            </div>
+                            {renderAllBadges(channel)}
                           </CardContent>
                         )}
                       </Card>
@@ -306,24 +369,22 @@ export default function ChannelsPage() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1.5">
                               <CardTitle className="text-base">{channel.name}</CardTitle>
+                              {channel.popular && (
+                                <Badge variant="outline" className="border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100 text-xs">
+                                  Popular
+                                </Badge>
+                              )}
                               {getStatusBadge(channel)}
                             </div>
-                            <CardDescription className="line-clamp-1 text-xs">
+                            <CardDescription className="truncate text-xs">
                               {channel.description}
                             </CardDescription>
                           </div>
                         </div>
                       </CardHeader>
-                      {channel.features && (
+                      {renderAllBadges(channel) && (
                         <CardContent>
-                          <div className="space-y-1">
-                            {channel.features.slice(0, 2).map((feature, idx) => (
-                              <div key={idx} className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <div className="w-1 h-1 rounded-full bg-primary" />
-                                {feature}
-                              </div>
-                            ))}
-                          </div>
+                          {renderAllBadges(channel)}
                         </CardContent>
                       )}
                     </Card>

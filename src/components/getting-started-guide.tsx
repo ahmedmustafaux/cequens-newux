@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge"
 import { smoothTransition } from "@/lib/transitions"
 import { cn } from "@/lib/utils"
 import { Alert } from "./ui/alert"
+import { hasActiveChannels } from "@/lib/channel-utils"
 import {
   Tooltip,
   TooltipContent,
@@ -81,9 +82,19 @@ export function GettingStartedGuide({
   const [completedSteps, setCompletedSteps] = useState<Set<string>>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_COMPLETED)
-      return saved ? new Set(JSON.parse(saved)) : new Set()
+      const savedSteps = saved ? new Set(JSON.parse(saved)) : new Set()
+      // Automatically mark step-1-1 as completed if any channel is active
+      if (hasActiveChannels()) {
+        savedSteps.add("step-1-1")
+      }
+      return savedSteps
     } catch {
-      return new Set()
+      const steps = new Set<string>()
+      // Automatically mark step-1-1 as completed if any channel is active
+      if (hasActiveChannels()) {
+        steps.add("step-1-1")
+      }
+      return steps
     }
   })
 
@@ -104,6 +115,30 @@ export function GettingStartedGuide({
       console.error('Failed to save completed steps:', error)
     }
   }, [completedSteps, STORAGE_KEY_COMPLETED])
+
+  // Listen for active channels changes and update step-1-1 completion
+  useEffect(() => {
+    const handleActiveChannelsChange = () => {
+      const hasActive = hasActiveChannels()
+      setCompletedSteps(prev => {
+        const newSet = new Set(prev)
+        if (hasActive) {
+          newSet.add("step-1-1")
+        } else {
+          newSet.delete("step-1-1")
+        }
+        return newSet
+      })
+    }
+
+    window.addEventListener('activeChannelsChanged', handleActiveChannelsChange)
+    // Check on mount as well
+    handleActiveChannelsChange()
+    
+    return () => {
+      window.removeEventListener('activeChannelsChanged', handleActiveChannelsChange)
+    }
+  }, [])
 
   // Save minimized state to localStorage whenever it changes
   useEffect(() => {

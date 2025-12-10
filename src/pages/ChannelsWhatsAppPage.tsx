@@ -15,6 +15,15 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   CheckCircle2,
   ExternalLink,
@@ -40,9 +49,19 @@ import {
   PlayCircle,
   ChevronDown,
   Plus,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react"
 import { toast } from "sonner"
 import { CircleFlag } from "react-circle-flags"
+import { 
+  addActiveChannel, 
+  removeActiveChannel, 
+  saveWhatsAppConfig, 
+  loadWhatsAppConfig, 
+  clearWhatsAppConfig,
+  type WhatsAppConfig 
+} from "@/lib/channel-utils"
 
 interface ResourceLink {
   id: string
@@ -71,13 +90,22 @@ export default function ChannelsWhatsAppPage() {
   const [isLoading, setIsLoading] = React.useState(true)
   const [showAccessToken, setShowAccessToken] = React.useState(false)
   const [showWebhookToken, setShowWebhookToken] = React.useState(false)
+  const [showApiToken, setShowApiToken] = React.useState(false)
   const [isAuthenticating, setIsAuthenticating] = React.useState(false)
   const [expandedNumbers, setExpandedNumbers] = React.useState<Set<string>>(new Set())
+  const [showRevokeDialog, setShowRevokeDialog] = React.useState(false)
+  const [revokeConfirmation, setRevokeConfirmation] = React.useState("")
+  const [showDisconnectDialog, setShowDisconnectDialog] = React.useState(false)
+  const [disconnectConfirmation, setDisconnectConfirmation] = React.useState("")
+  
+  // Track if we're in initial load to prevent saving during restore
+  const isInitialLoad = React.useRef(true)
   
   // Form state
   const [formData, setFormData] = React.useState({
     businessAccountId: "",
     accessToken: "",
+    apiToken: "",
     webhookUrl: "",
     webhookVerifyToken: "",
     about: "",
@@ -146,12 +174,56 @@ export default function ChannelsWhatsAppPage() {
     },
   ]
 
+  // Load saved configuration on mount - check if channel is active first
   React.useEffect(() => {
     const timer = setTimeout(() => {
+      // Check if WhatsApp channel is active (has been successfully configured)
+      const savedConfig = loadWhatsAppConfig()
+      if (savedConfig && savedConfig.formData.businessAccountId) {
+        // Restore the full configuration
+        setFormData(savedConfig.formData)
+        setPhoneNumbers(savedConfig.phoneNumbers || [])
+      }
       setIsLoading(false)
+      // Mark initial load as complete after a short delay to allow state to settle
+      setTimeout(() => {
+        isInitialLoad.current = false
+      }, 100)
     }, 400)
     return () => clearTimeout(timer)
   }, [])
+
+  // Save configuration to localStorage whenever it changes
+  // This ensures the configuration persists across browser sessions
+  React.useEffect(() => {
+    // Skip saving during initial load (when restoring from cache)
+    if (isInitialLoad.current) {
+      return
+    }
+    
+    // Only save if we have a businessAccountId (indicates successful integration)
+    // This will persist the configuration for future sessions
+    if (formData.businessAccountId) {
+      saveWhatsAppConfig({
+        formData,
+        phoneNumbers
+      })
+    }
+    // Note: We don't clear config here - only on explicit disconnect
+  }, [formData, phoneNumbers])
+
+  // Mark channel as active when configuration is complete
+  React.useEffect(() => {
+    // Channel is successfully configured when:
+    // 1. Meta Business Account is authenticated (businessAccountId exists)
+    // 2. At least one phone number is added
+    if (formData.businessAccountId && phoneNumbers.length > 0) {
+      addActiveChannel("whatsapp")
+    } else {
+      // Remove channel if configuration is incomplete
+      removeActiveChannel("whatsapp")
+    }
+  }, [formData.businessAccountId, phoneNumbers.length])
 
 
   const handleInputChange = (field: string, value: string) => {
@@ -160,14 +232,7 @@ export default function ChannelsWhatsAppPage() {
 
   const handleCopy = (text: string, label: string) => {
     navigator.clipboard.writeText(text)
-    toast.success(`${label} copied to clipboard`)
-  }
-
-  const handleTestConnection = () => {
-    toast.info("Testing connection...")
-    setTimeout(() => {
-      toast.success("Connection successful!")
-    }, 1500)
+    toast.success("Copied!")
   }
 
   const handleResourceClick = (resource: ResourceLink) => {
@@ -234,7 +299,7 @@ export default function ChannelsWhatsAppPage() {
                 {/* Not authenticated state */}
                 {!formData.businessAccountId && (
                   <div className="space-y-4">
-                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                    <div className="rounded-lg border border-gray-200 bg-white p-4">
                       <div className="flex gap-3">
                         <AlertCircle className="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" />
                         <div className="space-y-2">
@@ -291,7 +356,8 @@ export default function ChannelsWhatsAppPage() {
                           setTimeout(() => {
                             setFormData(prev => ({ 
                               ...prev, 
-                              businessAccountId: "123456789012345"
+                              businessAccountId: "123456789012345",
+                              apiToken: `ceq_${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`
                             }))
                             // Add initial phone number
                             const phoneData = generatePhoneNumber("+20", "eg")
@@ -308,8 +374,24 @@ export default function ChannelsWhatsAppPage() {
                               messagesReceived24h: 189,
                               deliveryRate: 98.5
                             }
+                            const newFormData = {
+                              businessAccountId: "123456789012345",
+                              accessToken: "",
+                              apiToken: `ceq_${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`,
+                              webhookUrl: "",
+                              webhookVerifyToken: "",
+                              about: "",
+                            }
+                            setFormData(prev => ({ ...prev, ...newFormData }))
                             setPhoneNumbers([initialPhoneNumber])
                             setIsAuthenticating(false)
+                            // Save configuration immediately to persist across sessions
+                            saveWhatsAppConfig({
+                              formData: { ...formData, ...newFormData },
+                              phoneNumbers: [initialPhoneNumber]
+                            })
+                            // Mark WhatsApp channel as active since configuration is complete
+                            addActiveChannel("whatsapp")
                             toast.success("Successfully connected to Meta Business Account")
                           }, 2000) // Simulate 2 second OAuth redirect delay
                         }}
@@ -356,7 +438,7 @@ export default function ChannelsWhatsAppPage() {
                 {/* Authenticated state */}
                 {formData.businessAccountId && (
                   <div className="space-y-4">
-                    <div className="space-y-4 p-4 rounded-lg border border-gray-200">
+                    <div className="space-y-4 p-4 rounded-lg border border-gray-200 bg-white">
                       <div className="flex items-start justify-between">
                         <div className="space-y-1">
                           <p className="text-sm font-medium">Account Name</p>
@@ -399,11 +481,7 @@ export default function ChannelsWhatsAppPage() {
                         </Button>
                         <Button 
                           variant="outline" 
-                          onClick={() => {
-                            setFormData(prev => ({ ...prev, businessAccountId: "" }))
-                            setPhoneNumbers([])
-                            toast.info("Disconnected from Meta Business Account")
-                          }}
+                          onClick={() => setShowDisconnectDialog(true)}
                         >
                           Disconnect
                         </Button>
@@ -419,13 +497,17 @@ export default function ChannelsWhatsAppPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <MessageSquare className="w-5 h-5 text-gray-600" />
+                    <img 
+                      src="/icons/WhatsApp.svg" 
+                      alt="WhatsApp" 
+                      className="w-5 h-5" 
+                    />
                     <CardTitle>WhatsApp Channel Status</CardTitle>
                   </div>
                   {formData.businessAccountId && phoneNumbers.length > 0 && (
                     <Button 
                       size="sm" 
-                      variant="outline"
+                      variant="secondary"
                       onClick={() => {
                         // Determine which number to add based on current count
                         // First number (index 0): Vodafone Support (already added on auth)
@@ -455,12 +537,20 @@ export default function ChannelsWhatsAppPage() {
                           messagesReceived24h: Math.floor(Math.random() * 400),
                           deliveryRate: Math.random() * 5 + 95
                         }
-                        setPhoneNumbers(prev => [...prev, newNumber])
+                        const updatedPhoneNumbers = [...phoneNumbers, newNumber]
+                        setPhoneNumbers(updatedPhoneNumbers)
+                        // Save configuration immediately to persist across sessions
+                        saveWhatsAppConfig({
+                          formData,
+                          phoneNumbers: updatedPhoneNumbers
+                        })
+                        // Mark WhatsApp channel as active since configuration is complete
+                        addActiveChannel("whatsapp")
                         toast.success("Phone number added successfully")
                       }}
                     >
                       <Plus className="w-4 h-4 mr-2" />
-                      Add Number from Meta
+                      Add new number
                     </Button>
                   )}
                 </div>
@@ -471,7 +561,7 @@ export default function ChannelsWhatsAppPage() {
               <CardContent className="space-y-4">
                 {/* No phone numbers */}
                 {phoneNumbers.length === 0 && (
-                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
+                  <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
                     <Phone className="w-8 h-8 text-gray-400 mx-auto mb-3" />
                     <p className="text-sm font-medium text-gray-900 mb-1">
                       No Phone Numbers Configured
@@ -505,7 +595,15 @@ export default function ChannelsWhatsAppPage() {
                             messagesReceived24h: 189,
                             deliveryRate: 98.5
                           }
-                          setPhoneNumbers([newNumber])
+                          const updatedPhoneNumbers = [newNumber]
+                          setPhoneNumbers(updatedPhoneNumbers)
+                          // Save configuration immediately to persist across sessions
+                          saveWhatsAppConfig({
+                            formData,
+                            phoneNumbers: updatedPhoneNumbers
+                          })
+                          // Mark WhatsApp channel as active since configuration is complete
+                          addActiveChannel("whatsapp")
                           toast.success("Phone number added successfully")
                         }}
                       >
@@ -549,10 +647,9 @@ export default function ChannelsWhatsAppPage() {
                                 return newSet
                               })
                             }}
-                            className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors cursor-pointer"
+                            className="w-full p-4 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
                           >
                             <div className="flex items-center gap-3 flex-1 min-w-0">
-                              <Phone className="w-4 h-4 text-gray-600 flex-shrink-0" />
                               <div className="grid grid-cols-2 gap-4 flex-1 min-w-0">
                                 <div className="flex items-center gap-2 min-w-0">
                                   <p className="text-sm font-bold truncate">
@@ -596,34 +693,36 @@ export default function ChannelsWhatsAppPage() {
                           </button>
 
                           {isExpanded && (
-                            <div className="border-t border-gray-200 p-4 space-y-4 bg-gray-50">
-                              {/* Health Status */}
-                              <div className="space-y-3">
+                            <div className="p-4 bg-white border-t border-gray-200">
+                              {/* Channel Health */}
+                              <div className="space-y-4 mb-4">
                                 <div className="flex items-center justify-between">
-                                  <h4 className="font-medium text-sm">Channel Health</h4>
-                                  <Badge className="bg-green-600">
+                                  <h4 className="text-sm font-semibold text-gray-900">Channel Health</h4>
+                                  <Badge className="bg-green-600 text-white px-2.5 py-0.5">
                                     <div className="w-1.5 h-1.5 rounded-full bg-white mr-1.5" />
                                     Healthy
                                   </Badge>
                                 </div>
 
                                 <div className="grid grid-cols-3 gap-4">
-                                  <div className="space-y-2">
-                                    <p className="text-xs text-muted-foreground">Quality Rating</p>
-                                    <div className="space-y-1">
-                                      <div className="flex items-center justify-between">
-                                        <span className={`text-sm font-semibold ${
-                                          phoneNumber.qualityRating >= 90 ? 'text-green-600' :
-                                          phoneNumber.qualityRating >= 70 ? 'text-yellow-600' : 'text-red-600'
-                                        }`}>
-                                          {phoneNumber.qualityRating >= 90 ? 'High' :
-                                           phoneNumber.qualityRating >= 70 ? 'Medium' : 'Low'}
-                                        </span>
-                                        <span className="text-xs text-muted-foreground">{phoneNumber.qualityRating}%</span>
-                                      </div>
-                                      <div className="w-full bg-gray-200 rounded-full h-2">
+                                  {/* Quality Rating */}
+                                  <div>
+                                    <p className="text-xs text-gray-500 mb-2">Quality Rating</p>
+                                    <div className="flex items-center gap-2">
+                                      <p className="text-base font-bold text-gray-600">{phoneNumber.qualityRating}%</p>
+                                      <Badge 
+                                        variant="secondary"
+                                        className={`text-xs px-1.5 py-0 h-4 ${
+                                          phoneNumber.qualityRating >= 90 ? 'bg-green-600/10 text-green-600' :
+                                          phoneNumber.qualityRating >= 70 ? 'bg-yellow-600/10 text-yellow-600' : 'bg-red-600/10 text-red-600'
+                                        }`}
+                                      >
+                                        {phoneNumber.qualityRating >= 90 ? 'High' :
+                                         phoneNumber.qualityRating >= 70 ? 'Medium' : 'Low'}
+                                      </Badge>
+                                      <div className="w-12 bg-gray-200 rounded-full h-1">
                                         <div 
-                                          className={`h-2 rounded-full ${
+                                          className={`h-1 rounded-full ${
                                             phoneNumber.qualityRating >= 90 ? 'bg-green-600' :
                                             phoneNumber.qualityRating >= 70 ? 'bg-yellow-600' : 'bg-red-600'
                                           }`}
@@ -632,42 +731,47 @@ export default function ChannelsWhatsAppPage() {
                                       </div>
                                     </div>
                                   </div>
-                                  <div className="space-y-2">
-                                    <p className="text-xs text-muted-foreground">Message Limit</p>
-                                    <p className="text-2xl font-bold">
-                                      {phoneNumber.messageLimit >= 1000 
-                                        ? `${(phoneNumber.messageLimit / 1000).toFixed(1)}K`
-                                        : phoneNumber.messageLimit}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">per day</p>
+
+                                  {/* Message Limit */}
+                                  <div>
+                                    <p className="text-xs text-gray-500 mb-2">Message Limit</p>
+                                    <div className="flex items-baseline gap-1.5">
+                                      <p className="text-base font-bold text-gray-600">
+                                        {phoneNumber.messageLimit >= 1000 
+                                          ? `${(phoneNumber.messageLimit / 1000).toFixed(1)}K`
+                                          : phoneNumber.messageLimit}
+                                      </p>
+                                      <p className="text-xs text-gray-500">per day</p>
+                                    </div>
                                   </div>
-                                  <div className="space-y-2">
-                                    <p className="text-xs text-muted-foreground">Status</p>
-                                    <p className={`text-2xl font-bold ${
-                                      phoneNumber.status === 'verified' ? 'text-green-600' :
-                                      phoneNumber.status === 'pending' ? 'text-yellow-600' : 'text-red-600'
-                                    }`}>
-                                      {phoneNumber.status === 'verified' ? '✓' :
-                                       phoneNumber.status === 'pending' ? '⏳' : '✗'}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground capitalize">
-                                      {phoneNumber.status}
-                                    </p>
+
+                                  {/* Status */}
+                                  <div>
+                                    <p className="text-xs text-gray-500 mb-2">Status</p>
+                                    <div className="flex items-center gap-1.5">
+                                      <CheckCircle2 className={`w-4 h-4 ${
+                                        phoneNumber.status === 'verified' ? 'text-green-600' :
+                                        phoneNumber.status === 'pending' ? 'text-yellow-600' : 'text-red-600'
+                                      }`} />
+                                      <span className="text-sm font-medium text-gray-600">
+                                        {statusLabels[phoneNumber.status]}
+                                      </span>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
 
                               {/* Recent Activity */}
-                              <div className="space-y-3 pt-3 border-t border-gray-200">
-                                <h4 className="font-medium text-sm">Recent Activity</h4>
+                              <div className="space-y-3 pt-4 border-t border-gray-200">
+                                <h4 className="font-medium text-sm text-gray-600">Recent Activity</h4>
                                 <div className="space-y-2">
                                   <div className="flex items-center justify-between text-sm">
                                     <span className="text-muted-foreground">Messages Sent (24h)</span>
-                                    <span className="font-semibold">{phoneNumber.messagesSent24h}</span>
+                                    <span className="font-semibold text-gray-600">{phoneNumber.messagesSent24h}</span>
                                   </div>
                                   <div className="flex items-center justify-between text-sm">
                                     <span className="text-muted-foreground">Messages Received (24h)</span>
-                                    <span className="font-semibold">{phoneNumber.messagesReceived24h}</span>
+                                    <span className="font-semibold text-gray-600">{phoneNumber.messagesReceived24h}</span>
                                   </div>
                                   <div className="flex items-center justify-between text-sm">
                                     <span className="text-muted-foreground">Delivery Rate</span>
@@ -691,141 +795,238 @@ export default function ChannelsWhatsAppPage() {
               </CardContent>
             </Card>
 
-            {/* Section 3: API Testing & Validation */}
+            {/* Section 3: API Configuration & Testing */}
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-2">
-                  <Webhook className="w-5 h-5 text-gray-600" />
-                  <CardTitle>API Testing & Validation</CardTitle>
+                  <Key className="w-5 h-5 text-gray-600" />
+                  <CardTitle>API Configuration & Testing</CardTitle>
                 </div>
                 <CardDescription>
-                  Test your WhatsApp API configuration and send test messages
+                  Manage your Cequens API token and test WhatsApp messaging integration
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {(!formData.businessAccountId || phoneNumbers.length === 0) && (
-                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-6 text-center">
+                  <div className="rounded-lg border border-gray-200 bg-white p-6 text-center">
                     <AlertCircle className="w-8 h-8 text-gray-400 mx-auto mb-3" />
                     <p className="text-sm font-medium text-gray-900 mb-1">
                       Configuration Required
                     </p>
                     <p className="text-sm text-gray-600">
-                      Complete the Meta authentication and add a phone number to access testing tools
+                      Complete the Meta authentication and add a phone number to access API configuration
                     </p>
                   </div>
                 )}
 
                 {formData.businessAccountId && phoneNumbers.length > 0 && (
                   <div className="space-y-4">
-                    {/* Connection Test */}
-                    <div className="rounded-lg border border-gray-200 p-4 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium text-sm">Connection Test</h4>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            Verify API credentials and connectivity
-                          </p>
-                        </div>
-                        <Button size="sm" onClick={handleTestConnection}>
-                          Test Connection
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Send Test Message */}
-                    <div className="rounded-lg border border-gray-200 p-4 space-y-3">
-                      <h4 className="font-medium text-sm">Send Test Message</h4>
-                      <div className="space-y-2">
-                        <Label htmlFor="testPhone" className="text-xs">
-                          Recipient Phone Number
+                    {/* API Token Section */}
+                    <div className="rounded-lg border border-gray-200 p-4 space-y-3 bg-white">
+                      <div>
+                        <Label htmlFor="apiToken" className="text-sm font-medium">
+                          API Token
                         </Label>
-                        <Input
-                          id="testPhone"
-                          placeholder="+1234567890"
-                          className="text-sm"
-                        />
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Your Cequens API token for WhatsApp Business API integration
+                        </p>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="testMessage" className="text-xs">
-                          Message
-                        </Label>
-                        <Input
-                          id="testMessage"
-                          placeholder="Hello from Cequens!"
-                          className="text-sm"
-                        />
-                      </div>
-                      <Button size="sm" className="w-full" onClick={() => toast.success("Test message sent!")}>
-                        <MessageSquare className="w-4 h-4 mr-2" />
-                        Send Test Message
-                      </Button>
-                    </div>
-
-                    {/* Webhook Validation */}
-                    <div className="rounded-lg border border-gray-200 p-4 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium text-sm">Webhook Status</h4>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {formData.webhookUrl || "Not configured"}
-                          </p>
+                      <div className="flex gap-2">
+                        <div className="flex-1 relative">
+                          <Input
+                            id="apiToken"
+                            type={showApiToken ? "text" : "password"}
+                            value={formData.apiToken}
+                            readOnly
+                            placeholder="Enter your Cequens API token"
+                            className="pr-20 font-mono text-xs"
+                          />
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                            {formData.apiToken && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 w-7 p-0"
+                                  onClick={() => setShowApiToken(!showApiToken)}
+                                >
+                                  {showApiToken ? (
+                                    <EyeOff className="w-4 h-4" />
+                                  ) : (
+                                    <Eye className="w-4 h-4" />
+                                  )}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 w-7 p-0"
+                                  onClick={() => handleCopy(formData.apiToken, "API Token")}
+                                >
+                                  <Copy className="w-4 h-4" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
                         </div>
-                        {formData.webhookUrl && (
-                          <Badge variant="outline" className="text-green-600 border-green-600">
-                            <CheckCircle2 className="w-3 h-3 mr-1" />
-                            Active
-                          </Badge>
+                        {formData.apiToken && (
+                          <Button
+                            variant="outline"
+                            size="default"
+                            onClick={() => setShowRevokeDialog(true)}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Revoke
+                          </Button>
                         )}
                       </div>
-                      {formData.webhookUrl && (
-                        <Button size="sm" variant="outline" className="w-full">
-                          Test Webhook
-                        </Button>
+                      {!formData.apiToken && (
+                        <p className="text-xs text-muted-foreground">
+                          Generate your API token from the Developers section in Cequens platform
+                        </p>
                       )}
                     </div>
 
                     <Separator />
-
-                    {/* Quick Links */}
-                    <div className="space-y-2">
-                      <p className="text-xs font-medium text-gray-900">Developer Resources</p>
-                      <div className="grid grid-cols-2 gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="text-xs justify-start"
-                          onClick={() => window.open('https://developers.facebook.com/docs/whatsapp', '_blank')}
-                        >
-                          <BookOpen className="w-3 h-3 mr-1.5" />
-                          API Docs
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="text-xs justify-start"
-                          onClick={() => window.open('https://developers.facebook.com/docs/whatsapp/api/webhooks', '_blank')}
-                        >
-                          <Webhook className="w-3 h-3 mr-1.5" />
-                          Webhooks
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="text-xs justify-start"
-                          onClick={() => toast.info("Opening API console...")}
-                        >
-                          <Key className="w-3 h-3 mr-1.5" />
-                          API Keys
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="text-xs justify-start"
-                          onClick={() => toast.info("Opening support...")}
-                        >
-                          <HelpCircle className="w-3 h-3 mr-1.5" />
-                          Support
-                        </Button>
+                    {/* API Code Snippet */}
+                    <div className="rounded-lg border border-gray-200 p-4 space-y-3 bg-white">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium text-sm">API Code Example</h4>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            Example code to send messages via WhatsApp API
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <Tabs defaultValue="curl">
+                        <TabsList className="w-fit">
+                          <TabsTrigger value="curl" className="flex-none">cURL</TabsTrigger>
+                          <TabsTrigger value="javascript" className="flex-none">JavaScript</TabsTrigger>
+                        </TabsList>
+                        
+                        <TabsContent value="curl" className="mt-3 data-[state=active]:animate-in data-[state=active]:fade-in data-[state=active]:duration-200">
+                          <div className="relative">
+                            <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-xs font-mono">
+                              <code>{`curl -X POST "https://apis.cequens.com/conversation/wab/v1/messages/" \\
+  -H "Authorization: ${formData.apiToken || 'YOUR_API_TOKEN'}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "to": "${phoneNumbers[0]?.phoneNumber || 'RECIPIENT_PHONE_NUMBER'}",
+    "type": "text",
+    "text": {
+      "body": "Hello from Cequens!"
+    }
+  }'`}</code>
+                            </pre>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="absolute top-2 right-2 bg-gray-800 hover:bg-gray-700 text-gray-100 border-gray-700"
+                              onClick={() => {
+                                const codeSnippet = `curl -X POST "https://apis.cequens.com/conversation/wab/v1/messages/" \\
+  -H "Authorization: ${formData.apiToken || 'YOUR_API_TOKEN'}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "to": "${phoneNumbers[0]?.phoneNumber || 'RECIPIENT_PHONE_NUMBER'}",
+    "type": "text",
+    "text": {
+      "body": "Hello from Cequens!"
+    }
+  }'`
+                                handleCopy(codeSnippet, "cURL code snippet")
+                              }}
+                            >
+                              <Copy className="w-3 h-3 mr-1.5" />
+                              Copy
+                            </Button>
+                          </div>
+                        </TabsContent>
+                        
+                        <TabsContent value="javascript" className="mt-3 data-[state=active]:animate-in data-[state=active]:fade-in data-[state=active]:duration-200">
+                          <div className="relative">
+                            <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-xs font-mono">
+                              <code>{`const sendWhatsAppMessage = async () => {
+  const apiToken = "${formData.apiToken || 'YOUR_API_TOKEN'}";
+  const recipient = "${phoneNumbers[0]?.phoneNumber || 'RECIPIENT_PHONE_NUMBER'}";
+  
+  const response = await fetch(
+    'https://apis.cequens.com/conversation/wab/v1/messages/',
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': apiToken,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        to: recipient,
+        type: 'text',
+        text: {
+          body: 'Hello from Cequens!'
+        }
+      })
+    }
+  );
+  
+  const data = await response.json();
+  return data;
+};`}</code>
+                            </pre>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="absolute top-2 right-2 bg-gray-800 hover:bg-gray-700 text-gray-100 border-gray-700"
+                              onClick={() => {
+                                const codeSnippet = `const sendWhatsAppMessage = async () => {
+  const apiToken = "${formData.apiToken || 'YOUR_API_TOKEN'}";
+  const recipient = "${phoneNumbers[0]?.phoneNumber || 'RECIPIENT_PHONE_NUMBER'}";
+  
+  const response = await fetch(
+    'https://apis.cequens.com/conversation/wab/v1/messages/',
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': apiToken,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        to: recipient,
+        type: 'text',
+        text: {
+          body: 'Hello from Cequens!'
+        }
+      })
+    }
+  );
+  
+  const data = await response.json();
+  return data;
+};`
+                                handleCopy(codeSnippet, "JavaScript code snippet")
+                              }}
+                            >
+                              <Copy className="w-3 h-3 mr-1.5" />
+                              Copy
+                            </Button>
+                          </div>
+                        </TabsContent>
+                      </Tabs>
+                      
+                      <div className="space-y-2 text-xs text-muted-foreground pt-2 border-t border-gray-200">
+                        <p className="font-medium text-gray-900">Required Fields:</p>
+                        <ul className="space-y-1 ml-4 list-disc">
+                          <li><code className="bg-gray-100 px-1 py-0.5 rounded">YOUR_API_TOKEN</code> - Your Cequens API token (get it from the Developers section)</li>
+                          <li><code className="bg-gray-100 px-1 py-0.5 rounded">to</code> - Recipient's phone number in E.164 format (e.g., +201234567890)</li>
+                          <li><code className="bg-gray-100 px-1 py-0.5 rounded">type</code> - Message type (e.g., "text")</li>
+                          <li><code className="bg-gray-100 px-1 py-0.5 rounded">body</code> - Message content (max 4096 characters)</li>
+                        </ul>
+                        <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                          <p className="font-medium text-amber-900 mb-1">⚠️ Important Notes:</p>
+                          <ul className="space-y-1 ml-4 list-disc text-amber-800">
+                            <li>Text messages can only be sent within 24 hours of the customer's last message</li>
+                            <li>Use message templates to reach customers outside the 24-hour window</li>
+                            <li>API endpoint: <code className="bg-amber-100 px-1 py-0.5 rounded">https://apis.cequens.com/conversation/wab/v1/messages/</code></li>
+                          </ul>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -875,6 +1076,164 @@ export default function ChannelsWhatsAppPage() {
           </div>
         </motion.div>
       )}
+
+      {/* Disconnect Dialog */}
+      <Dialog open={showDisconnectDialog} onOpenChange={setShowDisconnectDialog}>
+        <DialogContent className="sm:max-w-lg p-0 gap-0">
+          <DialogHeader className="p-4">
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-600" />
+              Disconnect Meta Business Account
+            </DialogTitle>
+            <DialogDescription className="mt-2">
+              Are you sure you want to disconnect your Meta Business Account? 
+              This will remove all WhatsApp channel configurations and you'll need to reconnect to use WhatsApp Business API again.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="p-4 space-y-4">
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="space-y-1 flex-1">
+                  <p className="text-sm text-amber-900 font-semibold">Warning</p>
+                  <p className="text-sm text-amber-800 leading-relaxed">
+                    Disconnecting will immediately stop all WhatsApp messaging capabilities. 
+                    All configured phone numbers and API tokens will be removed.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="disconnectConfirm" className="text-sm font-medium">
+                Type <code className="bg-gray-100 px-2 py-1 rounded font-mono text-xs">disconnect</code> to confirm:
+              </Label>
+              <Input
+                id="disconnectConfirm"
+                value={disconnectConfirmation}
+                onChange={(e) => setDisconnectConfirmation(e.target.value)}
+                placeholder="Type 'disconnect' to confirm"
+                className="font-mono"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="px-4 py-4 border-t gap-3">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowDisconnectDialog(false)
+                setDisconnectConfirmation("")
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (disconnectConfirmation.toLowerCase() === "disconnect") {
+                  setFormData(prev => ({ ...prev, businessAccountId: "", apiToken: "" }))
+                  setPhoneNumbers([])
+                  // Remove WhatsApp channel from active channels
+                  removeActiveChannel("whatsapp")
+                  // Clear saved configuration
+                  clearWhatsAppConfig()
+                  setShowDisconnectDialog(false)
+                  setDisconnectConfirmation("")
+                  toast.info("Disconnected from Meta Business Account")
+                } else {
+                  toast.error("Please type 'disconnect' to confirm")
+                }
+              }}
+              disabled={disconnectConfirmation.toLowerCase() !== "disconnect"}
+            >
+              Disconnect
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Revoke API Token Dialog */}
+      <Dialog open={showRevokeDialog} onOpenChange={setShowRevokeDialog}>
+        <DialogContent className="sm:max-w-lg p-0 gap-0">
+          <DialogHeader className="p-4">
+            <DialogTitle className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-destructive" />
+              Revoke API Token
+            </DialogTitle>
+            <DialogDescription className="mt-2">
+              This action will revoke your current API token and generate a new one. 
+              Any applications using the current token will stop working until you update them with the new token.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="p-4 space-y-4">
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="space-y-1 flex-1">
+                  <p className="text-sm text-amber-900 font-semibold">Warning</p>
+                  <p className="text-sm text-amber-800 leading-relaxed">
+                    Revoking your API token will immediately invalidate the current token. 
+                    Make sure to update all integrations using this token before proceeding.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="revokeConfirm" className="text-sm font-medium">
+                Type <code className="bg-gray-100 px-2 py-1 rounded font-mono text-xs">revoke</code> to confirm:
+              </Label>
+              <Input
+                id="revokeConfirm"
+                value={revokeConfirmation}
+                onChange={(e) => setRevokeConfirmation(e.target.value)}
+                placeholder="Type 'revoke' to confirm"
+                className="font-mono"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="px-4 py-4 border-t gap-3">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowRevokeDialog(false)
+                setRevokeConfirmation("")
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (revokeConfirmation.toLowerCase() === "revoke") {
+                  // Generate new token
+                  const newToken = `ceq_${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`
+                  const updatedFormData = { ...formData, apiToken: newToken }
+                  setFormData(updatedFormData)
+                  // Save updated configuration immediately to persist across sessions
+                  saveWhatsAppConfig({
+                    formData: updatedFormData,
+                    phoneNumbers
+                  })
+                  setShowRevokeDialog(false)
+                  setRevokeConfirmation("")
+                  toast.success("API Token revoked and regenerated successfully")
+                } else {
+                  toast.error("Please type 'revoke' to confirm")
+                }
+              }}
+              disabled={revokeConfirmation.toLowerCase() !== "revoke"}
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Revoke & Regenerate
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageWrapper>
   )
 }
