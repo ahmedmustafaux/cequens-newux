@@ -531,7 +531,7 @@ const ContactsPageContent = (): React.JSX.Element => {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-6 px-2 text-xs text-red-600 hover:text-red-700 hover:border-red-300"
+                    className="h-6 px-2 text-xs text-destructive hover:text-destructive/90 hover:border-border-destructive"
                     onClick={() => {
                       setShowArchiveDialog(true)
                     }}
@@ -612,7 +612,7 @@ const ContactsPageContent = (): React.JSX.Element => {
           </DialogHeader>
           
           <div className="p-4 space-y-4">
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+            <div className="rounded-lg border border-warning/30 bg-warning/10 p-3">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div className="space-y-1 flex-1">

@@ -75,9 +75,9 @@ export function FilterSelect({
           className={cn(
             "justify-between font-normal h-10 sm:h-9 px-3",
             "min-w-fit w-auto max-w-[300px]",
-            "border-dashed border border-gray-300",
-            "bg-white hover:bg-muted/50 hover:border-gray-400",
-            "text-black hover:text-black",
+            "border-dashed border border-border",
+            "bg-background hover:bg-muted/50 hover:border-border",
+            "text-foreground hover:text-foreground",
             className
           )}
         >
@@ -95,7 +95,7 @@ export function FilterSelect({
                       <Badge
                         key={value}
                         variant="secondary"
-                        className="flex items-center gap-2 px-2 py-0.5 text-xs h-5 border border-gray-300"
+                        className="flex items-center gap-2 px-2 py-0.5 text-xs h-5 border border-border"
                       >
                         <span className="truncate max-w-[80px]">{option?.label || value}</span>
                         <Button
@@ -113,7 +113,7 @@ export function FilterSelect({
                   <>
                     <Badge
                       variant="secondary"
-                      className="flex items-center gap-2 px-2 py-0.5 text-xs h-5 border border-gray-300"
+                      className="flex items-center gap-2 px-2 py-0.5 text-xs h-5 border border-border"
                     >
                       <span className="truncate max-w-[80px]">
                         {options.find(opt => opt.value === selectedValues[0])?.label || selectedValues[0]}
@@ -149,7 +149,7 @@ export function FilterSelect({
                 <div>
                   <Field>
                     <FieldContent>
-                      <InputGroup className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none">
+                      <InputGroup className="border-0 bg-background focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none">
                         <InputGroupAddon>
                           <Search className="h-3 w-3" />
                         </InputGroupAddon>

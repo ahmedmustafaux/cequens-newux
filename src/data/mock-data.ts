@@ -908,17 +908,17 @@ export const getDashboardMetrics = (): DashboardMetrics => {
 export const conversationStatusConfig = {
   unassigned: { 
     label: "Unassigned", 
-    color: "bg-gray-100 text-gray-800 border-gray-200",
+    color: "bg-muted text-muted-foreground border-border-muted",
     icon: "AlertCircle"
   },
   assigned: { 
     label: "Assigned", 
-    color: "bg-blue-100 text-blue-800 border-blue-200",
+    color: "bg-info/10 text-info-foreground border-border-info",
     icon: "CheckCircle"
   },
   closed: { 
     label: "Closed", 
-    color: "bg-green-100 text-green-800 border-green-200",
+    color: "bg-success/10 text-success-foreground border-border-success",
     icon: "XCircle"
   }
 };
@@ -926,10 +926,10 @@ export const conversationStatusConfig = {
 export const assigneeConfig = {
   available: { 
     label: "Available", 
-    color: "bg-green-100 text-green-800 border-green-200"
+    color: "bg-success/10 text-success-foreground border-border-success"
   },
   unavailable: { 
     label: "Unavailable", 
-    color: "bg-gray-100 text-gray-800 border-gray-200"
+    color: "bg-muted text-muted-foreground border-border-muted"
   }
 };

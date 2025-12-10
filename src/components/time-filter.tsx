@@ -358,7 +358,7 @@ export function TimeFilter({
                           <span className={isActive ? "font-medium" : ""}>{shortcut.label}</span>
                           {isActive && <Check className="h-3 w-3" />}
                         </Button>
-                        {index === 1 && <div className="my-2 border-t border-border" />}
+                        {index === 1 && <div className="my-2 border-t border-border-muted" />}
                       </div>
                     )
                   })}
@@ -386,7 +386,7 @@ export function TimeFilter({
           </div>
           
           {/* Apply/Cancel Buttons */}
-          <div className="flex justify-end gap-2 p-3 border-t">
+          <div className="flex justify-end gap-2 p-3 border-t border-border">
             <Button
               variant="outline"
               size="sm"

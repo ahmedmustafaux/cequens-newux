@@ -14,7 +14,7 @@ export function Highlight({
   searchTerm, 
   columnId, 
   className = "",
-  highlightClassName = "bg-yellow-200 text-yellow-900 px-0.5 py-0.5 rounded-sm font-medium"
+  highlightClassName = "bg-warning/20 text-warning-foreground px-0.5 py-0.5 rounded-sm font-medium"
 }: HighlightProps) {
   const { getSearchTerm } = useSearch()
   
@@ -66,7 +66,7 @@ export function AutoHighlight({
   text, 
   columnId, 
   className = "",
-  highlightClassName = "bg-yellow-200 text-yellow-900 px-0.5 py-0.5 rounded-sm font-medium"
+  highlightClassName = "bg-warning/20 text-warning-foreground px-0.5 py-0.5 rounded-sm font-medium"
 }: AutoHighlightProps) {
   return (
     <Highlight 

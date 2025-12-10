@@ -469,7 +469,7 @@ export default function PhoneVerificationPage() {
 
   return (
     <>
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden w-full max-w-lg mx-auto">
+      <div className="bg-card rounded-2xl shadow-lg overflow-hidden w-full max-w-lg mx-auto border border-border">
         <div className="w-full p-6">
           {/* Logo/Brand */}
           <div className="text-left mb-6 sm:mb-8">
@@ -517,7 +517,7 @@ export default function PhoneVerificationPage() {
                                 "justify-between font-normal h-9 px-3",
                                 "w-[130px] rounded-r-none border-r-0",
                                 "bg-transparent hover:bg-muted/50",
-                                "text-black hover:text-black"
+                                "text-foreground hover:text-foreground"
                               )}
                             >
                               <div className="flex items-center gap-2">

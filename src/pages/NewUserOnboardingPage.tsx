@@ -326,7 +326,7 @@ export default function NewUserOnboardingPage() {
   // Show wizard after template selection or industry overview
   return (
     <div className="min-h-screen flex items-start justify-center p-4 pt-24">
-      <Card className="w-full max-w-2xl shadow-lg bg-white rounded-2xl overflow-hidden fixed top-16 z-10">
+      <Card className="w-full max-w-2xl shadow-lg bg-card rounded-2xl overflow-hidden fixed top-16 z-10">
         <CardContent className="p-4">
           {!isCompleted ? (
             <motion.div
@@ -346,12 +346,12 @@ export default function NewUserOnboardingPage() {
                       className={`h-1 flex-1 rounded-full ${
                         index <= currentStep
                           ? "bg-primary"
-                          : "bg-gray-200"
+                          : "bg-muted"
                       }`}
                     />
                   ))}
                 </div>
-                <span className="ml-3 text-xs text-gray-500">
+                <span className="ml-3 text-xs text-muted-foreground">
                   Step {currentStep + 1} of {activeSteps.length}
                 </span>
               </div>
@@ -399,7 +399,7 @@ export default function NewUserOnboardingPage() {
                         className="flex flex-col items-center"
                       >
                         <div className="w-full cursor-pointer group">
-                          <div className="relative w-full aspect-video bg-gray-100 rounded-md overflow-hidden flex items-center justify-center transition-colors group-hover:bg-muted/60 group-hover:ring-1 group-hover:ring-primary">
+                          <div className="relative w-full aspect-video bg-muted rounded-md overflow-hidden flex items-center justify-center transition-colors group-hover:bg-muted/60 group-hover:ring-1 group-hover:ring-primary">
                             <div className="w-full h-full p-2">
                               <div className={`
                                 overflow-hidden w-full h-full bg-background/80 rounded-sm border border-border/50 relative
@@ -409,7 +409,7 @@ export default function NewUserOnboardingPage() {
                                 {option.id === "usage-1" && (
                                   <>
                                     {/* API Integrations (Developers) */}
-                                    <div className="absolute top-0 left-0 right-0 h-1.5 bg-gray-200"></div>
+                                    <div className="absolute top-0 left-0 right-0 h-1.5 bg-muted"></div>
                                     
                                     {/* Code/API visual */}
                                     <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4/5 h-3/5">
@@ -575,8 +575,8 @@ export default function NewUserOnboardingPage() {
                           p-3 rounded-lg border cursor-pointer transition-all
                           ${
                             isOptionSelected(option.id)
-                              ? "border-primary bg-primary/5"
-                              : "border-gray-200 hover:border-gray-300"
+                              ? "border-border-primary bg-primary/5"
+                              : "border-border hover:border-border-accent"
                           }
                         `}
                       >
@@ -591,8 +591,8 @@ export default function NewUserOnboardingPage() {
                               <div 
                                 className={`h-4 w-4 rounded-full border ${
                                   isOptionSelected(option.id) 
-                                    ? "border-primary bg-primary" 
-                                    : "border-gray-300 bg-gray-100/80"
+                                    ? "border-border-primary bg-primary" 
+                                    : "border-border-muted bg-muted"
                                 } flex items-center justify-center`}
                               >
                                 {isOptionSelected(option.id) && (
@@ -649,7 +649,7 @@ export default function NewUserOnboardingPage() {
               <p className="text-muted-foreground text-sm">{currentBuildingPhrase()}</p>
 
               {/* Progress bar */}
-              <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                 <motion.div
                   className="h-full bg-primary"
                   initial={{ width: "0%" }}

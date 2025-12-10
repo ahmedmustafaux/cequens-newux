@@ -299,14 +299,14 @@ export default function ChannelsWhatsAppPage() {
                 {/* Not authenticated state */}
                 {!formData.businessAccountId && (
                   <div className="space-y-4">
-                    <div className="rounded-lg border border-gray-200 bg-white p-4">
+                    <div className="rounded-lg border border-border bg-card p-4">
                       <div className="flex gap-3">
-                        <AlertCircle className="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" />
+                        <AlertCircle className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
                         <div className="space-y-2">
-                          <p className="text-sm font-medium text-gray-900">
+                          <p className="text-sm font-medium text-foreground">
                             Authentication Required
                           </p>
-                          <p className="text-sm text-gray-700">
+                          <p className="text-sm text-muted-foreground">
                             Connect your Meta Business Account to enable WhatsApp Business API integration. You'll be redirected to Meta's secure authentication page.
                           </p>
                         </div>
@@ -314,7 +314,7 @@ export default function ChannelsWhatsAppPage() {
                     </div>
                     
                     <div className="flex flex-col items-center justify-center py-8 space-y-4">
-                      <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
+                      <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
                         <svg 
                           width="32" 
                           height="32" 
@@ -398,7 +398,7 @@ export default function ChannelsWhatsAppPage() {
                       >
                         {isAuthenticating ? (
                           <>
-                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-primary-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
@@ -419,15 +419,15 @@ export default function ChannelsWhatsAppPage() {
                       <p className="text-sm font-medium">What you'll need:</p>
                       <ul className="space-y-2 text-sm text-muted-foreground">
                         <li className="flex items-start gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-gray-600 flex-shrink-0 mt-0.5" />
+                          <CheckCircle2 className="w-4 h-4 text-foreground flex-shrink-0 mt-0.5" />
                           <span>A verified Meta Business Account</span>
                         </li>
                         <li className="flex items-start gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-gray-600 flex-shrink-0 mt-0.5" />
+                          <CheckCircle2 className="w-4 h-4 text-foreground flex-shrink-0 mt-0.5" />
                           <span>Admin access to the Business Manager</span>
                         </li>
                         <li className="flex items-start gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-gray-600 flex-shrink-0 mt-0.5" />
+                          <CheckCircle2 className="w-4 h-4 text-foreground flex-shrink-0 mt-0.5" />
                           <span>WhatsApp Business Account created in Meta</span>
                         </li>
                       </ul>
@@ -438,7 +438,7 @@ export default function ChannelsWhatsAppPage() {
                 {/* Authenticated state */}
                 {formData.businessAccountId && (
                   <div className="space-y-4">
-                    <div className="space-y-4 p-4 rounded-lg border border-gray-200 bg-white">
+                    <div className="space-y-4 p-4 rounded-lg border border-border bg-card">
                       <div className="flex items-start justify-between">
                         <div className="space-y-1">
                           <p className="text-sm font-medium">Account Name</p>
@@ -446,8 +446,8 @@ export default function ChannelsWhatsAppPage() {
                             Vodafone Business Account
                           </p>
                         </div>
-                        <Badge className="bg-green-600">
-                          <div className="w-1.5 h-1.5 rounded-full bg-white mr-1.5" />
+                        <Badge className="bg-success">
+                          <div className="w-1.5 h-1.5 rounded-full bg-success-foreground mr-1.5" />
                           Active
                         </Badge>
                       </div>
@@ -561,12 +561,12 @@ export default function ChannelsWhatsAppPage() {
               <CardContent className="space-y-4">
                 {/* No phone numbers */}
                 {phoneNumbers.length === 0 && (
-                  <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
-                    <Phone className="w-8 h-8 text-gray-400 mx-auto mb-3" />
-                    <p className="text-sm font-medium text-gray-900 mb-1">
+                  <div className="rounded-lg border border-border bg-card p-8 text-center">
+                    <Phone className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-sm font-medium text-foreground mb-1">
                       No Phone Numbers Configured
                     </p>
-                    <p className="text-sm text-gray-600 mb-4">
+                    <p className="text-sm text-muted-foreground mb-4">
                       {!formData.businessAccountId 
                         ? "Connect your Meta Business Account to add WhatsApp phone numbers"
                         : "Add a phone number from your Meta Business Account to get started"}
@@ -620,9 +620,9 @@ export default function ChannelsWhatsAppPage() {
                     {phoneNumbers.map((phoneNumber) => {
                       const isExpanded = expandedNumbers.has(phoneNumber.id)
                       const statusColors = {
-                        verified: "bg-green-600",
-                        pending: "bg-yellow-600",
-                        restricted: "bg-red-600"
+                        verified: "bg-success",
+                        pending: "bg-warning",
+                        restricted: "bg-destructive"
                       }
                       const statusLabels = {
                         verified: "Verified",
@@ -633,7 +633,7 @@ export default function ChannelsWhatsAppPage() {
                       return (
                         <div 
                           key={phoneNumber.id}
-                          className="rounded-lg border border-gray-200 overflow-hidden"
+                          className="rounded-lg border border-border overflow-hidden"
                         >
                           <button
                             onClick={() => {
@@ -647,7 +647,7 @@ export default function ChannelsWhatsAppPage() {
                                 return newSet
                               })
                             }}
-                            className="w-full p-4 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                            className="w-full p-4 flex items-center justify-between bg-muted hover:bg-accent transition-colors cursor-pointer"
                           >
                             <div className="flex items-center gap-3 flex-1 min-w-0">
                               <div className="grid grid-cols-2 gap-4 flex-1 min-w-0">
@@ -688,18 +688,18 @@ export default function ChannelsWhatsAppPage() {
                               </div>
                             </div>
                             <ChevronDown 
-                              className={`w-5 h-5 text-gray-400 transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`}
+                              className={`w-5 h-5 text-muted-foreground transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`}
                             />
                           </button>
 
                           {isExpanded && (
-                            <div className="p-4 bg-white border-t border-gray-200">
+                            <div className="p-4 bg-card border-t border-border">
                               {/* Channel Health */}
                               <div className="space-y-4 mb-4">
                                 <div className="flex items-center justify-between">
-                                  <h4 className="text-sm font-semibold text-gray-900">Channel Health</h4>
-                                  <Badge className="bg-green-600 text-white px-2.5 py-0.5">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-white mr-1.5" />
+                                  <h4 className="text-sm font-semibold text-foreground">Channel Health</h4>
+                                  <Badge className="bg-success text-success-foreground px-2.5 py-0.5">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-success-foreground mr-1.5" />
                                     Healthy
                                   </Badge>
                                 </div>
@@ -707,24 +707,24 @@ export default function ChannelsWhatsAppPage() {
                                 <div className="grid grid-cols-3 gap-4">
                                   {/* Quality Rating */}
                                   <div>
-                                    <p className="text-xs text-gray-500 mb-2">Quality Rating</p>
+                                    <p className="text-xs text-muted-foreground mb-2">Quality Rating</p>
                                     <div className="flex items-center gap-2">
-                                      <p className="text-base font-bold text-gray-600">{phoneNumber.qualityRating}%</p>
+                                      <p className="text-base font-bold text-foreground">{phoneNumber.qualityRating}%</p>
                                       <Badge 
                                         variant="secondary"
                                         className={`text-xs px-1.5 py-0 h-4 ${
-                                          phoneNumber.qualityRating >= 90 ? 'bg-green-600/10 text-green-600' :
-                                          phoneNumber.qualityRating >= 70 ? 'bg-yellow-600/10 text-yellow-600' : 'bg-red-600/10 text-red-600'
+                                          phoneNumber.qualityRating >= 90 ? 'bg-success/10 text-success' :
+                                          phoneNumber.qualityRating >= 70 ? 'bg-warning/10 text-warning-foreground' : 'bg-destructive/10 text-destructive'
                                         }`}
                                       >
                                         {phoneNumber.qualityRating >= 90 ? 'High' :
                                          phoneNumber.qualityRating >= 70 ? 'Medium' : 'Low'}
                                       </Badge>
-                                      <div className="w-12 bg-gray-200 rounded-full h-1">
+                                      <div className="w-12 bg-muted rounded-full h-1">
                                         <div 
                                           className={`h-1 rounded-full ${
-                                            phoneNumber.qualityRating >= 90 ? 'bg-green-600' :
-                                            phoneNumber.qualityRating >= 70 ? 'bg-yellow-600' : 'bg-red-600'
+                                            phoneNumber.qualityRating >= 90 ? 'bg-success' :
+                                            phoneNumber.qualityRating >= 70 ? 'bg-warning' : 'bg-destructive'
                                           }`}
                                           style={{ width: `${phoneNumber.qualityRating}%` }}
                                         />
@@ -734,26 +734,26 @@ export default function ChannelsWhatsAppPage() {
 
                                   {/* Message Limit */}
                                   <div>
-                                    <p className="text-xs text-gray-500 mb-2">Message Limit</p>
+                                    <p className="text-xs text-muted-foreground mb-2">Message Limit</p>
                                     <div className="flex items-baseline gap-1.5">
-                                      <p className="text-base font-bold text-gray-600">
+                                      <p className="text-base font-bold text-foreground">
                                         {phoneNumber.messageLimit >= 1000 
                                           ? `${(phoneNumber.messageLimit / 1000).toFixed(1)}K`
                                           : phoneNumber.messageLimit}
                                       </p>
-                                      <p className="text-xs text-gray-500">per day</p>
+                                      <p className="text-xs text-muted-foreground">per day</p>
                                     </div>
                                   </div>
 
                                   {/* Status */}
                                   <div>
-                                    <p className="text-xs text-gray-500 mb-2">Status</p>
+                                    <p className="text-xs text-muted-foreground mb-2">Status</p>
                                     <div className="flex items-center gap-1.5">
                                       <CheckCircle2 className={`w-4 h-4 ${
-                                        phoneNumber.status === 'verified' ? 'text-green-600' :
-                                        phoneNumber.status === 'pending' ? 'text-yellow-600' : 'text-red-600'
+                                        phoneNumber.status === 'verified' ? 'text-success' :
+                                        phoneNumber.status === 'pending' ? 'text-warning-foreground' : 'text-destructive'
                                       }`} />
-                                      <span className="text-sm font-medium text-gray-600">
+                                      <span className="text-sm font-medium text-foreground">
                                         {statusLabels[phoneNumber.status]}
                                       </span>
                                     </div>
@@ -762,22 +762,22 @@ export default function ChannelsWhatsAppPage() {
                               </div>
 
                               {/* Recent Activity */}
-                              <div className="space-y-3 pt-4 border-t border-gray-200">
-                                <h4 className="font-medium text-sm text-gray-600">Recent Activity</h4>
+                              <div className="space-y-3 pt-4 border-t border-border">
+                                <h4 className="font-medium text-sm text-foreground">Recent Activity</h4>
                                 <div className="space-y-2">
                                   <div className="flex items-center justify-between text-sm">
                                     <span className="text-muted-foreground">Messages Sent (24h)</span>
-                                    <span className="font-semibold text-gray-600">{phoneNumber.messagesSent24h}</span>
+                                    <span className="font-semibold text-foreground">{phoneNumber.messagesSent24h}</span>
                                   </div>
                                   <div className="flex items-center justify-between text-sm">
                                     <span className="text-muted-foreground">Messages Received (24h)</span>
-                                    <span className="font-semibold text-gray-600">{phoneNumber.messagesReceived24h}</span>
+                                    <span className="font-semibold text-foreground">{phoneNumber.messagesReceived24h}</span>
                                   </div>
                                   <div className="flex items-center justify-between text-sm">
                                     <span className="text-muted-foreground">Delivery Rate</span>
                                     <span className={`font-semibold ${
-                                      phoneNumber.deliveryRate >= 95 ? 'text-green-600' :
-                                      phoneNumber.deliveryRate >= 90 ? 'text-yellow-600' : 'text-red-600'
+                                      phoneNumber.deliveryRate >= 95 ? 'text-success' :
+                                      phoneNumber.deliveryRate >= 90 ? 'text-warning-foreground' : 'text-destructive'
                                     }`}>
                                       {phoneNumber.deliveryRate.toFixed(1)}%
                                     </span>
@@ -799,7 +799,7 @@ export default function ChannelsWhatsAppPage() {
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-2">
-                  <Key className="w-5 h-5 text-gray-600" />
+                  <Key className="w-5 h-5 text-foreground" />
                   <CardTitle>API Configuration & Testing</CardTitle>
                 </div>
                 <CardDescription>
@@ -808,12 +808,12 @@ export default function ChannelsWhatsAppPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {(!formData.businessAccountId || phoneNumbers.length === 0) && (
-                  <div className="rounded-lg border border-gray-200 bg-white p-6 text-center">
-                    <AlertCircle className="w-8 h-8 text-gray-400 mx-auto mb-3" />
-                    <p className="text-sm font-medium text-gray-900 mb-1">
+                  <div className="rounded-lg border border-border bg-card p-6 text-center">
+                    <AlertCircle className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-sm font-medium text-foreground mb-1">
                       Configuration Required
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       Complete the Meta authentication and add a phone number to access API configuration
                     </p>
                   </div>
@@ -822,7 +822,7 @@ export default function ChannelsWhatsAppPage() {
                 {formData.businessAccountId && phoneNumbers.length > 0 && (
                   <div className="space-y-4">
                     {/* API Token Section */}
-                    <div className="rounded-lg border border-gray-200 p-4 space-y-3 bg-white">
+                    <div className="rounded-lg border border-border p-4 space-y-3 bg-card">
                       <div>
                         <Label htmlFor="apiToken" className="text-sm font-medium">
                           API Token
@@ -888,7 +888,7 @@ export default function ChannelsWhatsAppPage() {
 
                     <Separator />
                     {/* API Code Snippet */}
-                    <div className="rounded-lg border border-gray-200 p-4 space-y-3 bg-white">
+                    <div className="rounded-lg border border-border p-4 space-y-3 bg-card">
                       <div className="flex items-center justify-between">
                         <div>
                           <h4 className="font-medium text-sm">API Code Example</h4>
@@ -906,7 +906,7 @@ export default function ChannelsWhatsAppPage() {
                         
                         <TabsContent value="curl" className="mt-3 data-[state=active]:animate-in data-[state=active]:fade-in data-[state=active]:duration-200">
                           <div className="relative">
-                            <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-xs font-mono">
+                            <pre className="bg-muted text-foreground p-4 rounded-lg overflow-x-auto text-xs font-mono">
                               <code>{`curl -X POST "https://apis.cequens.com/conversation/wab/v1/messages/" \\
   -H "Authorization: ${formData.apiToken || 'YOUR_API_TOKEN'}" \\
   -H "Content-Type: application/json" \\
@@ -921,7 +921,7 @@ export default function ChannelsWhatsAppPage() {
                             <Button 
                               size="sm" 
                               variant="outline"
-                              className="absolute top-2 right-2 bg-gray-800 hover:bg-gray-700 text-gray-100 border-gray-700"
+                              className="absolute top-2 right-2 bg-muted hover:bg-accent text-foreground border-border"
                               onClick={() => {
                                 const codeSnippet = `curl -X POST "https://apis.cequens.com/conversation/wab/v1/messages/" \\
   -H "Authorization: ${formData.apiToken || 'YOUR_API_TOKEN'}" \\
@@ -944,7 +944,7 @@ export default function ChannelsWhatsAppPage() {
                         
                         <TabsContent value="javascript" className="mt-3 data-[state=active]:animate-in data-[state=active]:fade-in data-[state=active]:duration-200">
                           <div className="relative">
-                            <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-xs font-mono">
+                            <pre className="bg-muted text-foreground p-4 rounded-lg overflow-x-auto text-xs font-mono">
                               <code>{`const sendWhatsAppMessage = async () => {
   const apiToken = "${formData.apiToken || 'YOUR_API_TOKEN'}";
   const recipient = "${phoneNumbers[0]?.phoneNumber || 'RECIPIENT_PHONE_NUMBER'}";
@@ -974,7 +974,7 @@ export default function ChannelsWhatsAppPage() {
                             <Button 
                               size="sm" 
                               variant="outline"
-                              className="absolute top-2 right-2 bg-gray-800 hover:bg-gray-700 text-gray-100 border-gray-700"
+                              className="absolute top-2 right-2 bg-muted hover:bg-accent text-foreground border-border"
                               onClick={() => {
                                 const codeSnippet = `const sendWhatsAppMessage = async () => {
   const apiToken = "${formData.apiToken || 'YOUR_API_TOKEN'}";
@@ -1011,20 +1011,20 @@ export default function ChannelsWhatsAppPage() {
                         </TabsContent>
                       </Tabs>
                       
-                      <div className="space-y-2 text-xs text-muted-foreground pt-2 border-t border-gray-200">
-                        <p className="font-medium text-gray-900">Required Fields:</p>
+                      <div className="space-y-2 text-xs text-muted-foreground pt-2 border-t border-border">
+                        <p className="font-medium text-foreground">Required Fields:</p>
                         <ul className="space-y-1 ml-4 list-disc">
-                          <li><code className="bg-gray-100 px-1 py-0.5 rounded">YOUR_API_TOKEN</code> - Your Cequens API token (get it from the Developers section)</li>
-                          <li><code className="bg-gray-100 px-1 py-0.5 rounded">to</code> - Recipient's phone number in E.164 format (e.g., +201234567890)</li>
-                          <li><code className="bg-gray-100 px-1 py-0.5 rounded">type</code> - Message type (e.g., "text")</li>
-                          <li><code className="bg-gray-100 px-1 py-0.5 rounded">body</code> - Message content (max 4096 characters)</li>
+                          <li><code className="bg-muted px-1 py-0.5 rounded">YOUR_API_TOKEN</code> - Your Cequens API token (get it from the Developers section)</li>
+                          <li><code className="bg-muted px-1 py-0.5 rounded">to</code> - Recipient's phone number in E.164 format (e.g., +201234567890)</li>
+                          <li><code className="bg-muted px-1 py-0.5 rounded">type</code> - Message type (e.g., "text")</li>
+                          <li><code className="bg-muted px-1 py-0.5 rounded">body</code> - Message content (max 4096 characters)</li>
                         </ul>
-                        <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                          <p className="font-medium text-amber-900 mb-1">⚠️ Important Notes:</p>
-                          <ul className="space-y-1 ml-4 list-disc text-amber-800">
+                        <div className="mt-3 p-3 bg-warning/10 border border-warning/30 rounded-lg">
+                          <p className="font-medium text-warning-foreground mb-1">⚠️ Important Notes:</p>
+                          <ul className="space-y-1 ml-4 list-disc text-warning-foreground">
                             <li>Text messages can only be sent within 24 hours of the customer's last message</li>
                             <li>Use message templates to reach customers outside the 24-hour window</li>
-                            <li>API endpoint: <code className="bg-amber-100 px-1 py-0.5 rounded">https://apis.cequens.com/conversation/wab/v1/messages/</code></li>
+                            <li>API endpoint: <code className="bg-warning/20 px-1 py-0.5 rounded">https://apis.cequens.com/conversation/wab/v1/messages/</code></li>
                           </ul>
                         </div>
                       </div>
@@ -1050,10 +1050,10 @@ export default function ChannelsWhatsAppPage() {
                     <button
                       key={resource.id}
                       onClick={() => handleResourceClick(resource)}
-                      className="w-full text-left p-3 rounded-lg border border-gray-200 hover:bg-muted/50 transition-all group cursor-pointer"
+                      className="w-full text-left p-3 rounded-lg border border-border hover:bg-muted/50 transition-all group cursor-pointer"
                     >
                       <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-md border border-gray-200 bg-muted flex items-center justify-center text-muted-foreground transition-colors flex-shrink-0">
+                        <div className="w-10 h-10 rounded-md border border-border bg-muted flex items-center justify-center text-muted-foreground transition-colors flex-shrink-0">
                           {resource.icon}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1082,7 +1082,7 @@ export default function ChannelsWhatsAppPage() {
         <DialogContent className="sm:max-w-lg p-0 gap-0">
           <DialogHeader className="p-4">
             <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-amber-600" />
+              <AlertTriangle className="w-5 h-5 text-warning-foreground" />
               Disconnect Meta Business Account
             </DialogTitle>
             <DialogDescription className="mt-2">
@@ -1092,12 +1092,12 @@ export default function ChannelsWhatsAppPage() {
           </DialogHeader>
           
           <div className="p-4 space-y-4">
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+            <div className="rounded-lg border border-warning/30 bg-warning/10 p-3">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <AlertTriangle className="w-5 h-5 text-warning-foreground flex-shrink-0 mt-0.5" />
                 <div className="space-y-1 flex-1">
-                  <p className="text-sm text-amber-900 font-semibold">Warning</p>
-                  <p className="text-sm text-amber-800 leading-relaxed">
+                  <p className="text-sm text-warning-foreground font-semibold">Warning</p>
+                  <p className="text-sm text-warning-foreground leading-relaxed">
                     Disconnecting will immediately stop all WhatsApp messaging capabilities. 
                     All configured phone numbers and API tokens will be removed.
                   </p>
@@ -1107,7 +1107,7 @@ export default function ChannelsWhatsAppPage() {
             
             <div className="space-y-2">
               <Label htmlFor="disconnectConfirm" className="text-sm font-medium">
-                Type <code className="bg-gray-100 px-2 py-1 rounded font-mono text-xs">disconnect</code> to confirm:
+                Type <code className="bg-muted px-2 py-1 rounded font-mono text-xs">disconnect</code> to confirm:
               </Label>
               <Input
                 id="disconnectConfirm"
@@ -1169,12 +1169,12 @@ export default function ChannelsWhatsAppPage() {
           </DialogHeader>
           
           <div className="p-4 space-y-4">
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+            <div className="rounded-lg border border-warning/30 bg-warning/10 p-3">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <AlertTriangle className="w-5 h-5 text-warning-foreground flex-shrink-0 mt-0.5" />
                 <div className="space-y-1 flex-1">
-                  <p className="text-sm text-amber-900 font-semibold">Warning</p>
-                  <p className="text-sm text-amber-800 leading-relaxed">
+                  <p className="text-sm text-warning-foreground font-semibold">Warning</p>
+                  <p className="text-sm text-warning-foreground leading-relaxed">
                     Revoking your API token will immediately invalidate the current token. 
                     Make sure to update all integrations using this token before proceeding.
                   </p>
@@ -1184,7 +1184,7 @@ export default function ChannelsWhatsAppPage() {
             
             <div className="space-y-2">
               <Label htmlFor="revokeConfirm" className="text-sm font-medium">
-                Type <code className="bg-gray-100 px-2 py-1 rounded font-mono text-xs">revoke</code> to confirm:
+                Type <code className="bg-muted px-2 py-1 rounded font-mono text-xs">revoke</code> to confirm:
               </Label>
               <Input
                 id="revokeConfirm"

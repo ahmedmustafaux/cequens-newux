@@ -193,7 +193,7 @@ export default function ChannelsPage() {
     
     if (isActive) {
       return (
-        <Badge variant="outline" className="border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100">
+        <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary hover:bg-primary/20">
           Active
         </Badge>
       )
@@ -205,7 +205,7 @@ export default function ChannelsPage() {
   const renderChannelIcon = (channel: Channel) => {
     if (channel.iconUrl) {
       return (
-        <div className="p-2.5 rounded-lg bg-gray-100 border border-border">
+        <div className="p-2.5 rounded-lg bg-muted border border-border">
           <img 
             src={channel.iconUrl} 
             alt={channel.name}
@@ -218,7 +218,7 @@ export default function ChannelsPage() {
     if (channel.icon) {
       const Icon = channel.icon
       return (
-        <div className="p-2.5 rounded-lg bg-gray-100 border border-border">
+        <div className="p-2.5 rounded-lg bg-muted border border-border">
           <Icon className="w-6 h-6 text-foreground" />
         </div>
       )
@@ -260,7 +260,7 @@ export default function ChannelsPage() {
             <Badge
               key={badge}
               variant="secondary"
-              className="text-xs px-2 py-0.5 h-5 bg-gray-100 text-gray-700 border-gray-200"
+              className="text-xs px-2 py-0.5 h-5 bg-muted text-foreground border-border"
             >
               {badge}
             </Badge>
@@ -326,7 +326,7 @@ export default function ChannelsPage() {
                               <div className="flex items-center gap-2 mb-1.5">
                                 <CardTitle className="text-base">{channel.name}</CardTitle>
                                 {channel.popular && (
-                                  <Badge variant="outline" className="border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100 text-xs">
+                                  <Badge variant="outline" className="border-purple-500/30 bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 dark:border-purple-400/30 dark:bg-purple-400/10 dark:hover:bg-purple-400/20">
                                     Popular
                                   </Badge>
                                 )}
@@ -370,7 +370,7 @@ export default function ChannelsPage() {
                             <div className="flex items-center gap-2 mb-1.5">
                               <CardTitle className="text-base">{channel.name}</CardTitle>
                               {channel.popular && (
-                                <Badge variant="outline" className="border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100 text-xs">
+                                <Badge variant="outline" className="border-purple-500/30 bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 dark:border-purple-400/30 dark:bg-purple-400/10 dark:hover:bg-purple-400/20">
                                   Popular
                                 </Badge>
                               )}

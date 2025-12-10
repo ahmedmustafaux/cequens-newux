@@ -11,7 +11,7 @@ export function ErrorMessage({ message, className }: ErrorMessageProps) {
   if (!message) return null
 
   return (
-    <div className={cn("flex items-center gap-1 text-sm text-red-600 mt-1", className)}>
+    <div className={cn("flex items-center gap-1 text-sm text-destructive mt-1", className)}>
       <AlertCircle className="h-3 w-3 flex-shrink-0" />
       <span>{message}</span>
     </div>

@@ -20,6 +20,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { NotificationBell } from "@/components/notification-bell"
+import { ThemeSwitcher } from "@/components/theme-switcher"
 import { ArrowLeft, Search } from "lucide-react"
 import { 
   Field, 
@@ -244,7 +245,7 @@ export function PageHeader({
   if (!title && !description) {
     return (
       <>
-        <header className="flex h-(--header-height) shrink-0 items-center border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) relative max-w-full overflow-x-hidden rounded-t-xl overflow-hidden">
+        <header className="flex h-(--header-height) shrink-0 items-center border-b border-border transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) relative max-w-full overflow-x-hidden rounded-t-xl overflow-hidden">
           <div className="flex w-full items-center px-4 lg:px-6 py-4 min-w-0">
             {/* Left side - Sidebar trigger and breadcrumbs */}
             <div className="flex items-center gap-2 sm:gap-2 flex-shrink-0">
@@ -288,7 +289,7 @@ export function PageHeader({
               {!isMobile && showSearch && (
                 <Field className="w-auto">
                   <FieldContent>
-                    <InputGroup className="bg-muted/50 border-muted-foreground/20 focus-visible:bg-background focus-visible:border-ring transition-all duration-200 cursor-pointer w-auto gap-4">
+                    <InputGroup className="bg-muted/50 border-border-muted focus-visible:bg-background focus-visible:border-ring transition-all duration-200 cursor-pointer w-auto gap-4">
                       <div className="flex items-center gap-2">
                         <InputGroupAddon>
                           <Search className="h-3.5 w-3.5" />
@@ -332,6 +333,9 @@ export function PageHeader({
                   </TooltipContent>
                 </Tooltip>
               )}
+              
+              {/* Theme Switcher */}
+              <ThemeSwitcher />
               
               {/* Notification Bell */}
               <NotificationBell />

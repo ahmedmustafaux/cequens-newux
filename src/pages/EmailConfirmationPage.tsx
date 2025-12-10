@@ -113,7 +113,7 @@ export default function EmailConfirmationPage() {
 
   return (
     <>
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden w-full max-w-lg mx-auto">
+      <div className="bg-card rounded-2xl shadow-lg overflow-hidden w-full max-w-lg mx-auto border border-border">
         <div className="w-full p-6">
           {/* Logo/Brand */}
           <div className="text-left mb-6 sm:mb-8">
@@ -135,7 +135,7 @@ export default function EmailConfirmationPage() {
               transition={smoothTransition}
               className="w-full flex flex-col items-center justify-center py-12"
             >
-              <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-blue-500 mb-4"></div>
+              <div className="h-12 w-12 animate-spin rounded-full border-4 border-border border-t-primary mb-4"></div>
               <p className="text-sm text-muted-foreground">Verifying your email...</p>
             </motion.div>
           ) : currentStep === ConfirmationStep.WAITING ? (
@@ -230,7 +230,7 @@ export default function EmailConfirmationPage() {
             >
               {isLoading ? (
                 <div className="flex items-center space-x-2">
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-500 border-t-transparent" />
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
                   <span>Verifying...</span>
                 </div>
               ) : (

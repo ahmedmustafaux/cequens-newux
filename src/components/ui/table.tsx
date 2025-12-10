@@ -5,7 +5,7 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div
       data-slot="table-container"
-      className="relative w-full overflow-x-auto bg-white"
+      className="relative w-full overflow-x-auto bg-card"
     >
       <table
         data-slot="table"
@@ -50,7 +50,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
     <tr
       data-slot="table-row"
       className={cn(
-        "border-b transition-colors",
+        "border-b",
         className
       )}
       {...props}
@@ -62,7 +62,7 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
     <th
       data-slot="table-head"
       className={cn(
-        "text-foreground h-12 px-4 py-3 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        "text-table-header-foreground h-12 px-4 py-3 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
         className
       )}
       {...props}
@@ -106,7 +106,7 @@ function TableSkeleton({
   return (
     <div
       data-slot="table-skeleton"
-      className={cn("relative w-full overflow-x-auto bg-white", className)}
+      className={cn("relative w-full overflow-x-auto bg-card", className)}
       {...props}
     >
       <table className="w-full caption-bottom text-sm">
@@ -142,7 +142,7 @@ function TableRowSkeleton({
   return (
     <tr
       data-slot="table-row-skeleton"
-      className={cn("transition-colors", className)}
+      className={cn(className)}
       {...props}
     >
       {Array.from({ length: columns }).map((_, index) => (

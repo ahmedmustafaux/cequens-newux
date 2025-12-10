@@ -31,10 +31,10 @@ export function DashboardPieChart({ timeRange, isLoading = false, isEmpty = fals
   const whatsappTotal = isEmpty ? 0 : chartData.reduce((sum, item) => sum + item.whatsapp, 0)
   const smsTotal = isEmpty ? 0 : chartData.reduce((sum, item) => sum + item.sms, 0)
 
-  // Prepare data for pie chart - using only blue colors
+  // Prepare data for pie chart - using theme colors
   const pieData = [
-    { name: 'WhatsApp', value: whatsappTotal, color: '#1d4ed8' }, // Darker blue
-    { name: 'SMS', value: smsTotal, color: '#93c5fd' }, // Lighter blue
+    { name: 'WhatsApp', value: whatsappTotal, color: 'oklch(var(--primary))' },
+    { name: 'SMS', value: smsTotal, color: 'oklch(var(--info))' },
   ]
 
   return (
@@ -44,7 +44,7 @@ export function DashboardPieChart({ timeRange, isLoading = false, isEmpty = fals
       transition={smoothTransition}
     >
       <Card className={`py-0 ${isEmpty ? "opacity-50" : ""}`}>
-        <CardHeader className="flex flex-col items-stretch border-b !p-0 sm:flex-row">
+        <CardHeader className="flex flex-col items-stretch border-b border-border !p-0 sm:flex-row">
           <div className="flex flex-1 flex-col justify-center gap-1 px-4 pt-4 pb-3 sm:!py-6">
             <CardTitle>Message Distribution</CardTitle>
             <CardDescription>
@@ -58,11 +58,11 @@ export function DashboardPieChart({ timeRange, isLoading = false, isEmpty = fals
               config={{
                 whatsapp: {
                   label: "WhatsApp",
-                  color: "#1d4ed8"
+                  color: "oklch(var(--primary))"
                 },
                 sms: {
                   label: "SMS",
-                  color: "#93c5fd"
+                  color: "oklch(var(--info))"
                 }
               }}
               className="aspect-auto h-[250px] w-full"
@@ -74,7 +74,7 @@ export function DashboardPieChart({ timeRange, isLoading = false, isEmpty = fals
                   cy="50%"
                   labelLine={false}
                   outerRadius={80}
-                  fill="#8884d8"
+                  fill="oklch(var(--primary))"
                   dataKey="value"
                 >
                   {pieData.map((entry, index) => (

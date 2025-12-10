@@ -336,9 +336,9 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
   }
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-xl p-0 gap-0 overflow-hidden h-[600px] flex flex-col bg-background border" showCloseButton={false}>
+      <DialogContent className="max-w-xl p-0 gap-0 overflow-hidden h-[600px] flex flex-col bg-background border border-border" showCloseButton={false}>
         {/* 1. Searchbar with reduced padding and bottom border */}
-        <div className="p-3 border-b border flex-shrink-0">
+        <div className="p-3 border-b border-border flex-shrink-0">
           <div className="relative">
             <Field>
               <FieldContent>
@@ -430,7 +430,7 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.03 }}
                     className={cn(
-                      "flex items-center gap-2.5 p-2 rounded-md cursor-pointer transition-colors",
+                      "flex items-center gap-2.5 p-2 rounded-md cursor-pointer",
                       selectedIndex === index ? "bg-muted" : "hover:bg-muted/100"
                     )}
                     onClick={() => handleItemClick(searchResult, index)}
@@ -438,7 +438,7 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
                     <div className={cn(
                       "h-8 w-8 rounded-md flex items-center justify-center",
                       searchResult.type === 'contact' ? "bg-muted" :
-                      searchResult.type === 'action' ? "bg-primary/10 border border-primary/20 text-primary" :
+                      searchResult.type === 'action' ? "bg-primary/10 border border-border-primary/20 text-primary" :
                       "bg-muted"
                     )}>
                       {getIcon()}
@@ -474,7 +474,7 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.03 }}
                       className={cn(
-                        "flex items-center gap-2.5 p-2 rounded-md cursor-pointer transition-colors",
+                        "flex items-center gap-2.5 p-2 rounded-md cursor-pointer",
                         selectedIndex === globalIndex ? "bg-muted" : "hover:bg-muted/100"
                       )}
                       onClick={() => handleItemClick(contact, globalIndex)}
@@ -512,12 +512,12 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.03 }}
                         className={cn(
-                          "flex items-center gap-2.5 p-2 rounded-md cursor-pointer transition-colors",
+                          "flex items-center gap-2.5 p-2 rounded-md cursor-pointer",
                           selectedIndex === globalIndex ? "bg-muted" : "hover:bg-muted/100"
                         )}
                         onClick={() => handleItemClick(action, globalIndex)}
                       >
-                        <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center border border-primary/20 text-primary">
+                        <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center border border-border-primary/20 text-primary">
                           {action.icon}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -539,7 +539,7 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
           )}
         </div>
         {/* 3. Footer with reduced padding */}
-        <div className="px-3 py-4 border-t bg-background flex items-center justify-between text-xs text-muted-foreground flex-shrink-0">
+        <div className="px-3 py-4 border-t border-border bg-background flex items-center justify-between text-xs text-muted-foreground flex-shrink-0">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1">
               <KbdGroup>

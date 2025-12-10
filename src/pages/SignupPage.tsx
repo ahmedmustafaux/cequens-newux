@@ -299,11 +299,11 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden w-full max-w-6xl mx-auto h-full max-h-[calc(100vh-2rem)]">
+    <div className="bg-card rounded-2xl shadow-lg overflow-hidden w-full max-w-6xl mx-auto h-full max-h-[calc(100vh-2rem)] border border-border">
       <div className="grid grid-cols-1 md:grid-cols-2 h-full">
           {/* Left Panel - White Background with Form */}
           <motion.div 
-            className="bg-white flex items-center justify-center p-6 h-full"
+            className="bg-card flex items-center justify-center p-6 h-full"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
@@ -373,10 +373,10 @@ export default function SignupPage() {
                 
                 <div className="relative my-2">
                   <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-gray-200"></span>
+                    <span className="w-full border-t border-border"></span>
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-2 text-muted-foreground">Or with email</span>
+                    <span className="bg-card px-2 text-muted-foreground">Or with email</span>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start content-start">
@@ -394,7 +394,7 @@ export default function SignupPage() {
                           value={formData.firstName}
                           onChange={(e) => handleInputChange("firstName", e.target.value)}
                           onBlur={() => handleBlur("firstName")}
-                          className={`${touched.firstName && errors.firstName ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
+                          className={`${touched.firstName && errors.firstName ? 'border-border-destructive focus:border-border-destructive focus:ring-destructive' : ''}`}
                           autoComplete="off"
                           autoCorrect="off"
                           autoCapitalize="off"
@@ -416,7 +416,7 @@ export default function SignupPage() {
                           value={formData.lastName}
                           onChange={(e) => handleInputChange("lastName", e.target.value)}
                           onBlur={() => handleBlur("lastName")}
-                          className={`${touched.lastName && errors.lastName ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
+                          className={`${touched.lastName && errors.lastName ? 'border-border-destructive focus:border-border-destructive focus:ring-destructive' : ''}`}
                           autoComplete="off"
                           autoCorrect="off"
                           autoCapitalize="off"
@@ -443,7 +443,7 @@ export default function SignupPage() {
                         value={formData.companyName}
                         onChange={(e) => handleInputChange("companyName", e.target.value)}
                         onBlur={() => handleBlur("companyName")}
-                        className={`${touched.companyName && errors.companyName ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
+                        className={`${touched.companyName && errors.companyName ? 'border-border-destructive focus:border-border-destructive focus:ring-destructive' : ''}`}
                         autoComplete="organization"
                         autoCorrect="off"
                         autoCapitalize="off"
@@ -469,7 +469,7 @@ export default function SignupPage() {
                         value={formData.email}
                         onChange={(e) => handleInputChange("email", e.target.value)}
                         onBlur={() => handleBlur("email")}
-                        className={`${touched.email && errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
+                        className={`${touched.email && errors.email ? 'border-border-destructive focus:border-border-destructive focus:ring-destructive' : ''}`}
                         autoComplete="email"
                         autoCorrect="off"
                         autoCapitalize="off"
@@ -498,7 +498,7 @@ export default function SignupPage() {
                           onChange={(e) => handleInputChange("password", e.target.value)}
                           onFocus={() => setPasswordFocused(true)}
                           onBlur={() => handleBlur("password")}
-                          className={`${touched.password && errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
+                          className={`${touched.password && errors.password ? 'border-border-destructive focus:border-border-destructive focus:ring-destructive' : ''}`}
                           autoComplete="new-password"
                           autoCorrect="off"
                           autoCapitalize="off"
@@ -511,7 +511,7 @@ export default function SignupPage() {
                             variant="ghost"
                             size="icon"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="h-auto w-auto p-1 hover:text-slate-600"
+                            className="h-auto w-auto p-1 hover:text-muted-foreground"
                           >
                             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                           </Button>
@@ -522,7 +522,7 @@ export default function SignupPage() {
                       {passwordFocused && (
                         <div 
                           ref={passwordStrengthRef}
-                          className="bg-white p-3 rounded-md shadow-md border border-gray-200 z-50 w-auto"
+                          className="bg-card p-3 rounded-md shadow-md border border-border z-50 w-auto"
                           style={{ 
                             position: 'fixed',
                             left: passwordInputRef.current ? 
@@ -554,7 +554,7 @@ export default function SignupPage() {
                         value={formData.confirmPassword}
                         onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
                         onBlur={() => handleBlur("confirmPassword")}
-                        className={`${touched.confirmPassword && errors.confirmPassword ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
+                        className={`${touched.confirmPassword && errors.confirmPassword ? 'border-border-destructive focus:border-border-destructive focus:ring-destructive' : ''}`}
                         autoComplete="new-password"
                         autoCorrect="off"
                         autoCapitalize="off"
@@ -583,7 +583,7 @@ export default function SignupPage() {
                     checked={formData.agreeToTerms}
                     onCheckedChange={(checked) => handleInputChange("agreeToTerms", checked as boolean)}
                     onBlur={() => handleBlur("agreeToTerms")}
-                    className={`mt-1 ${touched.agreeToTerms && errors.agreeToTerms ? 'border-red-300' : ''}`}
+                    className={`mt-1 ${touched.agreeToTerms && errors.agreeToTerms ? 'border-border-destructive' : ''}`}
                   />
                   <Label htmlFor="terms" className="text-sm text-muted-foreground leading-relaxed">
                     I agree to the{" "}
@@ -605,7 +605,7 @@ export default function SignupPage() {
                 >
                   {isLoading ? (
                     <div className="flex items-center space-x-2">
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
                       <span>Submitting...</span>
                     </div>
                   ) : (
@@ -637,7 +637,7 @@ export default function SignupPage() {
           {/* Right Panel Wrapper */}
           <div className="hidden md:block m-2 border rounded-xl overflow-hidden relative">
           <motion.div 
-            className="bg-gray-50 flex flex-col justify-between relative overflow-hidden h-full"
+            className="bg-muted flex flex-col justify-between relative overflow-hidden h-full"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -675,7 +675,7 @@ export default function SignupPage() {
                       className={`absolute inset-0 flex flex-col justify-center w-full ${index === activeStoryStep ? 'opacity-100' : 'opacity-0'}`}
                     >
                       <h2 className="text-lg font-semibold mb-1 text-center">{step.title}</h2>
-                      <p className="text-gray-600 text-sm text-center px-8 mb-2">
+                      <p className="text-muted-foreground text-sm text-center px-8 mb-2">
                         {step.description}
                       </p>
                       
@@ -684,7 +684,7 @@ export default function SignupPage() {
                         <div className="flex justify-center items-center space-x-3 mt-1">
                           <button 
                             type="button"
-                            className="bg-white/80 rounded-full p-1 shadow-sm hover:bg-white cursor-pointer z-30"
+                            className="bg-card/80 rounded-full p-1 shadow-sm hover:bg-card cursor-pointer z-30"
                             onClick={(e) => {
                               e.stopPropagation();
                               console.log(`Left arrow clicked, current step: ${activeStoryStep}`);
@@ -695,7 +695,7 @@ export default function SignupPage() {
                             disabled={activeStoryStep === 0}
                             style={{ opacity: activeStoryStep === 0 ? 0.5 : 1 }}
                           >
-                            <ChevronLeft className="h-4 w-4 text-gray-700" />
+                            <ChevronLeft className="h-4 w-4 text-foreground" />
                           </button>
                           
                           {/* Small Line Indicators */}
@@ -712,7 +712,7 @@ export default function SignupPage() {
                                 aria-label={`Go to slide ${idx + 1}`}
                               >
                                 {/* Background line */}
-                                <div className="absolute inset-0 bg-gray-300 rounded-full"></div>
+                                <div className="absolute inset-0 bg-muted-foreground/30 rounded-full"></div>
                                 
                                 {/* Filled line */}
                                 {idx === activeStoryStep ? (
@@ -741,7 +741,7 @@ export default function SignupPage() {
                           
                           <button 
                             type="button"
-                            className="bg-white/80 rounded-full p-1 shadow-sm hover:bg-white cursor-pointer z-30"
+                            className="bg-card/80 rounded-full p-1 shadow-sm hover:bg-card cursor-pointer z-30"
                             onClick={(e) => {
                               e.stopPropagation();
                               console.log(`Right arrow clicked, current step: ${activeStoryStep}`);
@@ -752,7 +752,7 @@ export default function SignupPage() {
                             disabled={activeStoryStep === storySteps.length - 1}
                             style={{ opacity: activeStoryStep === storySteps.length - 1 ? 0.5 : 1 }}
                           >
-                            <ChevronRight className="h-4 w-4 text-gray-700" />
+                            <ChevronRight className="h-4 w-4 text-foreground" />
                           </button>
                         </div>
                       )}
@@ -763,11 +763,11 @@ export default function SignupPage() {
               
               {/* Partners Section with Infinite Scrolling - Single Row */}
               <div className="relative mt-auto pb-4">
-                <h3 className="text-xs uppercase text-gray-400 font-medium mb-6 text-center">OUR PARTNERS</h3>
+                <h3 className="text-xs uppercase text-muted-foreground font-medium mb-6 text-center">OUR PARTNERS</h3>
                 <div className="relative overflow-hidden">
                   {/* Gradient overlays for smooth edges */}
-                  <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-100 to-transparent z-10"></div>
-                  <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-100 to-transparent z-10"></div>
+                  <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-muted to-transparent z-10"></div>
+                  <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-muted to-transparent z-10"></div>
                   
                   {/* Single row with infinite scroll */}
                   <div className="overflow-hidden">

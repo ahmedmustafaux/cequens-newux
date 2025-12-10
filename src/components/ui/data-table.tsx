@@ -363,27 +363,27 @@ function DataTable({
           />
         ) : (
           <div className="flex flex-col gap-0" ref={tableRef}>
-            <div className="w-full overflow-x-auto rounded-md border bg-white">
+            <div className="w-full overflow-x-auto rounded-md border bg-card">
               <table className={cn("w-full caption-bottom text-sm", className)}>
                 {views && (
                   <thead>
                     <tr>
-                      <th colSpan={999} className="px-2 py-2 bg-white border-b">
+                      <th colSpan={999} className="px-2 py-2 bg-card border-b border-border">
                         <div className="flex items-center gap-2">
                           {views.options.map((view) => (
                             <button
                               key={view.value}
                               onClick={() => views.onViewChange(view.value)}
                               className={cn(
-                                "px-2 py-1 text-sm font-medium rounded-md transition-colors cursor-pointer",
+                                "px-2 py-1 text-sm font-medium rounded-md cursor-pointer",
                                 views.selectedView === view.value
-                                  ? "bg-gray-100 text-gray-700"
-                                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                                  ? "bg-accent text-accent-foreground"
+                                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                               )}
                             >
                               {view.label}
                               {view.count !== undefined && (
-                                <span className="ml-1.5 text-xs text-gray-400">
+                                <span className="ml-1.5 text-xs text-muted-foreground">
                                   ({view.count})
                                 </span>
                               )}
@@ -460,7 +460,7 @@ function DataTableFooter({
                     value={pagination.itemsPerPage.toString()}
                     onValueChange={(value) => pagination.onPageSizeChange?.(parseInt(value))}
                   >
-                    <SelectTrigger className="h-8 w-20 bg-white">
+                    <SelectTrigger className="h-8 w-20 bg-background">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -542,7 +542,7 @@ const DataTableSelectionHeader = React.forwardRef<HTMLTableSectionElement, {
   const colSpan = columnCount > 1 ? columnCount - 1 : 99
   return (
     <TableHeader ref={ref} className={className}>
-      <TableRow className="bg-gray-50 transition-colors">
+      <TableRow className="bg-table-header">
         <TableHead>
           <Checkbox
             checked={
@@ -565,7 +565,7 @@ const DataTableSelectionHeader = React.forwardRef<HTMLTableSectionElement, {
           <div className="flex items-center gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="inline-flex items-center justify-center gap-1 whitespace-nowrap text-sm font-medium transition-colors cursor-pointer text-foreground hover:text-accent-foreground h-6">
+                  <button className="inline-flex items-center justify-center gap-1 whitespace-nowrap text-sm font-medium cursor-pointer text-foreground hover:text-accent-foreground h-6">
                     {selectedCount} selected
                     <ChevronDown className="h-3.5 w-3.5" />
                   </button>
@@ -600,7 +600,7 @@ const DataTableSelectionHeader = React.forwardRef<HTMLTableSectionElement, {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-6 px-2 text-xs text-red-600 hover:text-red-700 hover:border-red-300"
+                    className="h-6 px-2 text-xs text-destructive hover:text-destructive hover:border-destructive"
                   >
                     Delete
                   </Button>
@@ -619,7 +619,7 @@ const DataTableHeader = React.forwardRef<HTMLTableSectionElement, DataTableHeade
   ({ children, className }, ref) => {
     return (
       <TableHeader ref={ref} className={className}>
-        <TableRow className="bg-gray-50">
+        <TableRow className="bg-table-header">
           {children}
         </TableRow>
       </TableHeader>
@@ -640,8 +640,8 @@ function DataTableRow({ children, className, selected, onClick }: DataTableRowPr
   return (
     <tr 
       className={cn(
-        "border-b transition-colors hover:bg-gray-100 data-[state=selected]:bg-gray-50", // Use same background as body
-        selected && "bg-gray-100", // Apply selected state styling
+        "border-b border-border hover:bg-accent data-[state=selected]:bg-muted", // Use same background as body
+        selected && "bg-accent", // Apply selected state styling
         className
       )}
       data-state={selected ? "selected" : undefined}
@@ -727,7 +727,7 @@ function DataTableCell({
     <td 
       className={cn(
         "px-4 py-2 align-middle [&:has([role=checkbox])]:pr-0 [&:has([role=checkbox])]:w-12 [&>[role=checkbox]]:translate-y-[2px]",
-        clickable && "cursor-pointer hover:bg-gray-100 transition-colors",
+        clickable && "cursor-pointer hover:bg-accent",
         className
       )} 
       colSpan={colSpan}

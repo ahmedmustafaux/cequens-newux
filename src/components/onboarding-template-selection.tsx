@@ -139,7 +139,7 @@ export function OnboardingTemplateSelection({
 }: OnboardingTemplateSelectionProps) {
   return (
     <div className="min-h-screen flex items-start justify-center p-4 pt-24">
-      <Card className="w-full max-w-5xl shadow-lg bg-white rounded-2xl overflow-hidden fixed top-16 z-10">
+      <Card className="w-full max-w-5xl shadow-lg bg-card rounded-2xl overflow-hidden fixed top-16 z-10">
         <CardContent className="p-4">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -162,7 +162,7 @@ export function OnboardingTemplateSelection({
                 <div
                   key={template.id}
                   onClick={() => onTemplateSelect(template)}
-                  className="p-4 rounded-lg border border-gray-200 hover:border-primary cursor-pointer transition-all bg-white group"
+                  className="p-4 rounded-lg border border-border hover:border-border-primary cursor-pointer transition-all bg-card group"
                 >
                   <div className="space-y-2.5">
                     <div className="flex items-start justify-between">
@@ -184,13 +184,13 @@ export function OnboardingTemplateSelection({
                     </div>
 
                     {/* Channels */}
-                    <div className="flex flex-wrap gap-1.5 pt-1.5 border-t border-gray-100">
+                    <div className="flex flex-wrap gap-1.5 pt-1.5 border-t border-border">
                       {template.channels.map((channelId) => {
                         const channel = channelIcons[channelId]
                         return channel ? (
                           <div
                             key={channelId}
-                            className="flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100 text-gray-700 text-xs"
+                            className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted text-muted-foreground text-xs"
                             title={channel.label}
                           >
                             {channel.icon}
@@ -201,7 +201,7 @@ export function OnboardingTemplateSelection({
                     </div>
 
                     <div className="space-y-1 pt-1">
-                      <p className="text-xs font-medium text-gray-700">Use cases:</p>
+                      <p className="text-xs font-medium text-foreground">Use cases:</p>
                       <ul className="text-xs text-muted-foreground space-y-0.5">
                         {template.useCases.slice(0, 2).map((useCase, idx) => (
                           <li key={idx} className="flex items-start">
@@ -240,7 +240,7 @@ export function OnboardingTemplateSelection({
             {/* Start from Scratch Card */}
             <div
               onClick={onStartFromScratch}
-              className="p-4 rounded-lg border border-dashed border-gray-300 hover:border-primary cursor-pointer transition-all bg-white group"
+              className="p-4 rounded-lg border border-dashed border-border hover:border-primary cursor-pointer transition-all bg-card group"
             >
               <div className="flex items-center gap-4">
                 <div className="flex-shrink-0">

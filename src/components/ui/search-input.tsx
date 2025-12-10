@@ -30,7 +30,7 @@ export function SearchInput({
     <div className={cn("w-auto inline-block", className)}>
       <Field>
         <FieldContent>
-          <InputGroup className="bg-white w-auto">
+          <InputGroup className="bg-background w-auto">
             <InputGroupAddon>
               <Search className="h-4 w-4" />
             </InputGroupAddon>

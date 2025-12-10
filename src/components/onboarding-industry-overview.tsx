@@ -341,7 +341,7 @@ export function OnboardingIndustryOverview({
 
   return (
     <div className="min-h-screen flex items-start justify-center p-4 pt-24">
-      <Card className="w-full max-w-4xl shadow-lg bg-white rounded-2xl overflow-hidden fixed top-16 z-10">
+      <Card className="w-full max-w-4xl shadow-lg bg-card rounded-2xl overflow-hidden fixed top-16 z-10">
         <CardContent className="p-6">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -358,15 +358,15 @@ export function OnboardingIndustryOverview({
                 showBreadcrumbs={false}
               />
               <div className="flex items-start gap-2">
-                <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600 hover:bg-gray-100">
+                <Badge variant="secondary" className="text-xs bg-muted text-muted-foreground hover:bg-muted">
                   Industry Template
                 </Badge>
               </div>
               
               {/* Info Note */}
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-blue-50 border border-blue-200">
-                <Info className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                <p className="text-xs text-blue-900">
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-info/10 border border-border-info">
+                <Info className="w-4 h-4 text-info-foreground flex-shrink-0" />
+                <p className="text-xs text-info-foreground">
                   We'll personalize your experience based on this industry template, but you'll have full access to all our products and features.
                 </p>
               </div>
@@ -379,14 +379,14 @@ export function OnboardingIndustryOverview({
                 {template.useCases.map((useCase, idx) => (
                   <div
                     key={idx}
-                    className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200"
+                    className="flex items-start gap-3 p-3 rounded-lg bg-muted border border-border"
                   >
                     <div className="mt-0.5">
-                      <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                        <Check className="w-3.5 h-3.5 text-gray" />
+                      <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                        <Check className="w-3.5 h-3.5 text-muted-foreground" />
                       </div>
                     </div>
-                    <p className="text-sm font-medium text-gray-700">{useCase}</p>
+                    <p className="text-sm font-medium text-foreground">{useCase}</p>
                   </div>
                 ))}
               </div>
@@ -400,7 +400,7 @@ export function OnboardingIndustryOverview({
                 {/* Carousel Container */}
                 <div className="relative">
                   {/* Case Study Cards */}
-                  <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-white">
+                  <div className="relative overflow-hidden rounded-lg border border-border bg-card">
                     <AnimatePresence mode="wait">
                       <motion.div
                         key={activeCaseStudy}
@@ -429,7 +429,7 @@ export function OnboardingIndustryOverview({
                                   return channel ? (
                                     <div
                                       key={channelId}
-                                      className="p-1.5 rounded-md bg-gray-100"
+                                      className="p-1.5 rounded-md bg-muted"
                                       title={channel.label}
                                     >
                                       {channel.icon}
@@ -443,14 +443,14 @@ export function OnboardingIndustryOverview({
                           {/* Challenge & Solution */}
                           <div className="space-y-3">
                             <div>
-                              <p className="text-xs font-medium text-gray-700 mb-1">Challenge</p>
-                              <p className="text-sm text-gray-600">
+                              <p className="text-xs font-medium text-foreground mb-1">Challenge</p>
+                              <p className="text-sm text-muted-foreground">
                                 {caseStudies[activeCaseStudy].challenge}
                               </p>
                             </div>
                             <div>
-                              <p className="text-xs font-medium text-gray-700 mb-1">Solution</p>
-                              <p className="text-sm text-gray-600">
+                              <p className="text-xs font-medium text-foreground mb-1">Solution</p>
+                              <p className="text-sm text-muted-foreground">
                                 {caseStudies[activeCaseStudy].solution}
                               </p>
                             </div>
@@ -458,20 +458,20 @@ export function OnboardingIndustryOverview({
 
                           {/* Results */}
                           <div>
-                            <p className="text-xs font-medium text-gray-700 mb-2">Results</p>
+                            <p className="text-xs font-medium text-foreground mb-2">Results</p>
                             <div className="grid grid-cols-3 gap-3">
                               {caseStudies[activeCaseStudy].results.map((result, idx) => (
                                 <div
                                   key={idx}
-                                  className="flex flex-col items-center justify-center p-3 rounded-lg bg-blue-50 border border-blue-100"
+                                  className="flex flex-col items-center justify-center p-3 rounded-lg bg-info/10 border border-border-info"
                                 >
-                                  <div className="text-blue-600 mb-1">
-                                    {result.icon}
+                                  <div className="text-info-foreground mb-1">
+                                  {result.icon}
                                   </div>
-                                  <p className="text-lg font-bold text-blue-900">
-                                    {result.value}
+                                  <p className="text-lg font-bold text-info-foreground">
+                                  {result.value}
                                   </p>
-                                  <p className="text-xs text-blue-700 text-center mt-0.5">
+                                  <p className="text-xs text-info-foreground text-center mt-0.5">
                                     {result.metric}
                                   </p>
                                 </div>
@@ -487,11 +487,11 @@ export function OnboardingIndustryOverview({
                   <div className="flex justify-center items-center space-x-3 mt-3">
                     <button
                       type="button"
-                      className="bg-white rounded-full p-1.5 shadow-sm border border-gray-200 hover:bg-gray-50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="bg-card rounded-full p-1.5 shadow-sm border border-border hover:bg-accent cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       onClick={() => goToCaseStudy(activeCaseStudy - 1)}
                       disabled={activeCaseStudy === 0}
                     >
-                      <ChevronLeft className="h-4 w-4 text-gray-700" />
+                      <ChevronLeft className="h-4 w-4 text-foreground" />
                     </button>
 
                     {/* Dot Indicators */}
@@ -502,8 +502,8 @@ export function OnboardingIndustryOverview({
                           type="button"
                           className={`h-2 w-2 rounded-full transition-all ${
                             idx === activeCaseStudy
-                              ? 'bg-blue-600 w-6'
-                              : 'bg-gray-300 hover:bg-gray-400'
+                              ? 'bg-primary w-6'
+                              : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
                           }`}
                           onClick={() => goToCaseStudy(idx)}
                           aria-label={`Go to case study ${idx + 1}`}
@@ -513,11 +513,11 @@ export function OnboardingIndustryOverview({
 
                     <button
                       type="button"
-                      className="bg-white rounded-full p-1.5 shadow-sm border border-gray-200 hover:bg-gray-50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="bg-card rounded-full p-1.5 shadow-sm border border-border hover:bg-accent cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       onClick={() => goToCaseStudy(activeCaseStudy + 1)}
                       disabled={activeCaseStudy === caseStudies.length - 1}
                     >
-                      <ChevronRight className="h-4 w-4 text-gray-700" />
+                      <ChevronRight className="h-4 w-4 text-foreground" />
                     </button>
                   </div>
                 </div>

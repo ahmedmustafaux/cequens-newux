@@ -477,7 +477,7 @@ export default function NotificationsPage() {
                                   <div className="absolute top-7 left-1 w-1/2 h-0.5 bg-gray-200/50 rounded-full"></div>
                                   
                                   {/* Notification */}
-                                  <div className="absolute top-0 right-0 m-0.5 w-1/3 h-3 bg-slate-500/40 rounded-sm border border-slate-400/30 flex items-center justify-center group-hover:bg-primary/70 group-hover:border-primary/80 transition-colors">
+                                  <div className="absolute top-0 right-0 m-0.5 w-1/3 h-3 bg-muted-foreground/40 rounded-sm border border-border-muted flex items-center justify-center group-hover:bg-primary/70 group-hover:border-border-primary transition-colors">
                                     <div className="w-2/3 h-0.5 bg-white/60 rounded-full mx-auto"></div>
                                   </div>
                                 </div>
@@ -514,7 +514,7 @@ export default function NotificationsPage() {
                                   <div className="absolute top-7 left-1 w-1/2 h-0.5 bg-gray-200/50 rounded-full"></div>
                                   
                                   {/* Notification */}
-                                  <div className="absolute bottom-0 right-0 m-0.5 w-1/3 h-3 bg-slate-500/40 rounded-sm border border-slate-400/30 flex items-center justify-center group-hover:bg-primary/70 group-hover:border-primary/80 transition-colors">
+                                  <div className="absolute bottom-0 right-0 m-0.5 w-1/3 h-3 bg-muted-foreground/40 rounded-sm border border-border-muted flex items-center justify-center group-hover:bg-primary/70 group-hover:border-border-primary transition-colors">
                                     <div className="w-2/3 h-0.5 bg-white/60 rounded-full mx-auto"></div>
                                   </div>
                                 </div>
@@ -551,7 +551,7 @@ export default function NotificationsPage() {
                                   <div className="absolute top-7 left-1 w-1/2 h-0.5 bg-gray-200/50 rounded-full"></div>
                                   
                                   {/* Notification */}
-                                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 m-0.5 w-1/3 h-3 bg-slate-500/40 rounded-sm border border-slate-400/30 flex items-center justify-center group-hover:bg-primary/70 group-hover:border-primary/80 transition-colors">
+                                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 m-0.5 w-1/3 h-3 bg-muted-foreground/40 rounded-sm border border-border-muted flex items-center justify-center group-hover:bg-primary/70 group-hover:border-border-primary transition-colors">
                                     <div className="w-2/3 h-0.5 bg-white/60 rounded-full mx-auto"></div>
                                   </div>
                                 </div>

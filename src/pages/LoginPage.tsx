@@ -402,11 +402,11 @@ export default function LoginPage() {
 
   return (
     <>
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden w-full max-w-lg mx-auto h-full max-h-[calc(100vh-2rem)]">
+      <div className="bg-card rounded-2xl shadow-lg overflow-hidden w-full max-w-lg mx-auto h-full max-h-[calc(100vh-2rem)] border border-border">
         <div className="h-full">
             {/* Form Panel */}
             <motion.div 
-              className="bg-white flex items-center justify-center p-6 h-full"
+              className="bg-card flex items-center justify-center p-6 h-full"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
@@ -437,9 +437,9 @@ export default function LoginPage() {
                 <>
                   {/* General Error Alert */}
                   {generalError && (
-                    <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-800">
-                      <AlertTriangle className="h-4 w-4 text-red-600" />
-                      <AlertDescription className="text-red-800">
+                    <Alert variant="destructive" className="bg-destructive/10 border-border-destructive text-destructive">
+                      <AlertTriangle className="h-4 w-4 text-destructive" />
+                      <AlertDescription className="text-destructive">
                         {generalError}
                       </AlertDescription>
                     </Alert>
@@ -490,10 +490,10 @@ export default function LoginPage() {
                   
                   <div className="relative my-2">
                     <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t border-gray-200"></span>
+                      <span className="w-full border-t border-border"></span>
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-white px-2 text-muted-foreground">Or with email</span>
+                      <span className="bg-card px-2 text-muted-foreground">Or with email</span>
                     </div>
                   </div>
                   
@@ -548,7 +548,7 @@ export default function LoginPage() {
                             variant="ghost"
                             size="icon"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="h-auto w-auto p-1 hover:text-slate-600"
+                            className="h-auto w-auto p-1 hover:text-muted-foreground"
                           >
                             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                           </Button>
@@ -583,7 +583,7 @@ export default function LoginPage() {
                   >
                     {isLoading ? (
                       <div className="flex items-center space-x-2">
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
                         <span>Verifying...</span>
                       </div>
                     ) : (
@@ -677,7 +677,7 @@ export default function LoginPage() {
                   >
                     {isLoading ? (
                       <div className="flex items-center space-x-2">
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
                         <span>Verifying...</span>
                       </div>
                     ) : (
@@ -723,10 +723,10 @@ export default function LoginPage() {
               onClick={() => handleSendVerification('email')}
               disabled={isResending}
               variant="outline"
-              className="w-full flex items-center p-3 border border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-all disabled:opacity-50 h-auto justify-start"
+              className="w-full flex items-center p-3 border border-border rounded-lg hover:border-border-accent hover:bg-accent transition-all disabled:opacity-50 h-auto justify-start"
             >
-              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3">
-                <Mail className="h-4 w-4 text-gray-600" />
+              <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center mr-3">
+                <Mail className="h-4 w-4 text-muted-foreground" />
               </div>
               <div className="text-left">
                 <div className="font-medium text-sm text-foreground">Email</div>
@@ -739,10 +739,10 @@ export default function LoginPage() {
               onClick={() => handleSendVerification('sms')}
               disabled={isResending}
               variant="outline"
-              className="w-full flex items-center p-3 border border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-all disabled:opacity-50 h-auto justify-start"
+              className="w-full flex items-center p-3 border border-border rounded-lg hover:border-border-accent hover:bg-accent transition-all disabled:opacity-50 h-auto justify-start"
             >
-              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3">
-                <MessageSquare className="h-4 w-4 text-gray-600" />
+              <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center mr-3">
+                <MessageSquare className="h-4 w-4 text-muted-foreground" />
               </div>
               <div className="text-left">
                 <div className="font-medium text-sm text-foreground">SMS</div>
@@ -755,10 +755,10 @@ export default function LoginPage() {
               onClick={() => handleSendVerification('whatsapp')}
               disabled={isResending}
               variant="outline"
-              className="w-full flex items-center p-3 border border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-all disabled:opacity-50 h-auto justify-start"
+              className="w-full flex items-center p-3 border border-border rounded-lg hover:border-border-accent hover:bg-accent transition-all disabled:opacity-50 h-auto justify-start"
             >
-              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3">
-                <Smartphone className="h-4 w-4 text-gray-600" />
+              <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center mr-3">
+                <Smartphone className="h-4 w-4 text-muted-foreground" />
               </div>
               <div className="text-left">
                 <div className="font-medium text-sm text-foreground">WhatsApp</div>
@@ -771,10 +771,10 @@ export default function LoginPage() {
               onClick={() => handleSendVerification('call')}
               disabled={isResending}
               variant="outline"
-              className="w-full flex items-center p-3 border border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-all disabled:opacity-50 h-auto justify-start"
+              className="w-full flex items-center p-3 border border-border rounded-lg hover:border-border-accent hover:bg-accent transition-all disabled:opacity-50 h-auto justify-start"
             >
-              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3">
-                <Phone className="h-4 w-4 text-gray-600" />
+              <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center mr-3">
+                <Phone className="h-4 w-4 text-muted-foreground" />
               </div>
               <div className="text-left">
                 <div className="font-medium text-sm text-foreground">Phone Call</div>
@@ -785,7 +785,7 @@ export default function LoginPage() {
 
           {isResending && (
             <div className="mt-3 flex items-center justify-center text-xs text-muted-foreground">
-              <div className="h-3 w-3 animate-spin rounded-full border-2 border-gray-600 border-t-transparent mr-2" />
+              <div className="h-3 w-3 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent mr-2" />
               Sending verification code...
             </div>
           )}

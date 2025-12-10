@@ -151,14 +151,15 @@ function Sidebar({
         {/* Backdrop */}
         {openMobile && (
           <div
-            className="fixed inset-0 z-40 bg-black/50"
+            className="fixed inset-0 z-40"
+            style={{ backgroundColor: 'var(--overlay)' }}
             onClick={() => setOpenMobile(false)}
           />
         )}
         {/* Sidebar */}
         <div
           className={cn(
-            "fixed inset-y-0 left-0 z-50 h-full w-sidebar bg-background border-r p-0",
+            "fixed inset-y-0 left-0 z-50 h-full w-sidebar bg-sidebar border-r border-sidebar p-0",
             openMobile ? "translate-x-0" : "-translate-x-full",
             "transition-transform duration-300 ease-in-out"
           )}
@@ -207,7 +208,7 @@ function Sidebar({
           // Adjust the padding for floating and inset variants.
           variant === "floating" || variant === "inset"
             ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
-            : "group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l",
+            : "group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=left]:border-sidebar group-data-[side=right]:border-l group-data-[side=right]:border-sidebar",
           className
         )}
         {...props}
@@ -432,7 +433,7 @@ const sidebarMenuButtonVariants = cva(
       variant: {
         default: "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
         outline:
-          "bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]",
+          "bg-background shadow-[0_0_0_1px_oklch(var(--sidebar-border))] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:shadow-[0_0_0_1px_oklch(var(--sidebar-accent))]",
       },
       size: {
         default: "h-8 text-sm",

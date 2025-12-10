@@ -196,11 +196,11 @@ export function ContactsImportDialog({
   const getStatusColor = (status: SyncHistory["status"]) => {
     switch (status) {
       case "success":
-        return "bg-green-500/10 text-green-700 dark:text-green-400"
+        return "bg-success/10 text-success-foreground"
       case "failed":
-        return "bg-red-500/10 text-red-700 dark:text-red-400"
+        return "bg-destructive/10 text-destructive-foreground"
       case "partial":
-        return "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400"
+        return "bg-warning/10 text-warning-foreground"
     }
   }
 
@@ -236,7 +236,7 @@ export function ContactsImportDialog({
                   <DialogTitle className="flex items-center gap-2">
                     {selectedIntegration.name}
                     {selectedIntegration.connected && (
-                      <Badge variant="outline" className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800">
+                      <Badge variant="outline" className="bg-success/10 text-success-foreground border-border-success">
                         <CheckCircle2 className="w-3 h-3 mr-1" />
                         Connected
                       </Badge>
@@ -289,7 +289,7 @@ export function ContactsImportDialog({
                         <TrendingUp className="w-4 h-4" />
                         Growth
                       </div>
-                      <div className="text-2xl font-semibold text-green-600">
+                      <div className="text-2xl font-semibold text-success-foreground">
                         +12%
                       </div>
                     </div>
@@ -371,8 +371,8 @@ export function ContactsImportDialog({
                         <div className="space-y-2">
                           <div className="p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer">
                             <div className="flex items-start gap-3">
-                              <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <Upload className="w-4 h-4 text-blue-600" />
+                              <div className="w-8 h-8 rounded-full bg-info/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <Upload className="w-4 h-4 text-info-foreground" />
                               </div>
                               <div className="flex-1">
                                 <div className="font-medium text-sm">Automated Contact Import</div>
@@ -384,8 +384,8 @@ export function ContactsImportDialog({
                           </div>
                           <div className="p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer">
                             <div className="flex items-start gap-3">
-                              <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <Tag className="w-4 h-4 text-purple-600" />
+                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <Tag className="w-4 h-4 text-primary" />
                               </div>
                               <div className="flex-1">
                                 <div className="font-medium text-sm">Smart Segmentation</div>
@@ -397,8 +397,8 @@ export function ContactsImportDialog({
                           </div>
                           <div className="p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer">
                             <div className="flex items-start gap-3">
-                              <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <RefreshCw className="w-4 h-4 text-green-600" />
+                              <div className="w-8 h-8 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <RefreshCw className="w-4 h-4 text-success-foreground" />
                               </div>
                               <div className="flex-1">
                                 <div className="font-medium text-sm">Two-Way Sync</div>
@@ -430,11 +430,11 @@ export function ContactsImportDialog({
                                   <div className="flex items-center gap-2">
                                     <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                                       {history.status === "success" ? (
-                                        <CheckCircle2 className="w-3 h-3 text-green-600" />
+                                        <CheckCircle2 className="w-3 h-3 text-success-foreground" />
                                       ) : history.status === "failed" ? (
-                                        <AlertCircle className="w-3 h-3 text-red-600" />
+                                        <AlertCircle className="w-3 h-3 text-destructive-foreground" />
                                       ) : (
-                                        <AlertCircle className="w-3 h-3 text-yellow-600" />
+                                        <AlertCircle className="w-3 h-3 text-warning-foreground" />
                                       )}
                                     </div>
                                     <Badge 
@@ -506,7 +506,7 @@ export function ContactsImportDialog({
                     onClick={() => handleIntegrationClick(integration)}
                     className={cn(
                       "w-full flex items-center gap-4 p-4 rounded-lg border text-left cursor-pointer",
-                      "hover:border-primary hover:bg-accent/50 transition-colors",
+                      "hover:border-border-primary hover:bg-accent/50 transition-colors",
                       "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                     )}
                   >
@@ -531,7 +531,7 @@ export function ContactsImportDialog({
                       <div className="font-medium flex items-center gap-2">
                         {integration.name}
                         {isConnected && (
-                          <CheckCircle2 className="w-4 h-4 text-green-600" />
+                          <CheckCircle2 className="w-4 h-4 text-success-foreground" />
                         )}
                       </div>
                       <div className="text-sm text-muted-foreground truncate">

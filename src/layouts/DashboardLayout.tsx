@@ -61,9 +61,9 @@ function DashboardContent({ children }: { children: ReactNode }) {
     >
       <div className="flex h-screen w-full m-0 p-0">
         <AppSidebar variant="inset" />
-        <SidebarInset className="flex flex-1 flex-col bg-gray-50 m-0 border border-gray-200">
+        <SidebarInset className="flex flex-1 flex-col bg-secondary m-0 border border-border">
           {/* Sticky Header */}
-          <div className="sticky top-0 z-1 w-full bg-gray-50 backdrop-blur-sm border-b border-gray-100 rounded-t-xl overflow-hidden">
+          <div className="sticky top-0 z-1 w-full bg-secondary backdrop-blur-sm border-b border-border rounded-t-xl overflow-hidden">
             <PageHeader
               showBreadcrumbs={true}
               showSearch={true}
@@ -95,10 +95,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // Show nothing while checking authentication
   if (isLoading) {
     return (
-      <div className="h-screen w-full flex items-center justify-center bg-white">
+      <div className="h-screen w-full flex items-center justify-center bg-background">
         <div className="flex flex-col items-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600"></div>
-          <p className="text-sm text-gray-600">Loading...</p>
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-primary"></div>
+          <p className="text-sm text-muted-foreground">Loading...</p>
         </div>
       </div>
     )

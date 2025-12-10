@@ -41,13 +41,13 @@ export function NotificationBell({
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'success':
-        return <div className="w-2 h-2 bg-green-500 rounded-full" />
+        return <div className="w-2 h-2 bg-success rounded-full" />
       case 'error':
-        return <div className="w-2 h-2 bg-red-500 rounded-full" />
+        return <div className="w-2 h-2 bg-destructive rounded-full" />
       case 'warning':
-        return <div className="w-2 h-2 bg-yellow-500 rounded-full" />
+        return <div className="w-2 h-2 bg-warning rounded-full" />
       default:
-        return <div className="w-2 h-2 bg-blue-500 rounded-full" />
+        return <div className="w-2 h-2 bg-info rounded-full" />
     }
   }
   
@@ -116,7 +116,7 @@ export function NotificationBell({
             {notifications.map((notification, index) => (
               <div key={notification.id}>
                 <DropdownMenuItem 
-                  className={`p-2.5 cursor-pointer ${!notification.read ? 'bg-gray-50' : ''}`}
+                  className={`p-2.5 cursor-pointer ${!notification.read ? 'bg-accent' : ''}`}
                   onClick={() => markAsRead(notification.id)}
                 >
                   <div className="flex items-start gap-2.5 w-full">
@@ -131,8 +131,8 @@ export function NotificationBell({
                           </p>
                           {!notification.read && (
                             <div className="flex items-center gap-1">
-                              <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
-                              <span className="text-xs text-red-600 font-medium">New</span>
+                              <div className="w-1.5 h-1.5 bg-destructive rounded-full"></div>
+                              <span className="text-xs text-destructive font-medium">New</span>
                             </div>
                           )}
                         </div>

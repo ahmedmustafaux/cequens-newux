@@ -207,14 +207,14 @@ export function GettingStartedGuide({
         }
       ],
       illustration: (
-        <div className="relative w-full h-32 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 flex items-center justify-center">
+        <div className="relative w-full h-32 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg p-4 flex items-center justify-center">
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="relative">
-              <div className="w-16 h-16 bg-white rounded-lg shadow-md flex items-center justify-center">
+              <div className="w-16 h-16 bg-card rounded-lg shadow-md flex items-center justify-center border border-border">
                 <Send className="w-8 h-8 text-primary" />
               </div>
-              <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                <Check className="w-4 h-4 text-white" />
+              <div className="absolute -top-2 -right-2 w-6 h-6 bg-success rounded-full flex items-center justify-center">
+                <Check className="w-4 h-4 text-success-foreground" />
               </div>
             </div>
           </div>
@@ -459,7 +459,7 @@ export function GettingStartedGuide({
       className="fixed bottom-6 right-6 z-50 w-full max-w-md"
       style={{ width: 'calc(25vw - 1.5rem)', minWidth: '480px', maxWidth: '600px' }}
     >
-      <Card className="shadow-2xl border-2 overflow-hidden">
+      <Card className="shadow-2xl border-2 border-border overflow-hidden">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3 flex-1">
@@ -493,7 +493,7 @@ export function GettingStartedGuide({
           {/* Progress bar */}
           <div className="mt-4">
             <div className="flex items-center gap-3">
-              <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                 <motion.div
                   className="h-full bg-primary"
                   initial={{ width: 0 }}
@@ -530,21 +530,21 @@ export function GettingStartedGuide({
                     <div
                       key={section.id}
                       className={cn(
-                        "border rounded-lg overflow-hidden transition-colors",
-                        allStepsCompleted ? "border-green-200 bg-green-50/50" : "border-gray-200"
+                        "border rounded-lg overflow-hidden",
+                        allStepsCompleted ? "border-success/30 bg-success/5" : "border-border"
                       )}
                     >
                       {/* Section Header */}
                       <button
                         onClick={() => toggleSection(section.id)}
-                        className="w-full p-3 flex items-center justify-between hover:bg-gray-50/50 transition-colors text-left"
+                        className="w-full p-3 flex items-center justify-between hover:bg-accent text-left"
                       >
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                           <div className={cn(
                             "w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0",
                             allStepsCompleted 
-                              ? "bg-green-600 text-white" 
-                              : "bg-gray-100 text-gray-600"
+                              ? "bg-success text-success-foreground" 
+                              : "bg-muted text-muted-foreground"
                           )}>
                             {allStepsCompleted ? (
                               <Check className="w-4 h-4" />
@@ -565,7 +565,7 @@ export function GettingStartedGuide({
                               animate={{ rotate: isExpanded ? 180 : 0 }}
                               transition={{ duration: 0.2 }}
                             >
-                              <ChevronDown className="w-4 h-4 text-gray-400" />
+                              <ChevronDown className="w-4 h-4 text-muted-foreground" />
                             </motion.div>
                           </div>
                         </div>
@@ -595,26 +595,26 @@ export function GettingStartedGuide({
                                   <div
                                     key={step.id}
                                     className={cn(
-                                      "flex items-start gap-2 p-3 rounded-lg border transition-colors",
+                                      "flex items-start gap-2 p-3 rounded-lg border",
                                       isCompleted 
-                                        ? "border-green-200 bg-green-50/50" 
-                                        : "border-gray-100 bg-white hover:bg-gray-50/50"
+                                        ? "border-success/30 bg-success/5" 
+                                        : "border-border bg-card hover:bg-accent"
                                     )}
                                   >
                                     <button
                                       onClick={() => !isLocked && toggleStepCompletion(step.id)}
                                       disabled={isLocked}
                                       className={cn(
-                                        "w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors",
+                                        "w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0",
                                         isCompleted
-                                          ? "border-green-600 bg-green-600"
+                                          ? "border-success bg-success"
                                           : isLocked
-                                          ? "border-gray-300 bg-gray-100 cursor-not-allowed"
-                                          : "border-gray-300 hover:border-primary"
+                                          ? "border-muted-foreground/30 bg-muted cursor-not-allowed"
+                                          : "border-border hover:border-border-primary"
                                       )}
                                     >
                                       {isCompleted && (
-                                        <Check className="w-2.5 h-2.5 text-white" />
+                                        <Check className="w-2.5 h-2.5 text-success-foreground" />
                                       )}
                                     </button>
 
