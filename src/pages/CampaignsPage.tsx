@@ -220,6 +220,7 @@ function CampaignsPageContent() {
   const [typeFilter, setTypeFilter] = React.useState<string[]>([])
   const [statusSearchQuery, setStatusSearchQuery] = React.useState("")
   const [typeSearchQuery, setTypeSearchQuery] = React.useState("")
+  const [selectedView, setSelectedView] = React.useState<string>("all")
 
   // Filter options
   const statusOptions = [
@@ -255,6 +256,20 @@ function CampaignsPageContent() {
     return () => clearTimeout(timer)
   }, [])
 
+  // Filter data based on selected view
+  const filteredDataByView = React.useMemo(() => {
+    switch (selectedView) {
+      case "scheduled":
+        return mockCampaigns.filter(c => c.status === "Active")
+      case "draft":
+        return mockCampaigns.filter(c => c.status === "Draft")
+      case "sent":
+        return mockCampaigns.filter(c => c.status === "Completed")
+      default:
+        return mockCampaigns
+    }
+  }, [selectedView])
+
   // Apply filters to table
   React.useEffect(() => {
     const newFilters: ColumnFiltersState = []
@@ -271,7 +286,7 @@ function CampaignsPageContent() {
   }, [statusFilter, typeFilter])
 
   const table = useReactTable({
-    data: mockCampaigns,
+    data: filteredDataByView,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -326,6 +341,16 @@ function CampaignsPageContent() {
       <div className="flex flex-col">
           <DataTable
             isLoading={isDataLoading}
+            views={{
+              options: [
+                { label: "All campaigns", value: "all", count: mockCampaigns.length },
+                { label: "Scheduled", value: "scheduled", count: mockCampaigns.filter(c => c.status === "Active").length },
+                { label: "Draft", value: "draft", count: mockCampaigns.filter(c => c.status === "Draft").length },
+                { label: "Sent", value: "sent", count: mockCampaigns.filter(c => c.status === "Completed").length }
+              ],
+              selectedView: selectedView,
+              onViewChange: setSelectedView
+            }}
             searchConfig={{
               placeholder: "Search campaigns...",
               searchColumns: ['name'],
@@ -378,13 +403,19 @@ function CampaignsPageContent() {
                       selectedCount={table.getSelectedRowModel().rows.length}
                       onClearSelection={() => table.resetRowSelection()}
                       onSelectAll={() => table.toggleAllRowsSelected()}
+                      onSelectAllOnPage={() => {
+                        table.getRowModel().rows.forEach(row => row.toggleSelected(true))
+                      }}
                       totalCount={table.getFilteredRowModel().rows.length}
+                      showCount={table.getRowModel().rows.length}
+                      selectedCountOnCurrentPage={table.getRowModel().rows.filter(row => row.getIsSelected()).length}
+                      audience="campaigns"
                       rightActions={
                         <>
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-7 px-2 text-xs"
+                            className="h-7 px-2.5 text-sm"
                             onClick={() => {
                               // TODO: Implement duplicate functionality
                             }}
@@ -394,22 +425,12 @@ function CampaignsPageContent() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-7 px-2 text-xs"
+                            className="h-7 px-2.5 text-sm"
                             onClick={() => {
-                              // TODO: Implement archive functionality
+                              // TODO: Implement see analytics functionality
                             }}
                           >
-                            Archive
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-7 px-2 text-xs text-red-600 hover:text-red-700 hover:border-red-300"
-                            onClick={() => {
-                              // TODO: Implement delete functionality
-                            }}
-                          >
-                            Delete
+                            See analytics
                           </Button>
                         </>
                       }

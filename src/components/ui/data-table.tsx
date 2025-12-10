@@ -2,7 +2,7 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ChevronLeft, ChevronRight, ArrowUpDownIcon, Columns3 } from "lucide-react"
+import { ChevronLeft, ChevronRight, ArrowUpDownIcon, Columns3, ChevronDown } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AutoHighlight } from "@/components/ui/highlight"
 import { TableHeader, TableHead, TableRow } from "@/components/ui/table"
@@ -41,6 +41,16 @@ interface FilterConfig {
   onSearchChange?: (query: string) => void
   filteredOptions?: FilterOption[]
 }
+interface ViewOption {
+  label: string
+  value: string
+  count?: number
+}
+interface ViewsConfig {
+  options: ViewOption[]
+  selectedView: string
+  onViewChange: (view: string) => void
+}
 interface DataTableProps {
   children: React.ReactNode
   className?: string
@@ -69,6 +79,7 @@ interface DataTableProps {
   }
   filters?: FilterConfig[]
   showControls?: boolean
+  views?: ViewsConfig
 }
 interface DataTableHeaderProps {
   children: React.ReactNode
@@ -112,6 +123,7 @@ function DataTable({
   searchConfig,
   filters,
   showControls = true,
+  views,
 }: DataTableProps) {
   const tableRef = React.useRef<HTMLDivElement>(null)
   // Integrate table search if searchConfig is provided
@@ -353,6 +365,35 @@ function DataTable({
           <div className="flex flex-col gap-0" ref={tableRef}>
             <div className="w-full overflow-x-auto rounded-md border bg-white">
               <table className={cn("w-full caption-bottom text-sm", className)}>
+                {views && (
+                  <thead>
+                    <tr>
+                      <th colSpan={999} className="px-2 py-2 bg-white border-b">
+                        <div className="flex items-center gap-2">
+                          {views.options.map((view) => (
+                            <button
+                              key={view.value}
+                              onClick={() => views.onViewChange(view.value)}
+                              className={cn(
+                                "px-2 py-1 text-sm font-medium rounded-md transition-colors cursor-pointer",
+                                views.selectedView === view.value
+                                  ? "bg-gray-200 text-gray-700"
+                                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                              )}
+                            >
+                              {view.label}
+                              {view.count !== undefined && (
+                                <span className="ml-1.5 text-xs text-gray-400">
+                                  ({view.count})
+                                </span>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </th>
+                    </tr>
+                  </thead>
+                )}
                 {children}
               </table>
             </div>
@@ -419,7 +460,7 @@ function DataTableFooter({
                     value={pagination.itemsPerPage.toString()}
                     onValueChange={(value) => pagination.onPageSizeChange?.(parseInt(value))}
                   >
-                    <SelectTrigger className="h-8 w-20">
+                    <SelectTrigger className="h-8 w-20 bg-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -473,21 +514,32 @@ const DataTableSelectionHeader = React.forwardRef<HTMLTableSectionElement, {
   selectedCount: number
   onClearSelection: () => void
   onSelectAll: () => void
+  onSelectAllOnPage?: () => void
   totalCount: number
+  showCount?: number
+  selectedCountOnCurrentPage?: number
+  audience?: string
   rightActions?: React.ReactNode
   className?: string
 }>(({ 
   selectedCount, 
   onClearSelection, 
   onSelectAll,
+  onSelectAllOnPage,
   totalCount,
+  showCount,
+  selectedCountOnCurrentPage,
+  audience = "this store",
   rightActions,
   className 
 }, ref) => {
+  const allPageItemsSelected = selectedCountOnCurrentPage !== undefined 
+    ? selectedCountOnCurrentPage >= (showCount ?? totalCount)
+    : false
   return (
     <TableHeader ref={ref} className={className}>
-      <TableRow className="transition-colors">
-        <TableHead className="w-12">
+      <TableRow className="bg-gray-50 transition-colors">
+        <TableHead className="w-12 px-4 py-2.5 [&>[role=checkbox]]:translate-y-[2px]">
           <Checkbox
             checked={
               selectedCount === 0 
@@ -505,45 +557,46 @@ const DataTableSelectionHeader = React.forwardRef<HTMLTableSectionElement, {
             }}
           />
         </TableHead>
-        <TableHead colSpan={99}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-foreground">
-                {selectedCount} selected
-              </span>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onSelectAll}
-                  className="h-7 px-2 text-xs"
-                >
-                  Select All ({totalCount})
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onClearSelection}
-                  className="h-7 px-2 text-xs"
-                >
-                  Deselect All
-                </Button>
-              </div>
-            </div>
+        <TableHead colSpan={99} className="px-4 py-2.5">
+          <div className="flex items-center gap-3">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap text-sm font-medium transition-colors cursor-pointer hover:text-accent-foreground h-7 px-2.5">
+                    {selectedCount} selected
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {!allPageItemsSelected && (
+                  <DropdownMenuItem 
+                    onClick={onSelectAllOnPage || onSelectAll} 
+                    className="cursor-pointer"
+                  >
+                    Select all {showCount ?? totalCount} in this page
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={onSelectAll} className="cursor-pointer">
+                  Select all {audience}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onClearSelection} className="cursor-pointer">
+                  Unselect all
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <div className="flex items-center gap-1">
               {rightActions || (
                 <>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 px-2 text-xs"
+                    className="h-7 px-2.5 text-sm"
                   >
                     Export
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 px-2 text-xs text-red-600 hover:text-red-700 hover:border-red-300"
+                    className="h-7 px-2.5 text-sm text-red-600 hover:text-red-700 hover:border-red-300"
                   >
                     Delete
                   </Button>
@@ -562,7 +615,7 @@ const DataTableHeader = React.forwardRef<HTMLTableSectionElement, DataTableHeade
   ({ children, className }, ref) => {
     return (
       <TableHeader ref={ref} className={className}>
-        <TableRow className="">
+        <TableRow className="bg-gray-50">
           {children}
         </TableRow>
       </TableHeader>

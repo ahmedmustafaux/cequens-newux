@@ -21,6 +21,7 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  AlertTriangle,
   UserPlus,
   Download,
   Upload,
@@ -48,6 +49,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { ContactsImportDialog } from "@/components/contacts-import-dialog"
 import { 
   DataTable,
@@ -82,6 +93,9 @@ const ContactsPageContent = (): React.JSX.Element => {
   const [channelSearchQuery, setChannelSearchQuery] = React.useState("")
   const [tagSearchQuery, setTagSearchQuery] = React.useState("")
   const [isImportDialogOpen, setIsImportDialogOpen] = React.useState(false)
+  const [selectedView, setSelectedView] = React.useState<string>("all")
+  const [showArchiveDialog, setShowArchiveDialog] = React.useState(false)
+  const [archiveConfirmation, setArchiveConfirmation] = React.useState("")
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   
   // Dynamic page title
@@ -162,6 +176,14 @@ const ContactsPageContent = (): React.JSX.Element => {
     {
       accessorKey: "channel",
       header: "Channels",
+      filterFn: (row, columnId, filterValue: string[]) => {
+        // OR logic: show row if its channel is in the selected channels array
+        if (!filterValue || filterValue.length === 0) {
+          return true; // No filter applied, show all rows
+        }
+        const rowChannel = row.getValue(columnId) as string;
+        return filterValue.includes(rowChannel);
+      },
       cell: ({ row }) => {
         const channel = row.getValue("channel") as string;
         const getChannelIconPath = (channel: string) => {
@@ -253,6 +275,14 @@ const ContactsPageContent = (): React.JSX.Element => {
     }
   }, [location.search])
 
+  // Filter data based on selected view
+  const filteredDataByView = React.useMemo(() => {
+    if (selectedView === "archived") {
+      return mockContacts.filter(c => c.conversationStatus === "closed")
+    }
+    return mockContacts
+  }, [selectedView])
+
   // Apply filters to table
   React.useEffect(() => {
     const newFilters: ColumnFiltersState = []
@@ -269,7 +299,7 @@ const ContactsPageContent = (): React.JSX.Element => {
   }, [selectedChannels, selectedTags])
 
   const table = useReactTable({
-    data: mockContacts,
+    data: filteredDataByView,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -408,6 +438,14 @@ const ContactsPageContent = (): React.JSX.Element => {
       <div className="flex flex-col">
         <DataTable
           isLoading={isDataLoading}
+          views={{
+            options: [
+              { label: "All contacts", value: "all", count: mockContacts.length },
+              { label: "Archived", value: "archived", count: mockContacts.filter(c => c.conversationStatus === "closed").length }
+            ],
+            selectedView: selectedView,
+            onViewChange: setSelectedView
+          }}
           searchConfig={{
             placeholder: "Search contacts by name or phone",
             searchColumns: ['name', 'phone', 'lastUpdate'],
@@ -460,28 +498,44 @@ const ContactsPageContent = (): React.JSX.Element => {
               selectedCount={table.getSelectedRowModel().rows.length}
               onClearSelection={() => table.resetRowSelection()}
               onSelectAll={() => table.toggleAllRowsSelected()}
+              onSelectAllOnPage={() => {
+                table.getRowModel().rows.forEach(row => row.toggleSelected(true))
+              }}
               totalCount={table.getFilteredRowModel().rows.length}
+              showCount={table.getRowModel().rows.length}
+              selectedCountOnCurrentPage={table.getRowModel().rows.filter(row => row.getIsSelected()).length}
+              audience="contacts"
               rightActions={
                 <>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 px-2 text-xs"
+                    className="h-7 px-2.5 text-sm"
                     onClick={() => {
-                      // TODO: Implement archive functionality
+                      // TODO: Implement send campaign functionality
                     }}
                   >
-                    Archive
+                    Send campaign
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 px-2 text-xs text-red-600 hover:text-red-700 hover:border-red-300"
+                    className="h-7 px-2.5 text-sm"
                     onClick={() => {
-                      // TODO: Implement delete functionality
+                      // TODO: Implement export functionality
                     }}
                   >
-                    Delete
+                    Export
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2.5 text-sm text-red-600 hover:text-red-700 hover:border-red-300"
+                    onClick={() => {
+                      setShowArchiveDialog(true)
+                    }}
+                  >
+                    Archive
                   </Button>
                 </>
               }
@@ -541,6 +595,75 @@ const ContactsPageContent = (): React.JSX.Element => {
           </DataTableBody>
         </DataTable>
       </div>
+
+      {/* Archive Dialog */}
+      <Dialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
+        <DialogContent className="sm:max-w-lg p-0 gap-0">
+          <DialogHeader className="p-4">
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-600" />
+              Archive Contacts
+            </DialogTitle>
+            <DialogDescription className="mt-2">
+              Are you sure you want to archive the selected contacts? 
+              Archived contacts will be moved to the archived view and can be restored later.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="p-4 space-y-4">
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="space-y-1 flex-1">
+                  <p className="text-sm text-amber-900 font-semibold">Warning</p>
+                  <p className="text-sm text-amber-800 leading-relaxed">
+                    Archiving will move the selected contacts to the archived section. 
+                    You can restore them later if needed.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="archiveConfirm" className="text-sm font-medium">
+                Type <code className="bg-gray-100 px-2 py-1 rounded font-mono text-xs">archive</code> to confirm:
+              </Label>
+              <Input
+                id="archiveConfirm"
+                value={archiveConfirmation}
+                onChange={(e) => setArchiveConfirmation(e.target.value)}
+                placeholder="Type 'archive' to confirm"
+                className="font-mono"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="px-4 py-4 border-t gap-3">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowArchiveDialog(false)
+                setArchiveConfirmation("")
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (archiveConfirmation.toLowerCase() === "archive") {
+                  // TODO: Implement archive functionality
+                  setShowArchiveDialog(false)
+                  setArchiveConfirmation("")
+                }
+              }}
+              disabled={archiveConfirmation.toLowerCase() !== "archive"}
+            >
+              Archive Contacts
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
