@@ -1,4 +1,4 @@
-import { IconTrendingDown, IconTrendingUp } from "@tabler/icons-react"
+import { TrendingDown, TrendingUp } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import {
@@ -75,7 +75,7 @@ export function SectionCards({ timeRange, isLoading = false, isEmpty = false }: 
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
-              {displayMetrics.messagesSent.trend === "up" ? <IconTrendingUp /> : <IconTrendingDown />}
+              {displayMetrics.messagesSent.trend === "up" ? <TrendingUp /> : <TrendingDown />}
               {displayMetrics.messagesSent.change}
             </Badge>
           </CardAction>
@@ -94,7 +94,7 @@ export function SectionCards({ timeRange, isLoading = false, isEmpty = false }: 
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
-              {displayMetrics.deliveryRate.trend === "up" ? <IconTrendingUp /> : <IconTrendingDown />}
+              {displayMetrics.deliveryRate.trend === "up" ? <TrendingUp /> : <TrendingDown />}
               {displayMetrics.deliveryRate.change}
             </Badge>
           </CardAction>
@@ -113,7 +113,7 @@ export function SectionCards({ timeRange, isLoading = false, isEmpty = false }: 
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
-              {displayMetrics.activeSenders.trend === "up" ? <IconTrendingUp /> : <IconTrendingDown />}
+              {displayMetrics.activeSenders.trend === "up" ? <TrendingUp /> : <TrendingDown />}
               {displayMetrics.activeSenders.change}
             </Badge>
           </CardAction>
@@ -130,7 +130,7 @@ export function SectionCards({ timeRange, isLoading = false, isEmpty = false }: 
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
-              {displayMetrics.responseRate.trend === "up" ? <IconTrendingUp /> : <IconTrendingDown />}
+              {displayMetrics.responseRate.trend === "up" ? <TrendingUp /> : <TrendingDown />}
               {displayMetrics.responseRate.change}
             </Badge>
           </CardAction>

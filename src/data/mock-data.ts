@@ -9,7 +9,7 @@ export type Campaign = {
   id: number;
   name: string;
   status: "Active" | "Draft" | "Completed";
-  type: "Email" | "SMS";
+  type: "Email" | "SMS" | "Whatsapp";
   recipients: number;
   sentDate: string | null;
   openRate: number;

@@ -94,25 +94,6 @@ const columns: ColumnDef<Campaign>[] = [
     ),
   },
   {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => {
-      const status = row.getValue("status") as Campaign["status"];
-      return (
-        <Badge 
-          variant={
-            status === "Active" ? "default" :
-            status === "Draft" ? "outline" :
-            "outline"
-          }
-          className="font-normal whitespace-nowrap"
-        >
-          {status}
-        </Badge>
-      );
-    },
-  },
-  {
     accessorKey: "recipients",
     header: () => <div className="text-right">Recipients</div>,
     cell: ({ row }) => (
@@ -125,11 +106,11 @@ const columns: ColumnDef<Campaign>[] = [
     accessorKey: "openRate",
     header: () => <div className="text-right">Open Rate</div>,
     cell: ({ row }) => {
-      const status = row.original.status;
+      const sentDate = row.original.sentDate;
       const openRate = row.getValue<number>("openRate");
       return (
         <div className="text-right whitespace-nowrap text-sm text-muted-foreground">
-          {status !== "Draft" ? `${openRate}%` : "-"}
+          {sentDate ? `${openRate}%` : "-"}
         </div>
       );
     },
@@ -138,11 +119,11 @@ const columns: ColumnDef<Campaign>[] = [
     accessorKey: "clickRate",
     header: () => <div className="text-right">Click Rate</div>,
     cell: ({ row }) => {
-      const status = row.original.status;
+      const sentDate = row.original.sentDate;
       const clickRate = row.getValue<number>("clickRate");
       return (
         <div className="text-right whitespace-nowrap text-sm text-muted-foreground">
-          {status !== "Draft" ? `${clickRate}%` : "-"}
+          {sentDate ? `${clickRate}%` : "-"}
         </div>
       );
     },
@@ -216,29 +197,18 @@ function CampaignsPageContent() {
   const [isDataLoading, setIsDataLoading] = React.useState(true)
 
   // Filter states
-  const [statusFilter, setStatusFilter] = React.useState<string[]>([])
   const [typeFilter, setTypeFilter] = React.useState<string[]>([])
-  const [statusSearchQuery, setStatusSearchQuery] = React.useState("")
   const [typeSearchQuery, setTypeSearchQuery] = React.useState("")
   const [selectedView, setSelectedView] = React.useState<string>("all")
 
   // Filter options
-  const statusOptions = [
-    { value: "Active", label: "Active" },
-    { value: "Draft", label: "Draft" },
-    { value: "Completed", label: "Completed" }
-  ]
-
   const typeOptions = [
     { value: "Email", label: "Email" },
-    { value: "SMS", label: "SMS" }
+    { value: "SMS", label: "SMS" },
+    { value: "Whatsapp", label: "Whatsapp" }
   ]
 
   // Filtered options based on search
-  const filteredStatusOptions = statusOptions.filter(option =>
-    option.label.toLowerCase().includes(statusSearchQuery.toLowerCase())
-  )
-
   const filteredTypeOptions = typeOptions.filter(option =>
     option.label.toLowerCase().includes(typeSearchQuery.toLowerCase())
   )
@@ -274,16 +244,12 @@ function CampaignsPageContent() {
   React.useEffect(() => {
     const newFilters: ColumnFiltersState = []
     
-    if (statusFilter.length > 0) {
-      newFilters.push({ id: 'status', value: statusFilter })
-    }
-    
     if (typeFilter.length > 0) {
       newFilters.push({ id: 'type', value: typeFilter })
     }
     
     setColumnFilters(newFilters)
-  }, [statusFilter, typeFilter])
+  }, [typeFilter])
 
   const table = useReactTable({
     data: filteredDataByView,
@@ -369,19 +335,6 @@ function CampaignsPageContent() {
                     searchQuery: typeSearchQuery,
                     onSearchChange: setTypeSearchQuery,
                     filteredOptions: filteredTypeOptions
-                  },
-                  {
-                    key: "status",
-                    label: "Status",
-                    options: statusOptions,
-                    selectedValues: statusFilter,
-                    onSelectionChange: setStatusFilter,
-                    onClear: () => setStatusFilter([]),
-                    searchable: true,
-                    searchPlaceholder: "Search status...",
-                    searchQuery: statusSearchQuery,
-                    onSearchChange: setStatusSearchQuery,
-                    filteredOptions: filteredStatusOptions
                   }
                 ]}
                 pagination={{

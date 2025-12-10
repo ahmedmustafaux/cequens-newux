@@ -561,7 +561,7 @@ const DataTableSelectionHeader = React.forwardRef<HTMLTableSectionElement, {
           <div className="flex items-center gap-3">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap text-sm font-medium transition-colors cursor-pointer hover:text-accent-foreground h-7 px-2.5">
+                  <button className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap text-sm font-medium transition-colors cursor-pointer text-foreground hover:text-accent-foreground h-7 px-2.5">
                     {selectedCount} selected
                     <ChevronDown className="h-4 w-4" />
                   </button>

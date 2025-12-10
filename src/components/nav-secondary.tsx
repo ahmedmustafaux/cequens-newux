@@ -1,5 +1,5 @@
 import * as React from "react"
-import { type Icon, IconChevronDown, IconChevronRight } from "@tabler/icons-react"
+import { type LucideIcon, ChevronDown, ChevronRight } from "lucide-react"
 import { useState, useEffect } from "react"
 import {
   SidebarGroup,
@@ -21,11 +21,11 @@ export function NavSecondary({
   items: {
     title: string
     url: string
-    icon: Icon
+    icon: LucideIcon
     items?: {
       title: string
       url: string
-      icon?: Icon
+      icon?: LucideIcon
     }[]
   }[]
 } & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
@@ -100,9 +100,9 @@ export function NavSecondary({
                         }}
                       >
                         {isOpen ? (
-                          <IconChevronDown className="size-4" />
+                          <ChevronDown className="size-4" />
                         ) : (
-                          <IconChevronRight className="size-4" />
+                          <ChevronRight className="size-4" />
                         )}
                       </div>
                     </SidebarMenuButton>

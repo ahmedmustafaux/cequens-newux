@@ -2,44 +2,24 @@ import * as React from "react"
 // Image component replaced with img tag for Vite
 import { getAppName } from "@/lib/config"
 import {
-  IconChartBar,
-  IconSmartHome,
-  IconHelp,
-  IconMessage,
-  IconPhoneCall,
-  IconSearch,
-  IconSettings,
-  IconUsers,
-  IconTemplate,
-  IconRobot,
-  IconComponents,
-  IconBrandWhatsapp,
-  IconMail,
-  IconBrandInstagram,
-  IconBrandApple,
-  IconDeviceMobile,
-  IconBrandMessenger,
-  IconWorld,
-  IconPlus,
-  IconBulb,
-  IconTags,
-  IconUserPlus,
-  IconSection,
-  IconInbox,
-  IconBrandCampaignmonitor,
-  IconBrain,
-  IconApi,
-  IconCreditCard,
-  IconUserCircle,
-  IconList,
-  IconFileDescription,
-  IconBell,
-  IconUser,
-  IconFileExport,
-  IconPuzzle,
-  IconAdjustments,
-  IconLifebuoy,
-} from "@tabler/icons-react"
+  BarChart3,
+  Home,
+  MessageSquare,
+  Settings,
+  Users,
+  FileText,
+  Bot,
+  Boxes,
+  Globe,
+  Lightbulb,
+  Tags,
+  Layout,
+  Inbox,
+  Megaphone,
+  Brain,
+  Code,
+  CreditCard,
+} from "lucide-react"
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
@@ -57,90 +37,90 @@ const data = {
     {
       title: "Home",
       url: "/",
-      icon: IconSmartHome,
+      icon: Home,
     },
     {
       title: "Campaigns",
       url: "/campaigns",
-      icon: IconBrandCampaignmonitor,
+      icon: Megaphone,
       items: [
         {
           title: "Automation",
           url: "/campaigns/automation",
-          icon: IconBulb,
+          icon: Lightbulb,
         },
         {
           title: "Settings",
           url: "/campaigns/settings",
-          icon: IconSettings,
+          icon: Settings,
         },
       ],
     },
     {
       title: "Inbox",
       url: "/inbox",
-      icon: IconInbox,
+      icon: Inbox,
       items: [
         {
           title: "Requests",
           url: "/inbox/requests",
-          icon: IconMessage,
+          icon: MessageSquare,
         },
         {
           title: "Settings",
           url: "/inbox/settings",
-          icon: IconSettings,
+          icon: Settings,
         },
       ],
     },
     {
       title: "Audience",
       url: "/contacts",
-      icon: IconUsers,
+      icon: Users,
       items: [
         {
           title: "Segments",
           url: "/contacts/segments",
-          icon: IconSection,
+          icon: Layout,
         },
         {
           title: "Tags & Attributes",
           url: "/contacts/tags",
-          icon: IconTags,
+          icon: Tags,
         },
       ],
     },
     {
       title: "Automation Hub",
       url: "/automation",
-      icon: IconRobot,
+      icon: Bot,
       items: [
         {
           title: "Journey Builder",
           url: "/automation/journey",
-          icon: IconComponents,
+          icon: Boxes,
         },
         {
           title: "Templates",
           url: "/automation/templates",
-          icon: IconTemplate,
+          icon: FileText,
         },
         {
           title: "Bot Studio",
           url: "/automation/bots",
-          icon: IconBrain,
+          icon: Brain,
         },
       ],
     },
     {
       title: "Channels",
       url: "/channels",
-      icon: IconWorld,
+      icon: Globe,
     },
     {
       title: "Analytics",
       url: "/analytics",
-      icon: IconChartBar,
+      icon: BarChart3,
     },
   ],
   navClouds: [],
@@ -148,7 +128,7 @@ const data = {
     {
       title: "Developer Hub",
       url: "/developer-apis",
-      icon: IconApi,
+      icon: Code,
       items: [
         {
           title: "API Docs",
@@ -183,7 +163,7 @@ const data = {
     {
       title: "Settings",
       url: "/settings",
-      icon: IconSettings,
+      icon: Settings,
       items: [
         {
           title: "Account Settings",
@@ -210,7 +190,7 @@ const data = {
     {
       title: "Billing",
       url: "/billing",
-      icon: IconCreditCard,
+      icon: CreditCard,
     },
   ],
 }

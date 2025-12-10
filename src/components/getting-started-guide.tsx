@@ -2,18 +2,18 @@ import * as React from "react"
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
-  IconCheck, 
-  IconChevronDown, 
-  IconChevronRight, 
-  IconMessage, 
-  IconUsers, 
-  IconSend,
-  IconSettings,
-  IconSparkles,
-  IconMinimize,
-  IconMaximize,
-  IconLock
-} from "@tabler/icons-react"
+  Check, 
+  ChevronDown, 
+  ChevronRight, 
+  MessageSquare, 
+  Users, 
+  Send,
+  Settings,
+  Sparkles,
+  Minimize2,
+  Maximize2,
+  Lock
+} from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -171,7 +171,7 @@ export function GettingStartedGuide({
       id: "section-1",
       title: "Send your first campaign",
       description: "Get started by sending your first message to customers",
-      icon: <IconSend className="w-5 h-5" />,
+      icon: <Send className="w-5 h-5" />,
       steps: [
         {
           id: "step-1-1",
@@ -211,10 +211,10 @@ export function GettingStartedGuide({
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="relative">
               <div className="w-16 h-16 bg-white rounded-lg shadow-md flex items-center justify-center">
-                <IconSend className="w-8 h-8 text-primary" />
+                <Send className="w-8 h-8 text-primary" />
               </div>
               <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                <IconCheck className="w-4 h-4 text-white" />
+                <Check className="w-4 h-4 text-white" />
               </div>
             </div>
           </div>
@@ -228,7 +228,7 @@ export function GettingStartedGuide({
         id: "section-2",
         title: "Set up your store",
         description: "Configure your e-commerce integrations",
-        icon: <IconSettings className="w-5 h-5" />,
+        icon: <Settings className="w-5 h-5" />,
         steps: [
           {
             id: "step-2-1",
@@ -267,7 +267,7 @@ export function GettingStartedGuide({
         id: "section-2",
         title: "Configure healthcare workflows",
         description: "Set up patient communication",
-        icon: <IconSettings className="w-5 h-5" />,
+        icon: <Settings className="w-5 h-5" />,
         steps: [
           {
             id: "step-2-1",
@@ -306,7 +306,7 @@ export function GettingStartedGuide({
         id: "section-2",
         title: "Configure financial services",
         description: "Set up secure banking communications",
-        icon: <IconSettings className="w-5 h-5" />,
+        icon: <Settings className="w-5 h-5" />,
         steps: [
           {
             id: "step-2-1",
@@ -346,7 +346,7 @@ export function GettingStartedGuide({
         id: "section-2",
         title: "Customize your setup",
         description: "Configure platform features",
-        icon: <IconSettings className="w-5 h-5" />,
+        icon: <Settings className="w-5 h-5" />,
         steps: [
           {
             id: "step-2-1",
@@ -387,7 +387,7 @@ export function GettingStartedGuide({
       id: "section-3",
       title: "Invite your team",
       description: "Collaborate with team members",
-      icon: <IconUsers className="w-5 h-5" />,
+      icon: <Users className="w-5 h-5" />,
       steps: [
         {
           id: "step-3-1",
@@ -464,7 +464,7 @@ export function GettingStartedGuide({
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3 flex-1">
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <IconSparkles className="w-5 h-5 text-primary" />
+                <Sparkles className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
                 <CardTitle className="text-lg">Setup guide</CardTitle>
@@ -482,9 +482,9 @@ export function GettingStartedGuide({
                 title={isMinimized ? "Maximize" : "Minimize"}
               >
                 {isMinimized ? (
-                  <IconMaximize className="h-4 w-4" />
+                  <Maximize2 className="h-4 w-4" />
                 ) : (
-                  <IconMinimize className="h-4 w-4" />
+                  <Minimize2 className="h-4 w-4" />
                 )}
               </Button>
             </div>
@@ -547,7 +547,7 @@ export function GettingStartedGuide({
                               : "bg-gray-100 text-gray-600"
                           )}>
                             {allStepsCompleted ? (
-                              <IconCheck className="w-4 h-4" />
+                              <Check className="w-4 h-4" />
                             ) : (
                               section.icon
                             )}
@@ -565,7 +565,7 @@ export function GettingStartedGuide({
                               animate={{ rotate: isExpanded ? 180 : 0 }}
                               transition={{ duration: 0.2 }}
                             >
-                              <IconChevronDown className="w-4 h-4 text-gray-400" />
+                              <ChevronDown className="w-4 h-4 text-gray-400" />
                             </motion.div>
                           </div>
                         </div>
@@ -614,7 +614,7 @@ export function GettingStartedGuide({
                                       )}
                                     >
                                       {isCompleted && (
-                                        <IconCheck className="w-2.5 h-2.5 text-white" />
+                                        <Check className="w-2.5 h-2.5 text-white" />
                                       )}
                                     </button>
 
@@ -627,7 +627,7 @@ export function GettingStartedGuide({
                                           {step.title}
                                         </h4>
                                         {isLocked && (
-                                          <IconLock className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                                          <Lock className="w-3 h-3 text-muted-foreground flex-shrink-0" />
                                         )}
                                       </div>
                                       <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
@@ -646,7 +646,7 @@ export function GettingStartedGuide({
                                                   disabled={isLocked}
                                                 >
                                                   {step.action.label}
-                                                  <IconChevronRight className="w-3 h-3 ml-0.5" />
+                                                  <ChevronRight className="w-3 h-3 ml-0.5" />
                                                 </Button>
                                               </span>
                                             </TooltipTrigger>

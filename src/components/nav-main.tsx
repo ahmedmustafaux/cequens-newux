@@ -1,5 +1,5 @@
 import { useLocation } from "react-router-dom"
-import { type Icon, IconChevronDown, IconChevronRight } from "@tabler/icons-react"
+import { type LucideIcon, ChevronDown, ChevronRight } from "lucide-react"
 import { useState, useEffect } from "react"
 import {
   SidebarGroup,
@@ -18,11 +18,11 @@ export function NavMain({
   items: {
     title: string
     url: string
-    icon?: Icon
+    icon?: LucideIcon
     items?: {
       title: string
       url: string
-      icon?: Icon
+      icon?: LucideIcon
     }[]
   }[]
 }) {
@@ -96,9 +96,9 @@ export function NavMain({
                         }}
                       >
                         {isOpen ? (
-                          <IconChevronDown className="size-4" />
+                          <ChevronDown className="size-4" />
                         ) : (
-                          <IconChevronRight className="size-4" />
+                          <ChevronRight className="size-4" />
                         )}
                       </div>
                     </SidebarMenuButton>
