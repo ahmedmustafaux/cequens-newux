@@ -340,7 +340,7 @@ export function OnboardingIndustryOverview({
   };
 
   return (
-    <div className="min-h-screen flex items-start justify-center p-4 pt-24">
+    <div className="bg-layout min-h-screen flex items-start justify-center p-4 pt-24">
       <Card className="w-full max-w-4xl shadow-lg bg-card rounded-2xl overflow-hidden fixed top-16 z-10">
         <CardContent className="p-6">
           <motion.div
@@ -364,9 +364,9 @@ export function OnboardingIndustryOverview({
               </div>
               
               {/* Info Note */}
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-info/10 border border-border-info">
-                <Info className="w-4 h-4 text-info-foreground flex-shrink-0" />
-                <p className="text-xs text-info-foreground">
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/10">
+                <Info className="w-4 h-4 text-primary flex-shrink-0" />
+                <p className="text-xs text-primary">
                   We'll personalize your experience based on this industry template, but you'll have full access to all our products and features.
                 </p>
               </div>
@@ -463,15 +463,15 @@ export function OnboardingIndustryOverview({
                               {caseStudies[activeCaseStudy].results.map((result, idx) => (
                                 <div
                                   key={idx}
-                                  className="flex flex-col items-center justify-center p-3 rounded-lg bg-info/10 border border-border-info"
+                                  className="flex flex-col items-center justify-center p-3 rounded-lg bg-muted border border-border"
                                 >
-                                  <div className="text-info-foreground mb-1">
+                                  <div className="text-muted-foreground mb-1">
                                   {result.icon}
                                   </div>
-                                  <p className="text-lg font-bold text-info-foreground">
+                                  <p className="text-lg font-bold text-foreground">
                                   {result.value}
                                   </p>
-                                  <p className="text-xs text-info-foreground text-center mt-0.5">
+                                  <p className="text-xs text-muted-foreground text-center mt-0.5">
                                     {result.metric}
                                   </p>
                                 </div>

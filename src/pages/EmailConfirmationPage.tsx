@@ -160,6 +160,26 @@ export default function EmailConfirmationPage() {
               </Item>
 
               <div className="grid gap-4">
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => window.open('https://mail.google.com', '_blank')}
+                    className="flex-1"
+                  >
+                    <img src="/icons/Gmail.svg" alt="Gmail" className="h-4 w-4" />
+                    Open Gmail
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => window.open('https://outlook.live.com', '_blank')}
+                    className="flex-1"
+                  >
+                    <img src="/icons/Outlook.svg" alt="Outlook" className="h-4 w-4" />
+                    Open Outlook
+                  </Button>
+                </div>
                 <div className="text-left">
                   <p className="text-sm text-muted-foreground">
                     Didn't receive an email?{" "}
