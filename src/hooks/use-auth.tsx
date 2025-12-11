@@ -124,8 +124,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         userType: determinedUserType
       })
       
-      // Navigate to intended page or dashboard
-      const destination = redirectTo || "/"
+      // Navigate to intended page or guide page
+      const destination = redirectTo || "/getting-started"
       navigate(destination, { replace: true })
     } catch (error) {
       console.error("Error during login:", error)

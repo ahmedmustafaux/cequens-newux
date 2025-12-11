@@ -274,12 +274,12 @@ export default function LoginPage() {
         } else {
           // User doesn't require additional verification
           toast.success("Welcome back! 👋", {
-            description: "You've successfully signed in. Redirecting to your dashboard...",
+            description: "You've successfully signed in. Redirecting to your guide...",
             duration: 3000,
           })
           
           // Use auth context to login with redirect
-          login(email, `${testUser.firstName} ${testUser.lastName}`, from)
+          login(email, `${testUser.firstName} ${testUser.lastName}`, undefined, from)
         }
       } else {
         // Show general error instead of individual field errors
@@ -309,9 +309,9 @@ export default function LoginPage() {
         // For demo user, use the name from test users
         const testUser = getTestUserByEmail(email)
         if (testUser) {
-          login(email, `${testUser.firstName} ${testUser.lastName}`, from)
+          login(email, `${testUser.firstName} ${testUser.lastName}`, undefined, from)
         } else {
-          login(email, undefined, from)
+          login(email, undefined, undefined, from)
         }
       } else {
         // Show error in form

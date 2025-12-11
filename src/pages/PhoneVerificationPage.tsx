@@ -399,7 +399,7 @@ export default function PhoneVerificationPage() {
         toast.success("Phone verified successfully!", {
           description: userType === "newUser" 
             ? "Your phone number has been verified. Let's set up your experience..." 
-            : "Your phone number has been verified. Redirecting to your dashboard...",
+            : "Your phone number has been verified. Redirecting to your guide...",
           duration: 4000,
         })
         
@@ -414,8 +414,8 @@ export default function PhoneVerificationPage() {
           // New users go to onboarding
           navigate("/onboarding")
         } else {
-          // Existing users go directly to dashboard
-          navigate("/")
+          // Existing users go to guide page
+          navigate("/getting-started")
         }
       } else {
         // Show error in form

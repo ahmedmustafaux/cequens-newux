@@ -45,7 +45,7 @@ interface PublicRouteProps {
 }
 
 export function PublicRoute({ children }: PublicRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading, user } = useAuth()
   const location = useLocation()
 
   // Show loading spinner while checking authentication
@@ -57,9 +57,9 @@ export function PublicRoute({ children }: PublicRouteProps) {
     )
   }
 
-  // If authenticated and on login/signup, redirect to intended location or dashboard
+  // If authenticated and on login/signup, redirect to intended location or guide page
   if (isAuthenticated) {
-    const from = location.state?.from?.pathname || "/"
+    const from = location.state?.from?.pathname || "/getting-started"
     return <Navigate to={from} replace />
   }
 

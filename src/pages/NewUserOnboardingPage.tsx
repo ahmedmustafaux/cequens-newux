@@ -263,8 +263,10 @@ export default function NewUserOnboardingPage() {
             setIsLoading(false)
             // Mark onboarding as completed with data
             markOnboardingComplete(onboardingData)
-            // Redirect to dashboard after completion
-            navigate("/")
+            // Redirect after completion
+            // Special handling: ahmed@cequens should go to guide page, others go to dashboard
+            const isAhmedUser = user?.email?.toLowerCase().includes("ahmed@cequens")
+            navigate(isAhmedUser ? "/getting-started" : "/")
           }, 1000)
           return 100
         }
