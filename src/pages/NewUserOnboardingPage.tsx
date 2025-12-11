@@ -338,7 +338,7 @@ export default function NewUserOnboardingPage() {
 
   // Show wizard after template selection or industry overview
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen bg-layout">
       {/* Theme Switcher - Top Right Corner */}
       <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20">
         <ThemeSwitcher />

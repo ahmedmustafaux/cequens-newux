@@ -138,7 +138,7 @@ export function OnboardingTemplateSelection({
   onStartFromScratch 
 }: OnboardingTemplateSelectionProps) {
   return (
-    <div className="min-h-screen flex items-start justify-center p-4 pt-24">
+    <div className="min-h-screen bg-layout flex items-start justify-center p-4 pt-24">
       <Card className="w-full max-w-5xl shadow-lg bg-card rounded-2xl overflow-hidden fixed top-16 z-10">
         <CardContent className="p-4">
           <motion.div
