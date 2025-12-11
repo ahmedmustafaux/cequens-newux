@@ -85,12 +85,22 @@ export function GettingStartedGuide({
   const [completedSteps, setCompletedSteps] = useState<Set<string>>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_COMPLETED)
-      const savedSteps = saved ? new Set(JSON.parse(saved)) : new Set()
-      // Automatically mark step-1-1 as completed if any channel is active
-      if (hasActiveChannels()) {
-        savedSteps.add("step-1-1")
+      if (saved) {
+        const parsed = JSON.parse(saved) as string[]
+        const savedSteps = new Set<string>(parsed)
+        // Automatically mark step-1-1 as completed if any channel is active
+        if (hasActiveChannels()) {
+          savedSteps.add("step-1-1")
+        }
+        return savedSteps
+      } else {
+        const steps = new Set<string>()
+        // Automatically mark step-1-1 as completed if any channel is active
+        if (hasActiveChannels()) {
+          steps.add("step-1-1")
+        }
+        return steps
       }
-      return savedSteps
     } catch {
       const steps = new Set<string>()
       // Automatically mark step-1-1 as completed if any channel is active
@@ -463,10 +473,10 @@ export function GettingStartedGuide({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 20, scale: 0.95 }}
-      transition={{ duration: 0.3 }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 20 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
       className={containerClasses}
       style={containerStyle}
     >
@@ -484,21 +494,21 @@ export function GettingStartedGuide({
               <div
                 key={section.id}
                 className={cn(
-                  "border rounded-lg overflow-hidden bg-card",
-                  allStepsCompleted ? "border-success/30 bg-success/5" : "border-border"
+                  "group border rounded-lg overflow-hidden bg-card transition-colors",
+                  allStepsCompleted ? "border-border-success bg-muted" : "border-border"
                 )}
               >
                 {/* Section Header - Clickable to toggle */}
                 <div
                   onClick={() => toggleSection(section.id)}
-                  className="w-full p-3 flex items-center justify-between hover:bg-accent cursor-pointer text-left transition-colors"
+                  className="w-full p-3 flex items-center justify-between cursor-pointer text-left"
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <div className={cn(
-                      "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",
+                      "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 border",
                       allStepsCompleted 
-                        ? "bg-success text-success-foreground" 
-                        : "bg-muted text-muted-foreground"
+                        ? "bg-success text-success-foreground border-border-success" 
+                        : "bg-muted text-muted-foreground border-border"
                     )}>
                       {allStepsCompleted ? (
                         <Check className="w-4 h-4" />
@@ -557,17 +567,13 @@ export function GettingStartedGuide({
                             <div
                               key={step.id}
                               className={cn(
-                                "group relative flex items-start gap-3 p-3 rounded-lg border transition-all",
+                                "group relative flex items-start gap-3 p-3 rounded-lg border",
                                 "overflow-hidden",
                                 isCompleted 
-                                  ? "border-success/30 bg-success/5" 
+                                  ? "border-border-success bg-success/10" 
                                   : "border-border bg-card"
                               )}
                             >
-                              {/* Gray gradient hover effect */}
-                              {!isCompleted && (
-                                <div className="absolute inset-0 bg-gradient-to-r from-muted/0 via-muted/50 to-muted/0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
-                              )}
                               <div className="relative z-10 flex items-start gap-3 w-full">
                                 <button
                                   onClick={() => !isLocked && toggleStepCompletion(step.id)}
@@ -578,11 +584,11 @@ export function GettingStartedGuide({
                                       ? "border-success bg-success"
                                       : isLocked
                                         ? "border-muted-foreground/30 bg-muted cursor-not-allowed"
-                                        : "border-border hover:border-border-primary"
+                                        : "border-border"
                                   )}
                                 >
                                   {isCompleted && (
-                                    <Check className="w-3 h-3 text-success-foreground" />
+                                    <Check className="w-2.5 h-2.5 text-success-foreground" />
                                   )}
                                 </button>
 
@@ -650,7 +656,7 @@ export function GettingStartedGuide({
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-3 flex-1">
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
                   <Sparkles className="w-5 h-5 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -680,7 +686,7 @@ export function GettingStartedGuide({
             {/* Progress bar */}
             <div className="mt-4">
               <div className="flex items-center gap-3">
-                <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden border border-border">
                   <motion.div
                     className="h-full bg-primary"
                     initial={{ width: 0 }}
@@ -717,21 +723,21 @@ export function GettingStartedGuide({
                     <div
                       key={section.id}
                       className={cn(
-                        "border rounded-lg overflow-hidden",
-                        allStepsCompleted ? "border-success/30 bg-success/5" : "border-border"
+                        "group border rounded-lg overflow-hidden transition-colors",
+                        allStepsCompleted ? "border-border-success bg-muted" : "border-border"
                       )}
                     >
                       {/* Section Header */}
                       <div
                         onClick={() => toggleSection(section.id)}
-                        className="w-full p-4 flex items-center justify-between hover:bg-accent cursor-pointer text-left"
+                        className="w-full p-4 flex items-center justify-between cursor-pointer text-left"
                       >
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                           <div className={cn(
-                            "w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0",
+                            "w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 border",
                             allStepsCompleted 
-                              ? "bg-success text-success-foreground" 
-                              : "bg-muted text-muted-foreground"
+                              ? "bg-success text-success-foreground border-border-success" 
+                              : "bg-muted text-muted-foreground border-border"
                           )}>
                             {allStepsCompleted ? (
                               <Check className="w-4 h-4" />
@@ -784,8 +790,8 @@ export function GettingStartedGuide({
                                     className={cn(
                                       "flex items-start gap-2 p-3 rounded-lg border",
                                       isCompleted 
-                                        ? "border-success/30 bg-success/5" 
-                                        : "border-border bg-card hover:bg-accent"
+                                        ? "border-border-success bg-success/10" 
+                                        : "border-border bg-card"
                                     )}
                                   >
                                     <button
@@ -797,11 +803,11 @@ export function GettingStartedGuide({
                                           ? "border-success bg-success"
                                           : isLocked
                                             ? "border-muted-foreground/30 bg-muted cursor-not-allowed"
-                                            : "border-border hover:border-border-primary"
+                                            : "border-border"
                                       )}
                                     >
                                       {isCompleted && (
-                                        <Check className="w-2.5 h-2.5 text-success-foreground" />
+                                        <Check className="w-2 h-2 text-success-foreground" />
                                       )}
                                     </button>
 

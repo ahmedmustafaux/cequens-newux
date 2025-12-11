@@ -72,6 +72,9 @@ import {
 import { usePageTitle } from "@/hooks/use-dynamic-title"
 import { mockContacts, type Contact } from "@/data/mock-data"
 
+// Tab values as constants
+const TAB_ALL = "all"
+const TAB_ARCHIVED = "archived"
 
 const ContactsPageContent = (): React.JSX.Element => {
   const navigate = useNavigate()
@@ -93,7 +96,7 @@ const ContactsPageContent = (): React.JSX.Element => {
   const [channelSearchQuery, setChannelSearchQuery] = React.useState("")
   const [tagSearchQuery, setTagSearchQuery] = React.useState("")
   const [isImportDialogOpen, setIsImportDialogOpen] = React.useState(false)
-  const [selectedView, setSelectedView] = React.useState<string>("all")
+  const [selectedView, setSelectedView] = React.useState<string>(TAB_ALL)
   const [showArchiveDialog, setShowArchiveDialog] = React.useState(false)
   const [archiveConfirmation, setArchiveConfirmation] = React.useState("")
   const fileInputRef = React.useRef<HTMLInputElement>(null)
@@ -277,7 +280,7 @@ const ContactsPageContent = (): React.JSX.Element => {
 
   // Filter data based on selected view
   const filteredDataByView = React.useMemo(() => {
-    if (selectedView === "archived") {
+    if (selectedView === TAB_ARCHIVED) {
       return mockContacts.filter(c => c.conversationStatus === "closed")
     }
     return mockContacts
@@ -440,8 +443,8 @@ const ContactsPageContent = (): React.JSX.Element => {
           isLoading={isDataLoading}
           views={{
             options: [
-              { label: "All contacts", value: "all", count: mockContacts.length },
-              { label: "Archived", value: "archived", count: mockContacts.filter(c => c.conversationStatus === "closed").length }
+              { label: "All contacts", value: TAB_ALL, count: mockContacts.length },
+              { label: "Archived", value: TAB_ARCHIVED, count: mockContacts.filter(c => c.conversationStatus === "closed").length }
             ],
             selectedView: selectedView,
             onViewChange: setSelectedView

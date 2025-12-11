@@ -43,7 +43,7 @@ export function DashboardPieChart({ timeRange, isLoading = false, isEmpty = fals
       animate={isLoading ? "loading" : "animate"}
       transition={smoothTransition}
     >
-      <Card className={`py-0 ${isEmpty ? "opacity-50" : ""}`}>
+      <Card className="py-0">
         <CardHeader className="flex flex-col items-stretch border-b border-border !p-0 sm:flex-row">
           <div className="flex flex-1 flex-col justify-center gap-1 px-4 pt-4 pb-3 sm:!py-6">
             <CardTitle>Message Distribution</CardTitle>

@@ -62,28 +62,23 @@ export function GettingStartedResources() {
 
   return (
     <div className="h-fit">
-      <div className="pb-3 mb-3">
-        <h2 className="text-base font-semibold">Resources</h2>
-      </div>
       <div className="space-y-1">
         {resources.map((resource, index) => (
-          <button
+          <Button
             key={index}
+            variant="outline"
             onClick={() => handleResourceClick(resource)}
             className={cn(
-              "w-full flex items-center gap-2.5 p-2 rounded-lg",
-              "hover:bg-accent transition-colors",
+              "w-full flex items-center gap-2.5 justify-start",
               "text-left group"
             )}
           >
-            <div className="text-muted-foreground group-hover:text-foreground transition-colors">
-              {resource.icon}
-            </div>
-            <span className="flex-1 text-xs font-medium group-hover:text-foreground transition-colors">
+            {resource.icon}
+            <span className="flex-1 text-xs font-medium">
               {resource.title}
             </span>
-            <ExternalLink className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-          </button>
+            <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </Button>
         ))}
       </div>
     </div>

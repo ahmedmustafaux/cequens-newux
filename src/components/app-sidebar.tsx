@@ -36,7 +36,7 @@ import {
 const data = {
   navMain: [
     {
-      title: "Getting Started",
+      title: "Guide",
       url: "/getting-started",
       icon: Sparkles,
     },

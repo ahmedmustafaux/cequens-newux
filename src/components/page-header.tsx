@@ -192,6 +192,8 @@ export function PageHeader({
         let label = segment.charAt(0).toUpperCase() + segment.slice(1)
         if (segment === "contacts") {
           label = "Audience"
+        } else if (segment === "getting-started") {
+          label = "Guide"
         }
         
         breadcrumbs.push({
@@ -289,7 +291,7 @@ export function PageHeader({
               {!isMobile && showSearch && (
                 <Field className="w-auto">
                   <FieldContent>
-                    <InputGroup className="bg-muted/50 border-border-muted focus-visible:bg-background focus-visible:border-ring transition-all duration-200 cursor-pointer w-auto gap-4">
+                    <InputGroup className="bg-background border-border-muted focus-visible:bg-background focus-visible:border-ring transition-all duration-200 cursor-pointer w-auto gap-4">
                       <div className="flex items-center gap-2">
                         <InputGroupAddon>
                           <Search className="h-3.5 w-3.5" />

@@ -1,14 +1,17 @@
 import * as React from "react"
+import { motion } from "framer-motion"
 import { GettingStartedGuide } from "@/components/getting-started-guide"
 import { GettingStartedResources } from "@/components/getting-started-resources"
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { useAuth } from "@/hooks/use-auth"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function GettingStartedPage() {
   const { onboardingData } = useOnboarding()
   const { user } = useAuth()
   const [totalSteps, setTotalSteps] = React.useState(4)
   const [completedCount, setCompletedCount] = React.useState(0)
+  const [isDataLoading, setIsDataLoading] = React.useState(true)
   
   // Calculate progress from localStorage
   React.useEffect(() => {
@@ -48,46 +51,126 @@ export default function GettingStartedPage() {
     }
   }, [onboardingData?.industry])
 
+  // Simulate initial data loading from server
+  React.useEffect(() => {
+    setIsDataLoading(true)
+    const timer = setTimeout(() => {
+      setIsDataLoading(false)
+    }, 400) // Simulate 400ms loading time for server data
+
+    return () => clearTimeout(timer)
+  }, [])
+
   // Get user's first name
   const userName = user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'there'
 
+  // Guide skeleton component
+  const GuideSkeleton = () => (
+    <div className="space-y-3">
+      {Array.from({ length: 3 }).map((_, index) => (
+        <div
+          key={index}
+          className="border rounded-lg overflow-hidden bg-card border-border"
+        >
+          {/* Section Header Skeleton */}
+          <div className="w-full p-3 flex items-center justify-between">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <Skeleton className="w-8 h-8 rounded-lg flex-shrink-0" />
+              <div className="flex-1 min-w-0 space-y-1.5">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-48" />
+              </div>
+              <Skeleton className="h-5 w-12 flex-shrink-0" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+
   return (
-    <div className="w-full">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className="w-full"
+    >
       {/* Two-column layout: 2/3 Getting Started, 1/3 Resources */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* Getting Started Section - 2/3 width (8 columns) */}
         <div className="lg:col-span-8">
           {/* Header with greeting and progress bar aligned horizontally - same width as guide */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-            <h1 className="text-xl font-semibold">
-              👋 Hello, {userName}! Let's get started.
-            </h1>
-            {/* Progress bar aligned horizontally with greeting */}
-            <div className="flex items-center gap-2">
-              <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden max-w-[200px]">
-                <div 
-                  className="h-full bg-primary transition-all duration-500"
-                  style={{ width: `${totalSteps > 0 ? Math.min((completedCount / totalSteps) * 100, 100) : 0}%` }}
-                />
-              </div>
-              <span className="text-xs text-muted-foreground whitespace-nowrap">
-                {completedCount} of {totalSteps}
-              </span>
-            </div>
-          </div>
-          <GettingStartedGuide
-            industry={onboardingData?.industry || "ecommerce"}
-            channels={onboardingData?.channels || []}
-            goals={onboardingData?.goals || []}
-            inline={true}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4"
+          >
+            {isDataLoading ? (
+              <>
+                <Skeleton className="h-7 w-64" />
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-1.5 w-[200px]" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+              </>
+            ) : (
+              <>
+                <h1 className="text-xl font-semibold">
+                  👋 Hello, {userName}! Let's get started.
+                </h1>
+                {/* Progress bar aligned horizontally with greeting */}
+                <div className="flex items-center gap-2">
+                  <div className="h-1.5 w-20 bg-muted rounded-full overflow-hidden border border-border">
+                    <div 
+                      className="h-full bg-primary transition-all duration-500"
+                      style={{ width: `${totalSteps > 0 ? Math.min((completedCount / totalSteps) * 100, 100) : 0}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    {completedCount} of {totalSteps}
+                  </span>
+                </div>
+              </>
+            )}
+          </motion.div>
+          
+          {isDataLoading ? (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            >
+              <GuideSkeleton />
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            >
+              <GettingStartedGuide
+                industry={onboardingData?.industry || "ecommerce"}
+                channels={onboardingData?.channels || []}
+                goals={onboardingData?.goals || []}
+                inline={true}
+              />
+            </motion.div>
+          )}
         </div>
 
         {/* Resources Section - 1/3 width (4 columns) */}
         <div className="lg:col-span-4">
-          <GettingStartedResources />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+          >
+            <GettingStartedResources />
+          </motion.div>
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }
