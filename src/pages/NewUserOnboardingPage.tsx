@@ -15,6 +15,7 @@ import { Item, ItemContent, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { toast } from "sonner"
 import { OnboardingTemplateSelection, IndustryTemplate } from "@/components/onboarding-template-selection"
 import { OnboardingIndustryOverview } from "@/components/onboarding-industry-overview"
+import { ThemeSwitcher } from "@/components/theme-switcher"
 
 // Define interfaces for option types
 interface BaseOption {
@@ -305,27 +306,44 @@ export default function NewUserOnboardingPage() {
   // Show template selection screen first
   if (showTemplateSelection) {
     return (
-      <OnboardingTemplateSelection
-        onTemplateSelect={handleTemplateSelect}
-        onStartFromScratch={handleStartFromScratch}
-      />
+      <div className="relative min-h-screen">
+        {/* Theme Switcher - Top Right Corner */}
+        <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20">
+          <ThemeSwitcher />
+        </div>
+        <OnboardingTemplateSelection
+          onTemplateSelect={handleTemplateSelect}
+          onStartFromScratch={handleStartFromScratch}
+        />
+      </div>
     )
   }
 
   // Show industry overview if template was selected
   if (showIndustryOverview && selectedTemplate) {
     return (
-      <OnboardingIndustryOverview
-        template={selectedTemplate}
-        onContinue={handleContinueFromOverview}
-        onBack={handleBackFromOverview}
-      />
+      <div className="relative min-h-screen">
+        {/* Theme Switcher - Top Right Corner */}
+        <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20">
+          <ThemeSwitcher />
+        </div>
+        <OnboardingIndustryOverview
+          template={selectedTemplate}
+          onContinue={handleContinueFromOverview}
+          onBack={handleBackFromOverview}
+        />
+      </div>
     )
   }
 
   // Show wizard after template selection or industry overview
   return (
-    <div className="min-h-screen flex items-start justify-center p-4 pt-24">
+    <div className="relative min-h-screen">
+      {/* Theme Switcher - Top Right Corner */}
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20">
+        <ThemeSwitcher />
+      </div>
+      <div className="min-h-screen flex items-start justify-center p-4 pt-24">
       <Card className="w-full max-w-2xl shadow-lg bg-card rounded-2xl overflow-hidden fixed top-16 z-10">
         <CardContent className="p-4">
           {!isCompleted ? (
@@ -664,6 +682,7 @@ export default function NewUserOnboardingPage() {
           )}
         </CardContent>
       </Card>
+      </div>
     </div>
   )
 }

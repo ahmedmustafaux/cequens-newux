@@ -169,13 +169,13 @@ export function OnboardingTemplateSelection({
                       <div className="text-3xl">{template.icon}</div>
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                         <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
-                          <Check className="w-3.5 h-3.5 text-primary" />
+                          <Check className="w-3.5 h-3.5 text-foreground" />
                         </div>
                       </div>
                     </div>
                     
                     <div>
-                      <h3 className="font-semibold text-base group-hover:text-primary transition-colors">
+                      <h3 className="font-semibold text-base transition-colors">
                         {template.name}
                       </h3>
                       <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
@@ -205,7 +205,7 @@ export function OnboardingTemplateSelection({
                       <ul className="text-xs text-muted-foreground space-y-0.5">
                         {template.useCases.slice(0, 2).map((useCase, idx) => (
                           <li key={idx} className="flex items-start">
-                            <Check className="w-3 h-3 mr-1 mt-0.5 text-primary flex-shrink-0" />
+                            <Check className="w-3 h-3 mr-1 mt-0.5 text-foreground flex-shrink-0" />
                             <span className="line-clamp-1">{useCase}</span>
                           </li>
                         ))}
@@ -213,7 +213,7 @@ export function OnboardingTemplateSelection({
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <li className="text-primary font-medium text-xs pl-4 cursor-help">
+                                <li className="text-foreground font-medium text-xs pl-4 cursor-help">
                                   +{template.useCases.length - 2} more
                                 </li>
                               </TooltipTrigger>
@@ -221,7 +221,7 @@ export function OnboardingTemplateSelection({
                                 <div className="space-y-1">
                                   {template.useCases.slice(2).map((useCase, idx) => (
                                     <div key={idx} className="flex items-start text-xs">
-                                      <Check className="w-3 h-3 mr-1 mt-0.5 text-primary flex-shrink-0" />
+                                      <Check className="w-3 h-3 mr-1 mt-0.5 text-foreground flex-shrink-0" />
                                       <span>{useCase}</span>
                                     </div>
                                   ))}

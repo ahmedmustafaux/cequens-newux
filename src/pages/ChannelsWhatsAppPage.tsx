@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
   Dialog,
   DialogContent,
@@ -97,6 +98,7 @@ export default function ChannelsWhatsAppPage() {
   const [revokeConfirmation, setRevokeConfirmation] = React.useState("")
   const [showDisconnectDialog, setShowDisconnectDialog] = React.useState(false)
   const [disconnectConfirmation, setDisconnectConfirmation] = React.useState("")
+  const [copiedButtonId, setCopiedButtonId] = React.useState<string | null>(null)
   
   // Track if we're in initial load to prevent saving during restore
   const isInitialLoad = React.useRef(true)
@@ -230,9 +232,13 @@ export default function ChannelsWhatsAppPage() {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleCopy = (text: string, label: string) => {
+  const handleCopy = (text: string, label: string, buttonId: string) => {
     navigator.clipboard.writeText(text)
-    toast.success("Copied!")
+    setCopiedButtonId(buttonId)
+    // Auto-hide after 2 seconds
+    setTimeout(() => {
+      setCopiedButtonId(null)
+    }, 2000)
   }
 
   const handleResourceClick = (resource: ResourceLink) => {
@@ -506,8 +512,7 @@ export default function ChannelsWhatsAppPage() {
                   </div>
                   {formData.businessAccountId && phoneNumbers.length > 0 && (
                     <Button 
-                      size="sm" 
-                      variant="secondary"
+                      variant="outline"
                       onClick={() => {
                         // Determine which number to add based on current count
                         // First number (index 0): Vodafone Support (already added on auth)
@@ -549,7 +554,7 @@ export default function ChannelsWhatsAppPage() {
                         toast.success("Phone number added successfully")
                       }}
                     >
-                      <Plus className="w-4 h-4 mr-2" />
+                      <Plus/>
                       Add new number
                     </Button>
                   )}
@@ -856,14 +861,22 @@ export default function ChannelsWhatsAppPage() {
                                     <Eye className="w-4 h-4" />
                                   )}
                                 </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-7 w-7 p-0"
-                                  onClick={() => handleCopy(formData.apiToken, "API Token")}
-                                >
-                                  <Copy className="w-4 h-4" />
-                                </Button>
+                                <div className="relative">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 w-7 p-0"
+                                    onClick={() => handleCopy(formData.apiToken, "API Token", "api-token-copy")}
+                                  >
+                                    <Copy className="w-4 h-4" />
+                                  </Button>
+                                  {copiedButtonId === "api-token-copy" && (
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-popover text-popover-foreground border border-border rounded-md text-xs shadow-md whitespace-nowrap z-50 animate-in fade-in-0 zoom-in-95">
+                                      Copied
+                                      <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 w-2 h-2 bg-popover border-r border-b border-border rotate-45"></div>
+                                    </div>
+                                  )}
+                                </div>
                               </>
                             )}
                           </div>
@@ -905,8 +918,37 @@ export default function ChannelsWhatsAppPage() {
                         </TabsList>
                         
                         <TabsContent value="curl" className="mt-3 data-[state=active]:animate-in data-[state=active]:fade-in data-[state=active]:duration-200">
-                          <div className="relative">
-                            <pre className="bg-muted text-foreground p-4 rounded-lg overflow-x-auto text-xs font-mono">
+                          <div className="relative rounded-lg border border-border bg-muted/50 overflow-hidden">
+                            <div className="absolute top-2 right-2 z-10">
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                className="h-7 bg-background/80 backdrop-blur-sm hover:bg-background border-border relative"
+                                onClick={() => {
+                                  const codeSnippet = `curl -X POST "https://apis.cequens.com/conversation/wab/v1/messages/" \\
+  -H "Authorization: ${formData.apiToken || 'YOUR_API_TOKEN'}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "to": "${phoneNumbers[0]?.phoneNumber || 'RECIPIENT_PHONE_NUMBER'}",
+    "type": "text",
+    "text": {
+      "body": "Hello from Cequens!"
+    }
+  }'`
+                                  handleCopy(codeSnippet, "cURL code snippet", "curl-copy")
+                                }}
+                              >
+                                <Copy className="w-3 h-3 mr-1.5" />
+                                Copy
+                              </Button>
+                              {copiedButtonId === "curl-copy" && (
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-popover text-popover-foreground border border-border rounded-md text-xs shadow-md whitespace-nowrap z-50 animate-in fade-in-0 zoom-in-95">
+                                  Copied
+                                  <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 w-2 h-2 bg-popover border-r border-b border-border rotate-45"></div>
+                                </div>
+                              )}
+                            </div>
+                            <pre className="p-4 overflow-x-auto text-xs font-mono text-foreground">
                               <code>{`curl -X POST "https://apis.cequens.com/conversation/wab/v1/messages/" \\
   -H "Authorization: ${formData.apiToken || 'YOUR_API_TOKEN'}" \\
   -H "Content-Type: application/json" \\
@@ -918,33 +960,56 @@ export default function ChannelsWhatsAppPage() {
     }
   }'`}</code>
                             </pre>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              className="absolute top-2 right-2 bg-muted hover:bg-accent text-foreground border-border"
-                              onClick={() => {
-                                const codeSnippet = `curl -X POST "https://apis.cequens.com/conversation/wab/v1/messages/" \\
-  -H "Authorization: ${formData.apiToken || 'YOUR_API_TOKEN'}" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "to": "${phoneNumbers[0]?.phoneNumber || 'RECIPIENT_PHONE_NUMBER'}",
-    "type": "text",
-    "text": {
-      "body": "Hello from Cequens!"
-    }
-  }'`
-                                handleCopy(codeSnippet, "cURL code snippet")
-                              }}
-                            >
-                              <Copy className="w-3 h-3 mr-1.5" />
-                              Copy
-                            </Button>
                           </div>
                         </TabsContent>
                         
                         <TabsContent value="javascript" className="mt-3 data-[state=active]:animate-in data-[state=active]:fade-in data-[state=active]:duration-200">
-                          <div className="relative">
-                            <pre className="bg-muted text-foreground p-4 rounded-lg overflow-x-auto text-xs font-mono">
+                          <div className="relative rounded-lg border border-border bg-muted/50 overflow-hidden">
+                            <div className="absolute top-2 right-2 z-10">
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                className="h-7 bg-background/80 backdrop-blur-sm hover:bg-background border-border relative"
+                                onClick={() => {
+                                  const codeSnippet = `const sendWhatsAppMessage = async () => {
+  const apiToken = "${formData.apiToken || 'YOUR_API_TOKEN'}";
+  const recipient = "${phoneNumbers[0]?.phoneNumber || 'RECIPIENT_PHONE_NUMBER'}";
+  
+  const response = await fetch(
+    'https://apis.cequens.com/conversation/wab/v1/messages/',
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': apiToken,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        to: recipient,
+        type: 'text',
+        text: {
+          body: 'Hello from Cequens!'
+        }
+      })
+    }
+  );
+  
+  const data = await response.json();
+  return data;
+};`
+                                  handleCopy(codeSnippet, "JavaScript code snippet", "javascript-copy")
+                                }}
+                              >
+                                <Copy className="w-3 h-3 mr-1.5" />
+                                Copy
+                              </Button>
+                              {copiedButtonId === "javascript-copy" && (
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-popover text-popover-foreground border border-border rounded-md text-xs shadow-md whitespace-nowrap z-50 animate-in fade-in-0 zoom-in-95">
+                                  Copied
+                                  <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 w-2 h-2 bg-popover border-r border-b border-border rotate-45"></div>
+                                </div>
+                              )}
+                            </div>
+                            <pre className="p-4 overflow-x-auto text-xs font-mono text-foreground">
                               <code>{`const sendWhatsAppMessage = async () => {
   const apiToken = "${formData.apiToken || 'YOUR_API_TOKEN'}";
   const recipient = "${phoneNumbers[0]?.phoneNumber || 'RECIPIENT_PHONE_NUMBER'}";
@@ -971,42 +1036,6 @@ export default function ChannelsWhatsAppPage() {
   return data;
 };`}</code>
                             </pre>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              className="absolute top-2 right-2 bg-muted hover:bg-accent text-foreground border-border"
-                              onClick={() => {
-                                const codeSnippet = `const sendWhatsAppMessage = async () => {
-  const apiToken = "${formData.apiToken || 'YOUR_API_TOKEN'}";
-  const recipient = "${phoneNumbers[0]?.phoneNumber || 'RECIPIENT_PHONE_NUMBER'}";
-  
-  const response = await fetch(
-    'https://apis.cequens.com/conversation/wab/v1/messages/',
-    {
-      method: 'POST',
-      headers: {
-        'Authorization': apiToken,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        to: recipient,
-        type: 'text',
-        text: {
-          body: 'Hello from Cequens!'
-        }
-      })
-    }
-  );
-  
-  const data = await response.json();
-  return data;
-};`
-                                handleCopy(codeSnippet, "JavaScript code snippet")
-                              }}
-                            >
-                              <Copy className="w-3 h-3 mr-1.5" />
-                              Copy
-                            </Button>
                           </div>
                         </TabsContent>
                       </Tabs>
@@ -1019,14 +1048,17 @@ export default function ChannelsWhatsAppPage() {
                           <li><code className="bg-muted px-1 py-0.5 rounded">type</code> - Message type (e.g., "text")</li>
                           <li><code className="bg-muted px-1 py-0.5 rounded">body</code> - Message content (max 4096 characters)</li>
                         </ul>
-                        <div className="mt-3 p-3 bg-warning/10 border border-warning/30 rounded-lg">
-                          <p className="font-medium text-warning-foreground mb-1">⚠️ Important Notes:</p>
-                          <ul className="space-y-1 ml-4 list-disc text-warning-foreground">
-                            <li>Text messages can only be sent within 24 hours of the customer's last message</li>
-                            <li>Use message templates to reach customers outside the 24-hour window</li>
-                            <li>API endpoint: <code className="bg-warning/20 px-1 py-0.5 rounded">https://apis.cequens.com/conversation/wab/v1/messages/</code></li>
-                          </ul>
-                        </div>
+                        <Alert className="mt-3 border-warning/30 bg-warning/10">
+                          <AlertTriangle className="h-4 w-4 text-warning-foreground" />
+                          <AlertTitle className="text-warning-foreground">Important Notes</AlertTitle>
+                          <AlertDescription className="text-warning-foreground">
+                            <ul className="space-y-1.5 mt-2 ml-4 list-disc">
+                              <li>Text messages can only be sent within 24 hours of the customer's last message</li>
+                              <li>Use message templates to reach customers outside the 24-hour window</li>
+                              <li>API endpoint: <code className="bg-warning/20 px-1 py-0.5 rounded font-mono text-xs">https://apis.cequens.com/conversation/wab/v1/messages/</code></li>
+                            </ul>
+                          </AlertDescription>
+                        </Alert>
                       </div>
                     </div>
                   </div>
