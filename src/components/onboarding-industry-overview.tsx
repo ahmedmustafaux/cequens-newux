@@ -379,9 +379,9 @@ export function OnboardingIndustryOverview({
                 {template.useCases.map((useCase, idx) => (
                   <div
                     key={idx}
-                    className="flex items-start gap-3 p-3 rounded-lg bg-muted border border-border"
+                    className="flex items-start gap-3 p-3 rounded-lg bg-muted/50 border border-border"
                   >
-                    <div className="mt-0.5">
+                    <div>
                       <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                         <Check className="w-3.5 h-3.5 text-muted-foreground" />
                       </div>
@@ -463,7 +463,7 @@ export function OnboardingIndustryOverview({
                               {caseStudies[activeCaseStudy].results.map((result, idx) => (
                                 <div
                                   key={idx}
-                                  className="flex flex-col items-center justify-center p-3 rounded-lg bg-muted border border-border"
+                                  className="flex flex-col items-center justify-center p-3 rounded-lg bg-muted/50 border border-border"
                                 >
                                   <div className="text-muted-foreground mb-1">
                                   {result.icon}
