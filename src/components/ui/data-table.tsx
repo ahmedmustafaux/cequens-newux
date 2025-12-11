@@ -24,7 +24,6 @@ import { FilterSelect } from "@/components/ui/filter-select"
 import { SearchInput } from "@/components/ui/search-input"
 import { useTableSearch } from "@/hooks/use-table-search"
 import { TableSkeleton } from "@/components/ui/table"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 interface FilterOption {
   value: string
   label: string
@@ -370,23 +369,24 @@ function DataTable({
                   <thead>
                     <tr>
                       <th colSpan={999} className="px-2 py-2 bg-card border-b border-border">
-                        <Tabs
-                          value={views.selectedView}
-                          onValueChange={views.onViewChange}
-                        >
-                          <TabsList>
-                            {views.options.map((view) => (
-                              <TabsTrigger key={view.value} value={view.value}>
-                                {view.label}
-                                {view.count !== undefined && (
-                                  <span className="ml-1.5 text-xs text-muted-foreground">
-                                    ({view.count})
-                                  </span>
-                                )}
-                              </TabsTrigger>
-                            ))}
-                          </TabsList>
-                        </Tabs>
+                        <div className="flex items-center gap-2">
+                          {views.options.map((view) => (
+                            <Button
+                              key={view.value}
+                              variant={views.selectedView === view.value ? "secondary" : "ghost"}
+                              size="sm"
+                              onClick={() => views.onViewChange(view.value)}
+                              className="h-8"
+                            >
+                              {view.label}
+                              {view.count !== undefined && (
+                                <span className="ml-1.5 text-xs text-muted-foreground">
+                                  ({view.count})
+                                </span>
+                              )}
+                            </Button>
+                          ))}
+                        </div>
                       </th>
                     </tr>
                   </thead>

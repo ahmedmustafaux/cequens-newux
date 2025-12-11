@@ -12,7 +12,14 @@ import {
   Sparkles,
   Minimize2,
   Maximize2,
-  Lock
+  Lock,
+  Code,
+  Briefcase,
+  BookOpen,
+  Terminal,
+  Key,
+  Webhook,
+  FileCode
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -50,11 +57,15 @@ interface SetupSection {
   illustration?: React.ReactNode
 }
 
+// Persona type
+export type Persona = "business" | "api"
+
 // Props interface
 interface GettingStartedGuideProps {
   industry?: string
   channels?: string[]
   goals?: string[]
+  persona?: Persona
   onDismiss?: () => void
   inline?: boolean // If true, renders inline instead of fixed position
 }
@@ -63,13 +74,14 @@ export function GettingStartedGuide({
   industry = "ecommerce",
   channels = [],
   goals = [],
+  persona = "business",
   onDismiss,
   inline = false
 }: GettingStartedGuideProps) {
-  // LocalStorage keys
-  const STORAGE_KEY_COMPLETED = 'cequens-setup-guide-completed-steps'
-  const STORAGE_KEY_MINIMIZED = 'cequens-setup-guide-minimized'
-  const STORAGE_KEY_EXPANDED = 'cequens-setup-guide-expanded-section'
+  // LocalStorage keys - persona-specific
+  const STORAGE_KEY_COMPLETED = `cequens-setup-guide-completed-steps-${persona}`
+  const STORAGE_KEY_MINIMIZED = `cequens-setup-guide-minimized-${persona}`
+  const STORAGE_KEY_EXPANDED = `cequens-setup-guide-expanded-section-${persona}`
 
   // Initialize state from localStorage
   // In inline mode, default to first section expanded
@@ -88,23 +100,23 @@ export function GettingStartedGuide({
       if (saved) {
         const parsed = JSON.parse(saved) as string[]
         const savedSteps = new Set<string>(parsed)
-        // Automatically mark step-1-1 as completed if any channel is active
-        if (hasActiveChannels()) {
+        // Automatically mark step-1-1 as completed if any channel is active (only for business persona)
+        if (persona === "business" && hasActiveChannels()) {
           savedSteps.add("step-1-1")
         }
         return savedSteps
       } else {
         const steps = new Set<string>()
-        // Automatically mark step-1-1 as completed if any channel is active
-        if (hasActiveChannels()) {
+        // Automatically mark step-1-1 as completed if any channel is active (only for business persona)
+        if (persona === "business" && hasActiveChannels()) {
           steps.add("step-1-1")
         }
         return steps
       }
     } catch {
       const steps = new Set<string>()
-      // Automatically mark step-1-1 as completed if any channel is active
-      if (hasActiveChannels()) {
+      // Automatically mark step-1-1 as completed if any channel is active (only for business persona)
+      if (persona === "business" && hasActiveChannels()) {
         steps.add("step-1-1")
       }
       return steps
@@ -127,10 +139,12 @@ export function GettingStartedGuide({
     } catch (error) {
       console.error('Failed to save completed steps:', error)
     }
-  }, [completedSteps, STORAGE_KEY_COMPLETED])
+  }, [completedSteps, persona])
 
-  // Listen for active channels changes and update step-1-1 completion
+  // Listen for active channels changes and update step-1-1 completion (only for business persona)
   useEffect(() => {
+    if (persona !== "business") return
+
     const handleActiveChannelsChange = () => {
       const hasActive = hasActiveChannels()
       setCompletedSteps(prev => {
@@ -151,7 +165,7 @@ export function GettingStartedGuide({
     return () => {
       window.removeEventListener('activeChannelsChanged', handleActiveChannelsChange)
     }
-  }, [])
+  }, [persona])
 
   // Save minimized state to localStorage whenever it changes
   useEffect(() => {
@@ -160,7 +174,7 @@ export function GettingStartedGuide({
     } catch (error) {
       console.error('Failed to save minimized state:', error)
     }
-  }, [isMinimized, STORAGE_KEY_MINIMIZED])
+  }, [isMinimized, persona])
 
   // Save expanded section to localStorage whenever it changes
   useEffect(() => {
@@ -173,70 +187,111 @@ export function GettingStartedGuide({
     } catch (error) {
       console.error('Failed to save expanded section:', error)
     }
-  }, [expandedSection, STORAGE_KEY_EXPANDED])
+  }, [expandedSection, persona])
 
-  // Generate personalized setup sections based on industry and selections
+  // Reset expanded section when persona changes
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_EXPANDED)
+      setExpandedSection(saved ? saved : "section-1")
+    } catch {
+      setExpandedSection("section-1")
+    }
+  }, [persona])
+
+  // Reset completed steps when persona changes
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_COMPLETED)
+      if (saved) {
+        const parsed = JSON.parse(saved) as string[]
+        const savedSteps = new Set<string>(parsed)
+        // Only auto-mark step-1-1 for business persona
+        if (persona === "business" && hasActiveChannels()) {
+          savedSteps.add("step-1-1")
+        }
+        setCompletedSteps(savedSteps)
+      } else {
+        const steps = new Set<string>()
+        if (persona === "business" && hasActiveChannels()) {
+          steps.add("step-1-1")
+        }
+        setCompletedSteps(steps)
+      }
+    } catch {
+      const steps = new Set<string>()
+      if (persona === "business" && hasActiveChannels()) {
+        steps.add("step-1-1")
+      }
+      setCompletedSteps(steps)
+    }
+  }, [persona])
+
+  // Generate personalized setup sections based on persona, industry and selections
   const setupSections: SetupSection[] = React.useMemo(() => {
     const sections: SetupSection[] = []
 
-    // Section 1: Send your first campaign (always included)
-    sections.push({
-      id: "section-1",
-      title: "Send your first campaign",
-      description: "Get started by sending your first message to customers",
-      icon: <Send className="w-5 h-5" />,
-      steps: [
-        {
-          id: "step-1-1",
-          title: "Configure your channel",
-          description: channels.length > 0 
-            ? `Set up ${channels.map(c => getChannelName(c)).join(", ")} for messaging`
-            : "Choose and configure your preferred messaging channel",
-          completed: false,
-          action: {
-            label: "Configure channels",
-            href: "/channels"
+    if (persona === "business") {
+      // BUSINESS PERSONA (MARKETEER) SECTIONS
+      
+      // Section 1: Send your first campaign
+      sections.push({
+        id: "section-1",
+        title: "Send your first campaign",
+        description: "Get started by sending your first message to customers",
+        icon: <Send className="w-5 h-5" />,
+        steps: [
+          {
+            id: "step-1-1",
+            title: "Configure your channel",
+            description: channels.length > 0 
+              ? `Set up ${channels.map(c => getChannelName(c)).join(", ")} for messaging`
+              : "Choose and configure your preferred messaging channel",
+            completed: false,
+            action: {
+              label: "Configure channels",
+              href: "/channels"
+            }
+          },
+          {
+            id: "step-1-2",
+            title: "Add your audience",
+            description: "Add contacts or create a segment",
+            completed: false,
+            action: {
+              label: "Add contacts",
+              href: "/contacts"
+            }
+          },
+          {
+            id: "step-1-3",
+            title: "Send your campaign",
+            description: "Create and send your first message",
+            completed: false,
+            action: {
+              label: "Create campaign",
+              href: "/campaigns/create"
+            }
           }
-        },
-        {
-          id: "step-1-2",
-          title: "Add your audience",
-          description: "Add contacts or create a segment",
-          completed: false,
-          action: {
-            label: "Add contacts",
-            href: "/contacts"
-          }
-        },
-        {
-          id: "step-1-3",
-          title: "Send your campaign",
-          description: "Create and send your first message",
-          completed: false,
-          action: {
-            label: "Create campaign",
-            href: "/campaigns/create"
-          }
-        }
-      ],
-      illustration: (
-        <div className="relative w-full h-32 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg p-4 flex items-center justify-center">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="relative">
-              <div className="w-16 h-16 bg-card rounded-lg shadow-md flex items-center justify-center border border-border">
-                <Send className="w-8 h-8 text-primary" />
-              </div>
-              <div className="absolute -top-2 -right-2 w-6 h-6 bg-success rounded-full flex items-center justify-center">
-                <Check className="w-4 h-4 text-success-foreground" />
+        ],
+        illustration: (
+          <div className="relative w-full h-32 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg p-4 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="relative">
+                <div className="w-16 h-16 bg-card rounded-lg shadow-md flex items-center justify-center border border-border">
+                  <Send className="w-8 h-8 text-primary" />
+                </div>
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-success rounded-full flex items-center justify-center">
+                  <Check className="w-4 h-4 text-success-foreground" />
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )
-    })
+        )
+      })
 
-    // Section 2: Industry-specific setup
-    if (industry === "ecommerce") {
+      // Section 2: Industry-specific setup for Business persona
+      if (industry === "ecommerce") {
       sections.push({
         id: "section-2",
         title: "Set up your store",
@@ -395,38 +450,175 @@ export function GettingStartedGuide({
       })
     }
 
-    // Section 3: Team collaboration (if applicable)
-    sections.push({
-      id: "section-3",
-      title: "Invite your team",
-      description: "Collaborate with team members",
-      icon: <Users className="w-5 h-5" />,
-      steps: [
-        {
-          id: "step-3-1",
-          title: "Add team members",
-          description: "Invite colleagues to collaborate",
-          completed: false,
-          action: {
-            label: "Manage team",
-            href: "/settings/organization"
+      // Section 3: Team collaboration (if applicable)
+      sections.push({
+        id: "section-3",
+        title: "Invite your team",
+        description: "Collaborate with team members",
+        icon: <Users className="w-5 h-5" />,
+        steps: [
+          {
+            id: "step-3-1",
+            title: "Add team members",
+            description: "Invite colleagues to collaborate",
+            completed: false,
+            action: {
+              label: "Manage team",
+              href: "/settings/organization"
+            }
+          },
+          {
+            id: "step-3-2",
+            title: "Set up roles and permissions",
+            description: "Control who can access what",
+            completed: false,
+            action: {
+              label: "Configure roles",
+              href: "/settings/organization"
+            }
           }
-        },
-        {
-          id: "step-3-2",
-          title: "Set up roles and permissions",
-          description: "Control who can access what",
-          completed: false,
-          action: {
-            label: "Configure roles",
-            href: "/settings/organization"
+        ]
+      })
+    } else {
+      // API PERSONA (DEVELOPER) SECTIONS
+      
+      // Section 1: Get API Access
+      sections.push({
+        id: "section-1",
+        title: "Get API Access",
+        description: "Set up your API credentials and authentication",
+        icon: <Key className="w-5 h-5" />,
+        steps: [
+          {
+            id: "step-1-1",
+            title: "Generate API Key",
+            description: "Create your API key for authentication",
+            completed: false,
+            action: {
+              label: "Get API Key",
+              href: "/developer-apis"
+            }
+          },
+          {
+            id: "step-1-2",
+            title: "Review API Documentation",
+            description: "Explore our comprehensive API documentation",
+            completed: false,
+            action: {
+              label: "View API Docs",
+              href: "/developer-apis/docs"
+            }
+          },
+          {
+            id: "step-1-3",
+            title: "Test API Connection",
+            description: "Verify your API credentials are working",
+            completed: false,
+            action: {
+              label: "Test Connection",
+              href: "/developer-apis"
+            }
           }
-        }
-      ]
-    })
+        ],
+        illustration: (
+          <div className="relative w-full h-32 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg p-4 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="relative">
+                <div className="w-16 h-16 bg-card rounded-lg shadow-md flex items-center justify-center border border-border">
+                  <Key className="w-8 h-8 text-primary" />
+                </div>
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-success rounded-full flex items-center justify-center">
+                  <Check className="w-4 h-4 text-success-foreground" />
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      })
+
+      // Section 2: Integrate APIs
+      sections.push({
+        id: "section-2",
+        title: "Integrate APIs",
+        description: "Start integrating messaging APIs into your application",
+        icon: <Code className="w-5 h-5" />,
+        steps: [
+          {
+            id: "step-2-1",
+            title: "Choose your API",
+            description: "Select SMS, WhatsApp, Voice, or other APIs",
+            completed: false,
+            action: {
+              label: "Browse APIs",
+              href: "/developer-apis/listing"
+            }
+          },
+          {
+            id: "step-2-2",
+            title: "Set up webhooks",
+            description: "Configure webhooks to receive message status updates",
+            completed: false,
+            action: {
+              label: "Configure Webhooks",
+              href: "/developer-apis/docs"
+            }
+          },
+          {
+            id: "step-2-3",
+            title: "Send your first API request",
+            description: "Make your first API call to send a message",
+            completed: false,
+            action: {
+              label: "Try SMS API",
+              href: "/developer-apis/sms"
+            }
+          }
+        ]
+      })
+
+      // Section 3: Advanced Features
+      sections.push({
+        id: "section-3",
+        title: "Advanced Features",
+        description: "Explore advanced API features and capabilities",
+        icon: <Terminal className="w-5 h-5" />,
+        steps: [
+          {
+            id: "step-3-1",
+            title: "Explore SDKs and Libraries",
+            description: "Use our SDKs for faster integration",
+            completed: false,
+            action: {
+              label: "View SDKs",
+              href: "/developer-apis/docs"
+            }
+          },
+          {
+            id: "step-3-2",
+            title: "Set up OTP verification",
+            description: "Implement OTP verification in your app",
+            completed: false,
+            action: {
+              label: "OTP API",
+              href: "/developer-apis/otp"
+            }
+          },
+          {
+            id: "step-3-3",
+            title: "Configure rate limits",
+            description: "Understand and manage API rate limits",
+            completed: false,
+            action: {
+              label: "Rate Limits",
+              href: "/developer-apis/docs"
+            }
+          }
+        ]
+      })
+    }
 
     return sections
-  }, [industry, channels])
+  }, [industry, channels, persona])
 
   // Helper function to get channel name
   function getChannelName(channelId: string): string {

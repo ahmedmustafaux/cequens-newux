@@ -23,6 +23,36 @@ interface DashboardChartProps {
 
 export function DashboardChart({ timeRange, isLoading = false, isEmpty = false, className }: DashboardChartProps) {
   const [activeMetric, setActiveMetric] = React.useState<"messages" | "senders">("messages")
+  const [barColor, setBarColor] = React.useState<string>('')
+  const chartRef = React.useRef<HTMLDivElement>(null)
+  
+  // Get computed color from chart config CSS variable
+  React.useEffect(() => {
+    const updateColor = () => {
+      if (chartRef.current) {
+        const chartElement = chartRef.current.querySelector('[data-chart]') as HTMLElement
+        if (chartElement) {
+          const computed = getComputedStyle(chartElement)
+          const colorVar = computed.getPropertyValue(`--color-${activeMetric}`).trim()
+          if (colorVar) {
+            setBarColor(colorVar)
+          }
+        }
+      }
+    }
+    
+    updateColor()
+    // Update on theme changes
+    const observer = new MutationObserver(updateColor)
+    if (chartRef.current) {
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class']
+      })
+    }
+    
+    return () => observer.disconnect()
+  }, [activeMetric])
   
   // Get chart data from mock data
   const chartData = getDashboardChartData(timeRange)
@@ -87,16 +117,16 @@ export function DashboardChart({ timeRange, isLoading = false, isEmpty = false, 
           </div>
         </CardHeader>
         <CardContent className="px-2 sm:p-6">
-          <div className="h-[250px] w-full">
+          <div className="h-[250px] w-full" ref={chartRef}>
             <ChartContainer 
               config={{
                 messages: {
                   label: "Messages Sent",
-                  color: "oklch(var(--primary))"
+                  color: "var(--primary)"
                 },
                 senders: {
                   label: "Active Senders",
-                  color: "oklch(var(--primary))"
+                  color: "var(--primary)"
                 }
               }}
               className="aspect-auto h-[250px] w-full"
@@ -151,7 +181,7 @@ export function DashboardChart({ timeRange, isLoading = false, isEmpty = false, 
                 />
                 <Bar 
                   dataKey={activeMetric} 
-                  fill="oklch(var(--primary))" 
+                  fill={barColor || 'var(--primary)'}
                   radius={[4, 4, 0, 0]} 
                 />
               </BarChart>

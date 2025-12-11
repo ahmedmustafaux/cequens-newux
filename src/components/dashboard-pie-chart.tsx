@@ -20,6 +20,44 @@ interface DashboardPieChartProps {
 }
 
 export function DashboardPieChart({ timeRange, isLoading = false, isEmpty = false }: DashboardPieChartProps) {
+  const [pieColors, setPieColors] = React.useState<{ whatsapp: string; sms: string }>({
+    whatsapp: '',
+    sms: ''
+  })
+  const chartRef = React.useRef<HTMLDivElement>(null)
+  
+  // Get computed colors from chart config CSS variables
+  React.useEffect(() => {
+    const updateColors = () => {
+      if (chartRef.current) {
+        const chartElement = chartRef.current.querySelector('[data-chart]') as HTMLElement
+        if (chartElement) {
+          const computed = getComputedStyle(chartElement)
+          const whatsappColor = computed.getPropertyValue('--color-whatsapp').trim()
+          const smsColor = computed.getPropertyValue('--color-sms').trim()
+          if (whatsappColor && smsColor) {
+            setPieColors({
+              whatsapp: whatsappColor,
+              sms: smsColor
+            })
+          }
+        }
+      }
+    }
+    
+    updateColors()
+    // Update on theme changes
+    const observer = new MutationObserver(updateColors)
+    if (chartRef.current) {
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class']
+      })
+    }
+    
+    return () => observer.disconnect()
+  }, [])
+  
   // Get chart data from mock data
   const chartData = getChartData(timeRange)
   
@@ -31,10 +69,10 @@ export function DashboardPieChart({ timeRange, isLoading = false, isEmpty = fals
   const whatsappTotal = isEmpty ? 0 : chartData.reduce((sum, item) => sum + item.whatsapp, 0)
   const smsTotal = isEmpty ? 0 : chartData.reduce((sum, item) => sum + item.sms, 0)
 
-  // Prepare data for pie chart - using theme colors
+  // Prepare data for pie chart - using computed colors from chart config
   const pieData = [
-    { name: 'WhatsApp', value: whatsappTotal, color: 'oklch(var(--primary))' },
-    { name: 'SMS', value: smsTotal, color: 'oklch(var(--info))' },
+    { name: 'WhatsApp', value: whatsappTotal, color: pieColors.whatsapp || 'var(--primary)' },
+    { name: 'SMS', value: smsTotal, color: pieColors.sms || 'var(--chart-2)' },
   ]
 
   return (
@@ -53,16 +91,16 @@ export function DashboardPieChart({ timeRange, isLoading = false, isEmpty = fals
           </div>
         </CardHeader>
         <CardContent className="px-2 sm:p-6">
-          <div className="h-[250px] w-full">
+          <div className="h-[250px] w-full" ref={chartRef}>
             <ChartContainer 
               config={{
                 whatsapp: {
                   label: "WhatsApp",
-                  color: "oklch(var(--primary))"
+                  color: "var(--primary)"
                 },
                 sms: {
                   label: "SMS",
-                  color: "oklch(var(--info))"
+                  color: "var(--chart-1)"
                 }
               }}
               className="aspect-auto h-[250px] w-full"
@@ -74,7 +112,7 @@ export function DashboardPieChart({ timeRange, isLoading = false, isEmpty = fals
                   cy="50%"
                   labelLine={false}
                   outerRadius={80}
-                  fill="oklch(var(--primary))"
+                  fill={pieColors.whatsapp || 'var(--primary)'}
                   dataKey="value"
                 >
                   {pieData.map((entry, index) => (
