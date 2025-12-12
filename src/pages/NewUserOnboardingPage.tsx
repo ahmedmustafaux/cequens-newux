@@ -2,7 +2,7 @@ import * as React from "react"
 import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { Check, ChevronRight, Loader2, MessageSquare, Mail, Phone, Smartphone } from "lucide-react"
+import { Check, ChevronRight, Loader2, MessageSquare, Mail, Phone, Smartphone, Code, AppWindow } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { smoothTransition, pageVariants } from "@/lib/transitions"
@@ -22,7 +22,7 @@ interface BaseOption {
 }
 
 interface IconOption extends BaseOption {
-  iconType: "lucide" | "svg" | "img";
+  iconType: "lucide" | "svg" | "img" | "visual";
   icon: string;
 }
 
@@ -41,18 +41,88 @@ const hasIcon = (option: Option): option is IconOption => {
   return 'iconType' in option && 'icon' in option;
 };
 
+// Grayscale visual components
+const CodeSnippetVisual = () => (
+  <svg
+    width="100%"
+    height="100"
+    viewBox="0 0 100 100"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className="grayscale w-full"
+    preserveAspectRatio="xMidYMid meet"
+  >
+    {/* Code editor background */}
+    <rect x="10" y="15" width="80" height="70" rx="5" fill="#F5F5F5" stroke="#D4D4D4" strokeWidth="2"/>
+    {/* Window controls */}
+    <circle cx="22" cy="25" r="4" fill="#A3A3A3"/>
+    <circle cx="35" cy="25" r="4" fill="#A3A3A3"/>
+    <circle cx="48" cy="25" r="4" fill="#A3A3A3"/>
+    {/* Code lines */}
+    <rect x="20" y="40" width="60" height="4" rx="2" fill="#D4D4D4"/>
+    <rect x="20" y="50" width="50" height="4" rx="2" fill="#D4D4D4"/>
+    <rect x="20" y="60" width="65" height="4" rx="2" fill="#D4D4D4"/>
+    <rect x="25" y="70" width="55" height="4" rx="2" fill="#D4D4D4"/>
+    {/* Syntax highlighting accents */}
+    <rect x="20" y="40" width="10" height="4" rx="2" fill="#A3A3A3"/>
+    <rect x="20" y="50" width="15" height="4" rx="2" fill="#A3A3A3"/>
+  </svg>
+);
+
+const DashboardVisual = () => (
+  <svg
+    width="100%"
+    height="100"
+    viewBox="0 0 100 100"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className="grayscale w-full"
+    preserveAspectRatio="xMidYMid meet"
+  >
+    {/* Dashboard background */}
+    <rect x="10" y="15" width="80" height="70" rx="5" fill="#F5F5F5" stroke="#D4D4D4" strokeWidth="2"/>
+    {/* Header bar */}
+    <rect x="10" y="15" width="80" height="15" rx="5" fill="#E5E5E5"/>
+    {/* Sidebar */}
+    <rect x="10" y="30" width="20" height="55" rx="0" fill="#E5E5E5"/>
+    {/* Chart area */}
+    <rect x="35" y="35" width="50" height="25" rx="2" fill="#D4D4D4" opacity="0.5"/>
+    {/* Chart bars */}
+    <rect x="40" y="50" width="5" height="10" rx="1" fill="#A3A3A3"/>
+    <rect x="50" y="45" width="5" height="15" rx="1" fill="#A3A3A3"/>
+    <rect x="60" y="48" width="5" height="12" rx="1" fill="#A3A3A3"/>
+    <rect x="70" y="42" width="5" height="18" rx="1" fill="#A3A3A3"/>
+    {/* Stats cards */}
+    <rect x="35" y="65" width="22" height="15" rx="2" fill="#D4D4D4" opacity="0.5"/>
+    <rect x="63" y="65" width="22" height="15" rx="2" fill="#D4D4D4" opacity="0.5"/>
+    {/* Sidebar items */}
+    <rect x="15" y="38" width="10" height="2.5" rx="1" fill="#A3A3A3"/>
+    <rect x="15" y="45" width="10" height="2.5" rx="1" fill="#A3A3A3"/>
+    <rect x="15" y="52" width="10" height="2.5" rx="1" fill="#A3A3A3"/>
+  </svg>
+);
+
 // Helper function to render icon based on type
-const renderIcon = (option: IconOption) => {
+const renderIcon = (option: IconOption, size: "small" | "large" = "small") => {
+  const iconSize = size === "large" ? "w-12 h-12" : "w-4 h-4";
   if (option.iconType === "lucide") {
     const iconMap: Record<string, React.ReactNode> = {
-      MessageSquare: <MessageSquare className="w-4 h-4 text-primary" />,
-      Mail: <Mail className="w-4 h-4 text-primary" />,
-      Phone: <Phone className="w-4 h-4 text-primary" />,
-      Smartphone: <Smartphone className="w-4 h-4 text-primary" />,
+      MessageSquare: <MessageSquare className={`${iconSize} text-primary`} />,
+      Mail: <Mail className={`${iconSize} text-primary`} />,
+      Phone: <Phone className={`${iconSize} text-primary`} />,
+      Smartphone: <Smartphone className={`${iconSize} text-primary`} />,
+      Code: <Code className={`${iconSize} text-primary`} />,
+      AppWindow: <AppWindow className={`${iconSize} text-primary`} />,
     };
     return iconMap[option.icon] || null;
   } else if (option.iconType === "svg" || option.iconType === "img") {
-    return <img src={option.icon} alt={option.label} className="w-4 h-4" />;
+    return <img src={option.icon} alt={option.label} className={iconSize} />;
+  } else if (option.iconType === "visual") {
+    const visualMap: Record<string, React.ReactNode> = {
+      codeSnippet: <CodeSnippetVisual />,
+      dashboard: <DashboardVisual />,
+    };
+    return visualMap[option.icon] || null;
   }
   return null;
 };
@@ -105,8 +175,8 @@ const onboardingSteps = [
     id: 4,
     question: "How will you use our platform?",
     options: [
-      { id: "usage-1", label: "API Integrations (Developers)" },
-      { id: "usage-2", label: "Interfaced Apps (CRM Teams)" },
+      { id: "usage-1", label: "API Integrations (Developers)", iconType: "visual", icon: "codeSnippet" },
+      { id: "usage-2", label: "Interfaced Apps (CRM Teams)", iconType: "visual", icon: "dashboard" },
     ],
     multiSelect: true,
     visualOptions: true,
@@ -124,7 +194,7 @@ export default function NewUserOnboardingPage() {
   const [customIndustryName, setCustomIndustryName] = useState("")
   const [currentStep, setCurrentStep] = useState(0)
   const [selectedOptions, setSelectedOptions] = useState<Record<number, string[]>>({
-    5: ["usage-1", "usage-2"] // Pre-select both options for the usage question (step 5)
+    4: ["usage-1", "usage-2"] // Pre-select both options for the usage question (step 4)
   })
   const [isCompleted, setIsCompleted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -393,23 +463,40 @@ export default function NewUserOnboardingPage() {
 
                     {/* Options */}
                     {onboardingSteps[currentStep - 1].visualOptions ? (
-                      // Visual options for usage question - simplified with native components
+                      // Visual options for usage question - with grayscale visuals above labels
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                        {onboardingSteps[currentStep - 1].options.map(option => (
-                          <div
-                            key={option.id}
-                            onClick={() => handleOptionSelect(option.id)}
-                            className="flex items-center space-x-2 cursor-pointer"
-                          >
-                            <Checkbox 
-                              checked={isOptionSelected(option.id)}
-                              className="pointer-events-none"
-                            />
-                            <Label className="text-sm font-normal cursor-pointer">
-                              {option.label}
-                            </Label>
-                          </div>
-                        ))}
+                        {onboardingSteps[currentStep - 1].options.map(option => {
+                          const isSelected = isOptionSelected(option.id);
+                          const hasIconData = hasIcon(option);
+                          return (
+                            <div
+                              key={option.id}
+                              onClick={() => handleOptionSelect(option.id)}
+                              className={`relative flex flex-col rounded-lg border cursor-pointer transition-all hover:bg-accent ${
+                                isSelected
+                                  ? "border-primary bg-primary/5"
+                                  : "border-border"
+                              }`}
+                            >
+                              {/* Visual/Icon above - full width */}
+                              {hasIconData && (
+                                <div className="w-full flex items-center justify-center bg-muted/30 rounded-t-lg overflow-hidden">
+                                  {renderIcon(option, "large")}
+                                </div>
+                              )}
+                              {/* Checkbox and Label */}
+                              <div className="flex items-center space-x-2 w-full justify-center p-4">
+                                <Checkbox 
+                                  checked={isSelected}
+                                  className="pointer-events-none"
+                                />
+                                <Label className="text-sm font-normal cursor-pointer text-center">
+                                  {option.label}
+                                </Label>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     ) : (
                       // Standard options for other questions
