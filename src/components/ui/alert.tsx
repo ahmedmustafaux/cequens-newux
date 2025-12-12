@@ -2,18 +2,19 @@ import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
-import { Skeleton } from "@/components/ui/skeleton"
 
 const alertVariants = cva(
-  "relative w-full rounded-lg border border-border px-4 py-3 text-sm grid has-[>svg]:grid-cols-[calc(var(--spacing)*4)_1fr] grid-cols-[0_1fr] has-[>svg]:gap-x-3 gap-y-0.5 items-start [&>svg]:size-4 [&>svg]:translate-y-0.5 [&>svg]:text-current",
+  "relative w-full rounded-lg border px-4 py-3 text-sm grid has-[>svg]:grid-cols-[calc(var(--spacing)*4)_1fr] grid-cols-[0_1fr] has-[>svg]:gap-x-3 gap-y-0.5 items-start [&>svg]:size-4 [&>svg]:translate-y-0.5 [&>svg]:text-current",
   {
-    variants: {
-      variant: {
-        default: "bg-card text-card-foreground border-border-card",
-        destructive:
-          "text-destructive bg-card border-border-destructive [&>svg]:text-current *:data-[slot=alert-description]:text-destructive/90",
+      variants: {
+        variant: {
+          default: "bg-card text-card-foreground *:data-[slot=alert-description]:text-card-foreground",
+          destructive:
+            "text-destructive bg-card [&>svg]:text-current *:data-[slot=alert-description]:text-destructive/90",
+          info:
+            "bg-info/10 text-info border-border-info [&>svg]:text-info *:data-[slot=alert-description]:text-info/90",
+        },
       },
-    },
     defaultVariants: {
       variant: "default",
     },
@@ -64,22 +65,4 @@ function AlertDescription({
   )
 }
 
-function AlertSkeleton({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div
-      className={cn(
-        "relative w-full rounded-lg px-4 py-3 text-sm",
-        className
-      )}
-      {...props}
-    >
-      <div className="space-y-2">
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-3 w-full" />
-        <Skeleton className="h-3 w-2/3" />
-      </div>
-    </div>
-  )
-}
-
-export { Alert, AlertTitle, AlertDescription, AlertSkeleton }
+export { Alert, AlertTitle, AlertDescription }

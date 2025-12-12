@@ -299,7 +299,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="bg-card rounded-2xl shadow-lg overflow-hidden w-full max-w-6xl mx-auto h-full max-h-[calc(100vh-2rem)] border border-border">
+    <div className="bg-card rounded-2xl shadow-none overflow-hidden w-full max-w-6xl mx-auto h-full max-h-[calc(100vh-2rem)] border border-border">
       <div className="grid grid-cols-1 md:grid-cols-2 h-full">
           {/* Left Panel - White Background with Form */}
           <motion.div 
@@ -522,7 +522,7 @@ export default function SignupPage() {
                       {passwordFocused && (
                         <div 
                           ref={passwordStrengthRef}
-                          className="bg-card p-3 rounded-md shadow-md border border-border z-50 w-auto"
+                          className="bg-card p-3 rounded-md shadow-none border border-border z-50 w-auto"
                           style={{ 
                             position: 'fixed',
                             left: passwordInputRef.current ? 
@@ -684,7 +684,7 @@ export default function SignupPage() {
                         <div className="flex justify-center items-center space-x-3 mt-1">
                           <button 
                             type="button"
-                            className="bg-card/80 rounded-full p-1 shadow-sm hover:bg-card cursor-pointer z-30"
+                            className="bg-card/80 rounded-full p-1 shadow-none hover:bg-card cursor-pointer z-30"
                             onClick={(e) => {
                               e.stopPropagation();
                               console.log(`Left arrow clicked, current step: ${activeStoryStep}`);
@@ -741,7 +741,7 @@ export default function SignupPage() {
                           
                           <button 
                             type="button"
-                            className="bg-card/80 rounded-full p-1 shadow-sm hover:bg-card cursor-pointer z-30"
+                            className="bg-card/80 rounded-full p-1 shadow-none hover:bg-card cursor-pointer z-30"
                             onClick={(e) => {
                               e.stopPropagation();
                               console.log(`Right arrow clicked, current step: ${activeStoryStep}`);

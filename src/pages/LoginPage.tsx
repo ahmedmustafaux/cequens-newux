@@ -402,7 +402,7 @@ export default function LoginPage() {
 
   return (
     <>
-      <div className="bg-card rounded-2xl shadow-lg overflow-hidden w-full max-w-lg mx-auto h-full max-h-[calc(100vh-2rem)] border border-border">
+      <div className="bg-card rounded-2xl shadow-none overflow-hidden w-full max-w-lg mx-auto h-full max-h-[calc(100vh-2rem)] border border-border">
         <div className="h-full">
             {/* Form Panel */}
             <motion.div 
