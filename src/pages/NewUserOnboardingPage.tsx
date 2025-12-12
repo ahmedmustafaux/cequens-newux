@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 import { OnboardingTemplateSelection, IndustryTemplate } from "@/components/onboarding-template-selection"
 import { OnboardingIndustryOverview } from "@/components/onboarding-industry-overview"
@@ -193,9 +194,7 @@ export default function NewUserOnboardingPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<IndustryTemplate | null>(null)
   const [customIndustryName, setCustomIndustryName] = useState("")
   const [currentStep, setCurrentStep] = useState(0)
-  const [selectedOptions, setSelectedOptions] = useState<Record<number, string[]>>({
-    4: ["usage-1", "usage-2"] // Pre-select both options for the usage question (step 4)
-  })
+  const [selectedOptions, setSelectedOptions] = useState<Record<number, string[]>>({})
   const [isCompleted, setIsCompleted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [buildingProgress, setBuildingProgress] = useState(0)
@@ -215,15 +214,6 @@ export default function NewUserOnboardingPage() {
   }, [user, navigate])
 
   const handleTemplateSelect = (template: IndustryTemplate) => {
-    // Pre-fill selections based on template
-    setSelectedOptions(prev => ({
-      ...prev,
-      1: template.goals, // Primary goals
-      2: template.channels, // Channels
-      3: [template.teamSize], // Company size
-      4: ["usage-1", "usage-2"] // Usage options
-    }))
-    
     setSelectedTemplate(template)
     setCustomIndustryName("")
   }
@@ -273,6 +263,34 @@ export default function NewUserOnboardingPage() {
     const step = onboardingSteps[currentStep - 1] // Adjust index since step 0 is industry
     const selections = selectedOptions[step.id] || []
     return selections.includes(optionId)
+  }
+
+  // Check if an option matches the selected industry template
+  const isOptionCommonForIndustry = (optionId: string) => {
+    if (!selectedTemplate) return false
+    const step = onboardingSteps[currentStep - 1] // Adjust index since step 0 is industry
+    
+    // Check based on step type
+    if (step.id === 1) {
+      // Goals question
+      return selectedTemplate.goals.includes(optionId)
+    } else if (step.id === 2) {
+      // Channels question
+      return selectedTemplate.channels.includes(optionId)
+    }
+    // Step 3 (team size) and Step 4 (usage) don't show badges
+    return false
+  }
+
+  // Get the industry name for the badge
+  const getIndustryName = () => {
+    if (selectedTemplate) {
+      return selectedTemplate.name
+    }
+    if (customIndustryName.trim().length > 0) {
+      return customIndustryName
+    }
+    return null
   }
 
   const canProceed = () => {
@@ -464,7 +482,7 @@ export default function NewUserOnboardingPage() {
                     {/* Options */}
                     {onboardingSteps[currentStep - 1].visualOptions ? (
                       // Visual options for usage question - with grayscale visuals above labels
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {onboardingSteps[currentStep - 1].options.map(option => {
                           const isSelected = isOptionSelected(option.id);
                           const hasIconData = hasIcon(option);
@@ -472,10 +490,10 @@ export default function NewUserOnboardingPage() {
                             <div
                               key={option.id}
                               onClick={() => handleOptionSelect(option.id)}
-                              className={`relative flex flex-col rounded-lg border cursor-pointer transition-all hover:bg-accent ${
+                              className={`relative flex flex-col rounded-lg border cursor-pointer ${
                                 isSelected
-                                  ? "border-primary bg-primary/5"
-                                  : "border-border"
+                                  ? "border-primary shadow-sm hover:bg-accent hover:shadow-md"
+                                  : "border-border hover:border-primary/50 hover:bg-accent hover:shadow-md"
                               }`}
                             >
                               {/* Visual/Icon above - full width */}
@@ -485,14 +503,21 @@ export default function NewUserOnboardingPage() {
                                 </div>
                               )}
                               {/* Checkbox and Label */}
-                              <div className="flex items-center space-x-2 w-full justify-center p-4">
-                                <Checkbox 
-                                  checked={isSelected}
-                                  className="pointer-events-none"
-                                />
-                                <Label className="text-sm font-normal cursor-pointer text-center">
-                                  {option.label}
-                                </Label>
+                              <div className="flex flex-col items-center space-y-2 w-full p-4">
+                                <div className="flex items-center space-x-2 w-full justify-center">
+                                  <Checkbox 
+                                    checked={isSelected}
+                                    className="pointer-events-none"
+                                  />
+                                  <Label className="text-sm font-normal cursor-pointer text-center">
+                                    {option.label}
+                                  </Label>
+                                </div>
+                                {isOptionCommonForIndustry(option.id) && getIndustryName() && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    Matches {getIndustryName()}
+                                  </Badge>
+                                )}
                               </div>
                             </div>
                           );
@@ -500,12 +525,14 @@ export default function NewUserOnboardingPage() {
                       </div>
                     ) : (
                       // Standard options for other questions
-                      <div className="space-y-3 mb-8 mt-8">
-                        {onboardingSteps[currentStep - 1].options.map(option => (
+                      <div className="mt-8">
+                        {onboardingSteps[currentStep - 1].options.map(option => {
+                          const isSelected = isOptionSelected(option.id);
+                          return (
                           <div
                             key={option.id}
                             onClick={() => handleOptionSelect(option.id)}
-                            className="flex items-center gap-2.5 cursor-pointer"
+                            className={`group flex items-center gap-2.5 cursor-pointer rounded-md p-2 -mx-2 hover:bg-accent hover:shadow-sm`}
                           >
                             {onboardingSteps[currentStep - 1].multiSelect ? (
                               <Checkbox 
@@ -514,7 +541,7 @@ export default function NewUserOnboardingPage() {
                               />
                             ) : (
                               <div 
-                                className={`h-4 w-4 rounded-full border-1 shrink-0 flex items-center justify-center transition-colors ${
+                                className={`h-4 w-4 rounded-full border-1 shrink-0 flex items-center justify-center ${
                                   isOptionSelected(option.id) 
                                     ? "border-primary bg-primary" 
                                     : "border-muted-foreground/50"
@@ -533,8 +560,14 @@ export default function NewUserOnboardingPage() {
                             <Label className="text-sm font-normal cursor-pointer flex-1">
                               {option.label}
                             </Label>
+                            {isOptionCommonForIndustry(option.id) && getIndustryName() && (
+                              <Badge variant="secondary" className="text-xs shrink-0">
+                                Matches {getIndustryName()}
+                              </Badge>
+                            )}
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </motion.div>
