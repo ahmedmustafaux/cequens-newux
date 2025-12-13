@@ -1,5 +1,6 @@
 -- Cequens Database Schema for Supabase
 -- Run this in your Supabase SQL Editor to create the database schema
+-- This script is idempotent - safe to run multiple times (will recreate policies/triggers)
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -132,33 +133,40 @@ ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 -- In production, you should add proper RLS policies based on user_id
 
 -- Users policies - allow anyone to create users, but only read their own
+-- Drop existing policies if they exist, then create new ones
+DROP POLICY IF EXISTS "Allow user registration" ON users;
 CREATE POLICY "Allow user registration" ON users
   FOR INSERT
   WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Allow users to read own data" ON users;
 CREATE POLICY "Allow users to read own data" ON users
   FOR SELECT
   USING (true); -- For now, allow reading all users (can be restricted later)
 
 -- Contacts policies
+DROP POLICY IF EXISTS "Allow all operations on contacts" ON contacts;
 CREATE POLICY "Allow all operations on contacts" ON contacts
   FOR ALL
   USING (true)
   WITH CHECK (true);
 
 -- Segments policies
+DROP POLICY IF EXISTS "Allow all operations on segments" ON segments;
 CREATE POLICY "Allow all operations on segments" ON segments
   FOR ALL
   USING (true)
   WITH CHECK (true);
 
 -- Campaigns policies
+DROP POLICY IF EXISTS "Allow all operations on campaigns" ON campaigns;
 CREATE POLICY "Allow all operations on campaigns" ON campaigns
   FOR ALL
   USING (true)
   WITH CHECK (true);
 
 -- Notifications policies
+DROP POLICY IF EXISTS "Allow all operations on notifications" ON notifications;
 CREATE POLICY "Allow all operations on notifications" ON notifications
   FOR ALL
   USING (true)
@@ -178,15 +186,20 @@ END;
 $$ language 'plpgsql';
 
 -- Triggers to automatically update updated_at
+-- Drop existing triggers if they exist, then create new ones
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_contacts_updated_at ON contacts;
 CREATE TRIGGER update_contacts_updated_at BEFORE UPDATE ON contacts
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_segments_updated_at ON segments;
 CREATE TRIGGER update_segments_updated_at BEFORE UPDATE ON segments
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_campaigns_updated_at ON campaigns;
 CREATE TRIGGER update_campaigns_updated_at BEFORE UPDATE ON campaigns
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
