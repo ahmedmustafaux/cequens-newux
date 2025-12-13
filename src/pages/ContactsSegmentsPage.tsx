@@ -52,6 +52,7 @@ import {
   type SegmentFilter,
   type Contact,
   mockContacts,
+  mockSegments,
   updateSegmentContacts,
   getContactsForSegment,
 } from "@/data/mock-data"
@@ -429,15 +430,38 @@ const loadSegmentsFromStorage = (): Segment[] => {
     const stored = localStorage.getItem(SEGMENTS_STORAGE_KEY)
     if (stored) {
       const parsed = JSON.parse(stored)
-      // Convert date strings back to Date objects
-      return parsed.map((seg: any) => ({
+      // Convert date strings back to Date objects and ensure default segments exist
+      const loadedSegments = parsed.map((seg: any) => ({
         ...seg,
         createdAt: new Date(seg.createdAt),
         updatedAt: new Date(seg.updatedAt),
       }))
+      
+      // Check if default segments exist, if not add them
+      const defaultSegmentIds = mockSegments.map((s: Segment) => s.id)
+      const existingDefaultIds = loadedSegments.filter((s: Segment) => defaultSegmentIds.includes(s.id)).map((s: Segment) => s.id)
+      const missingDefaultIds = defaultSegmentIds.filter((id: string) => !existingDefaultIds.includes(id))
+      
+      if (missingDefaultIds.length > 0) {
+        // Add missing default segments
+        const missingSegments = mockSegments
+          .filter(s => missingDefaultIds.includes(s.id))
+          .map(segment => updateSegmentContacts(segment, mockContacts))
+        return [...loadedSegments, ...missingSegments]
+      }
+      
+      return loadedSegments
+    }
+    // If no segments in storage, return default segments with updated contactIds
+    if (mockSegments.length > 0) {
+      return mockSegments.map(segment => updateSegmentContacts(segment, mockContacts))
     }
   } catch (error) {
     console.error("Error loading segments from storage:", error)
+  }
+  // Fallback: return default segments with updated contactIds
+  if (mockSegments.length > 0) {
+    return mockSegments.map(segment => updateSegmentContacts(segment, mockContacts))
   }
   return []
 }

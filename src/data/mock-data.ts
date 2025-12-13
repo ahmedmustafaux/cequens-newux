@@ -29,6 +29,8 @@ export type Contact = {
   assignee: string | null;
   lastMessage: string;
   isSelected: boolean;
+  createdAt?: Date; // Date when contact was created
+  lastInteractionTime?: Date; // Date of last interaction
 };
 
 export type ChartDataPoint = {
@@ -129,6 +131,56 @@ export const mockCampaigns: Campaign[] = [
 // ============================================================================
 // CONTACTS DATA
 // ============================================================================
+
+// Helper function to parse lastMessage string to Date
+const parseLastMessageToDate = (lastMessage: string): Date => {
+  const now = new Date();
+  const lowerMessage = lastMessage.toLowerCase();
+  
+  if (lowerMessage.includes("minute")) {
+    const minutes = parseInt(lowerMessage.match(/(\d+)/)?.[1] || "0");
+    return new Date(now.getTime() - minutes * 60 * 1000);
+  }
+  if (lowerMessage.includes("hour")) {
+    const hours = parseInt(lowerMessage.match(/(\d+)/)?.[1] || "0");
+    return new Date(now.getTime() - hours * 60 * 60 * 1000);
+  }
+  if (lowerMessage.includes("day")) {
+    const days = parseInt(lowerMessage.match(/(\d+)/)?.[1] || "0");
+    return new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+  }
+  if (lowerMessage.includes("week")) {
+    const weeks = parseInt(lowerMessage.match(/(\d+)/)?.[1] || "0");
+    return new Date(now.getTime() - weeks * 7 * 24 * 60 * 60 * 1000);
+  }
+  if (lowerMessage.includes("month")) {
+    const months = parseInt(lowerMessage.match(/(\d+)/)?.[1] || "0");
+    const date = new Date(now);
+    date.setMonth(date.getMonth() - months);
+    return date;
+  }
+  // Default to now if can't parse
+  return now;
+};
+
+// Helper function to generate createdAt date (some recent, some old)
+const generateCreatedAt = (index: number): Date => {
+  const now = new Date();
+  // Mix of recent (last 7 days) and older contacts
+  if (index % 3 === 0) {
+    // Recent contacts (created in last 7 days)
+    const daysAgo = Math.floor(Math.random() * 7);
+    return new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000);
+  } else if (index % 3 === 1) {
+    // Medium age (8-30 days ago)
+    const daysAgo = 8 + Math.floor(Math.random() * 23);
+    return new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000);
+  } else {
+    // Older contacts (31+ days ago)
+    const daysAgo = 31 + Math.floor(Math.random() * 60);
+    return new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000);
+  }
+};
 
 export const mockContacts: Contact[] = [
   {
@@ -551,7 +603,11 @@ export const mockContacts: Contact[] = [
     lastMessage: "40 minutes ago",
     isSelected: false
   }
-];
+].map((contact, index) => ({
+  ...contact,
+  createdAt: generateCreatedAt(index),
+  lastInteractionTime: parseLastMessageToDate(contact.lastMessage),
+}));
 
 // ============================================================================
 // CHART DATA
@@ -954,7 +1010,53 @@ export const assigneeConfig = {
 // SEGMENTS DATA
 // ============================================================================
 
-export const mockSegments: Segment[] = [];
+export const mockSegments: Segment[] = [
+  {
+    id: "segment-1",
+    name: "Contacts created <7 days ago",
+    description: "Contacts that were created within the last 7 days",
+    filters: [
+      {
+        field: "createdAt",
+        operator: "isLessThanTime",
+        value: 7, // 7 days
+      },
+    ],
+    contactIds: [],
+    createdAt: new Date("2024-01-01"),
+    updatedAt: new Date("2024-01-01"),
+  },
+  {
+    id: "segment-2",
+    name: "Contacts inactive >30 days",
+    description: "Contacts that haven't interacted in more than 30 days",
+    filters: [
+      {
+        field: "lastInteractionTime",
+        operator: "isGreaterThanTime",
+        value: 30, // 30 days
+      },
+    ],
+    contactIds: [],
+    createdAt: new Date("2024-01-01"),
+    updatedAt: new Date("2024-01-01"),
+  },
+  {
+    id: "segment-3",
+    name: "Contacts with tags",
+    description: "Contacts that have at least one tag assigned",
+    filters: [
+      {
+        field: "tags",
+        operator: "isNotEmpty",
+        value: "",
+      },
+    ],
+    contactIds: [],
+    createdAt: new Date("2024-01-01"),
+    updatedAt: new Date("2024-01-01"),
+  },
+];
 
 // ============================================================================
 // SEGMENT UTILITIES
@@ -1069,31 +1171,59 @@ export function contactMatchesFilter(contact: Contact, filter: SegmentFilter): b
       }
       return false;
 
-    // Date/time fields - basic stub implementations
-    case 'conversationOpenedTime':
+    // Date/time fields - actual implementations
     case 'createdAt':
+      if (!contact.createdAt) return false;
+      if (operator === 'exists') {
+        return !!contact.createdAt;
+      }
+      if (operator === 'doesNotExist') {
+        return !contact.createdAt;
+      }
+      if (operator === 'isLessThanTime' && typeof value === 'number') {
+        // Check if contact was created less than X days ago
+        const daysSinceCreation = Math.floor((Date.now() - contact.createdAt.getTime()) / (1000 * 60 * 60 * 24));
+        return daysSinceCreation < value;
+      }
+      if (operator === 'isGreaterThanTime' && typeof value === 'number') {
+        // Check if contact was created more than X days ago
+        const daysSinceCreation = Math.floor((Date.now() - contact.createdAt.getTime()) / (1000 * 60 * 60 * 24));
+        return daysSinceCreation > value;
+      }
+      return false;
+
     case 'lastInteractionTime':
     case 'timeSinceLastIncomingMessage':
+      const interactionDate = contact.lastInteractionTime;
+      if (!interactionDate) {
+        // If no interaction date, only match "doesNotExist" or "isEmpty"
+        return operator === 'doesNotExist' || operator === 'isEmpty';
+      }
       if (operator === 'exists') {
-        // Assume exists if we have a contact (placeholder logic)
+        return !!interactionDate;
+      }
+      if (operator === 'doesNotExist') {
+        return !interactionDate;
+      }
+      if (operator === 'isGreaterThanTime' && typeof value === 'number') {
+        // Check if last interaction was more than X days ago (inactive)
+        const daysSinceInteraction = Math.floor((Date.now() - interactionDate.getTime()) / (1000 * 60 * 60 * 24));
+        return daysSinceInteraction > value;
+      }
+      if (operator === 'isLessThanTime' && typeof value === 'number') {
+        // Check if last interaction was less than X days ago (active)
+        const daysSinceInteraction = Math.floor((Date.now() - interactionDate.getTime()) / (1000 * 60 * 60 * 24));
+        return daysSinceInteraction < value;
+      }
+      return false;
+
+    case 'conversationOpenedTime':
+      // Placeholder for conversationOpenedTime - not implemented in Contact type yet
+      if (operator === 'exists') {
         return true;
       }
       if (operator === 'doesNotExist') {
         return false;
-      }
-      // For timestamp operators, we'd need actual date fields on Contact
-      // This is a placeholder - in a real implementation, you'd compare actual dates
-      if (operator === 'isTimestampAfter' || operator === 'isTimestampBefore' || operator === 'isTimestampBetween') {
-        // Placeholder: would compare contact's actual date field with filter value
-        return true;
-      }
-      if (operator === 'isGreaterThanTime' || operator === 'isLessThanTime' || operator === 'isBetweenTime') {
-        // Placeholder: would calculate time difference and compare
-        return true;
-      }
-      if (operator === 'from' || operator === 'to' || operator === 'fromOnly' || operator === 'between') {
-        // Placeholder: would compare contact's actual date field with filter date range
-        return true;
       }
       return false;
 
