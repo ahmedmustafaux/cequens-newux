@@ -22,7 +22,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { User, Mail, Phone, Tag, Plus, X, Search, ChevronDown, ChevronUp } from "lucide-react"
+import { User, Mail, Phone, Tag, Plus, X, Search, ChevronDown } from "lucide-react"
 import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
 import { CircleFlag } from "react-circle-flags"
@@ -52,7 +52,6 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
   const [countryCode, setCountryCode] = React.useState("+966")
   const [searchQuery, setSearchQuery] = React.useState("")
   const [isCountryPopoverOpen, setIsCountryPopoverOpen] = React.useState(false)
-  const [showAdditionalDetails, setShowAdditionalDetails] = React.useState(false)
   
   const [formData, setFormData] = React.useState<ContactFormData>({
     name: "",
@@ -73,7 +72,6 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
         notes: ""
       })
       setNewTag("")
-      setShowAdditionalDetails(false)
     }
   }, [open])
 
@@ -203,159 +201,145 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-lg overflow-y-auto">
-        <SheetHeader>
+      <SheetContent side="right" className="sm:max-w-lg bg-popover flex flex-col p-0 gap-0 [&>button.absolute]:hidden">
+        <SheetHeader className="px-4 pt-4 pb-2">
           <SheetTitle>Create Contact</SheetTitle>
           <SheetDescription>
             Add a new contact to your list. Phone number is required.
           </SheetDescription>
         </SheetHeader>
 
-        <div className="mt-6 space-y-6">
-          {/* Main Fields */}
-          <div className="space-y-4">
-            <Field>
-              <FieldLabel htmlFor="name">Name</FieldLabel>
-              <FieldDescription>Optional - will use phone number if not provided</FieldDescription>
-              <FieldContent>
-                <InputGroup>
-                  <InputGroupAddon>
-                    <User className="h-4 w-4" />
-                  </InputGroupAddon>
-                  <InputGroupInput
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
-                    placeholder="Enter contact name"
-                  />
-                </InputGroup>
-              </FieldContent>
-            </Field>
+        <div className="flex flex-col flex-1 min-h-0">
+          <div className="flex-1 overflow-y-auto px-4">
+            <div className="mt-4 space-y-6 pb-4">
+              {/* Main Fields */}
+              <div className="space-y-4">
+                <Field>
+                  <FieldLabel htmlFor="name">Name</FieldLabel>
+                  <FieldContent>
+                    <InputGroup>
+                      <InputGroupAddon>
+                        <User className="h-4 w-4" />
+                      </InputGroupAddon>
+                      <InputGroupInput
+                        id="name"
+                        value={formData.name}
+                        onChange={(e) => handleInputChange("name", e.target.value)}
+                        placeholder="Enter contact name"
+                      />
+                    </InputGroup>
+                    <FieldDescription>Optional - will use phone number if not provided</FieldDescription>
+                  </FieldContent>
+                </Field>
 
-            <Field>
-              <FieldLabel htmlFor="phone">Phone Number *</FieldLabel>
-              <FieldDescription>Required - include country code</FieldDescription>
-              <FieldContent>
-                <div className="flex">
-                  <Popover open={isCountryPopoverOpen} onOpenChange={setIsCountryPopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "justify-between font-normal h-9 px-3",
-                          "w-[130px] rounded-r-none border-r-0",
-                          "bg-transparent hover:bg-muted/50",
-                          "text-black hover:text-black"
-                        )}
-                      >
-                        <div className="flex items-center gap-2">
-                          <CircleFlag 
-                            countryCode={selectedCountry.code} 
-                            height="16" 
-                            width="16" 
-                          />
-                          <span className="text-sm">{selectedCountry.dialCode}</span>
-                        </div>
-                        <ChevronDown className="h-4 w-4 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent 
-                      className="w-[300px] p-0" 
-                      align="start"
-                      onOpenAutoFocus={(e) => e.preventDefault()}
-                    >
-                      <div className="flex flex-col">
-                        <div className="flex flex-col">
-                          <div>
-                            <Field>
-                              <FieldContent>
-                                <InputGroup className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none">
-                                  <InputGroupAddon>
-                                    <Search className="h-3 w-3" />
-                                  </InputGroupAddon>
-                                  <InputGroupInput
-                                    placeholder="Search countries..."
-                                    value={searchQuery}
-                                    onChange={handleSearchChange}
-                                    className="h-6 text-sm"
-                                    autoFocus={false}
-                                  />
-                                </InputGroup>
-                              </FieldContent>
-                            </Field>
-                          </div>
-                          <div className="border-t border-border" />
-                        </div>
-                        
-                        <div className="relative">
-                          <div className="max-h-72 overflow-y-auto p-1">
-                            {filteredCountries.length > 0 ? (
-                              filteredCountries.map((country) => (
-                                <div 
-                                  key={country.code} 
-                                  className={cn(
-                                    "flex items-center gap-2 p-2 hover:bg-accent rounded-sm cursor-pointer",
-                                    country.dialCode === countryCode && "bg-accent"
-                                  )}
-                                  onClick={() => handleCountryCodeChange(country.dialCode)}
-                                >
-                                  <CircleFlag countryCode={country.code} height="16" width="16" />
-                                  <span className="text-sm">{country.name}</span>
-                                  <span className="text-sm text-muted-foreground ml-auto">{country.dialCode}</span>
-                                </div>
-                              ))
-                            ) : (
-                              <div className="px-2 py-1 text-sm text-muted-foreground text-center">
-                                No results found
-                              </div>
+                <Field>
+                  <FieldLabel htmlFor="phone">Phone Number *</FieldLabel>
+                  <FieldContent>
+                    <div className="flex">
+                      <Popover open={isCountryPopoverOpen} onOpenChange={setIsCountryPopoverOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "justify-between font-normal h-9 px-3",
+                              "w-[130px] rounded-r-none border-r-0",
+                              "bg-transparent hover:bg-muted/50",
+                              "text-black hover:text-black"
                             )}
-                          </div>
-                          
-                          {filteredCountries.length > 6 && (
-                            <div className="absolute bottom-0 inset-x-0 flex justify-center bg-gradient-to-t from-white via-white/80 to-transparent py-1 pointer-events-none">
-                              <ChevronDown className="h-4 w-4 text-muted-foreground animate-bounce" />
+                          >
+                            <div className="flex items-center gap-2">
+                              <CircleFlag 
+                                countryCode={selectedCountry.code} 
+                                height="16" 
+                                width="16" 
+                              />
+                              <span className="text-sm">{selectedCountry.dialCode}</span>
                             </div>
-                          )}
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="Enter phone number"
-                    value={formData.phone}
-                    onChange={handlePhoneNumberChange}
-                    autoComplete="tel"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck="false"
-                    className="flex-1 rounded-l-none h-9"
-                    required
-                  />
-                </div>
-              </FieldContent>
-            </Field>
-          </div>
+                            <ChevronDown className="h-4 w-4 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent 
+                          className="w-[300px] p-0" 
+                          align="start"
+                          onOpenAutoFocus={(e) => e.preventDefault()}
+                        >
+                          <div className="flex flex-col">
+                            <div className="flex flex-col">
+                              <div>
+                                <Field>
+                                  <FieldContent>
+                                    <InputGroup className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none">
+                                      <InputGroupAddon>
+                                        <Search className="h-3 w-3" />
+                                      </InputGroupAddon>
+                                      <InputGroupInput
+                                        placeholder="Search countries..."
+                                        value={searchQuery}
+                                        onChange={handleSearchChange}
+                                        className="h-6 text-sm"
+                                        autoFocus={false}
+                                      />
+                                    </InputGroup>
+                                  </FieldContent>
+                                </Field>
+                              </div>
+                              <div className="border-t border-border" />
+                            </div>
+                            
+                            <div className="relative">
+                              <div className="max-h-72 overflow-y-auto p-1">
+                                {filteredCountries.length > 0 ? (
+                                  filteredCountries.map((country) => (
+                                    <div 
+                                      key={country.code} 
+                                      className={cn(
+                                        "flex items-center gap-2 p-2 hover:bg-accent rounded-sm cursor-pointer",
+                                        country.dialCode === countryCode && "bg-accent"
+                                      )}
+                                      onClick={() => handleCountryCodeChange(country.dialCode)}
+                                    >
+                                      <CircleFlag countryCode={country.code} height="16" width="16" />
+                                      <span className="text-sm">{country.name}</span>
+                                      <span className="text-sm text-muted-foreground ml-auto">{country.dialCode}</span>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <div className="px-2 py-1 text-sm text-muted-foreground text-center">
+                                    No results found
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {filteredCountries.length > 6 && (
+                                <div className="absolute bottom-0 inset-x-0 flex justify-center bg-gradient-to-t from-white via-white/80 to-transparent py-1 pointer-events-none">
+                                  <ChevronDown className="h-4 w-4 text-muted-foreground animate-bounce" />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="Enter phone number"
+                        value={formData.phone}
+                        onChange={handlePhoneNumberChange}
+                        autoComplete="tel"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        className="flex-1 rounded-l-none h-9"
+                        required
+                      />
+                    </div>
+                    <FieldDescription>Required - include country code</FieldDescription>
+                  </FieldContent>
+                </Field>
+              </div>
 
-          {/* Additional Details - Collapsible */}
-          <div className="border-t pt-4">
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full justify-between p-0 h-auto font-normal"
-              onClick={() => setShowAdditionalDetails(!showAdditionalDetails)}
-            >
-              <span className="text-sm font-medium">Additional Details</span>
-              {showAdditionalDetails ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-            </Button>
-
-            {showAdditionalDetails && (
-              <div className="mt-4 space-y-4 animate-in slide-in-from-top-2 duration-200">
+              {/* Additional Details - Always Visible */}
+              <div className="border-t pt-4 space-y-4">
                 <Field>
                   <FieldLabel htmlFor="email">Email Address</FieldLabel>
                   <FieldDescription>Optional</FieldDescription>
@@ -438,25 +422,33 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
                   </FieldContent>
                 </Field>
               </div>
-            )}
+            </div>
           </div>
-        </div>
 
-        <SheetFooter className="mt-6">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isSubmitting}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={!canSave || isSubmitting}
-          >
-            {isSubmitting ? "Creating..." : "Create Contact"}
-          </Button>
-        </SheetFooter>
+          {/* Footer - Sticky like segments */}
+          <SheetFooter className="sticky bottom-0 border-t bg-popover px-4 py-3 mt-auto z-10 shrink-0">
+            <div className="flex gap-3 w-full justify-between">
+              <div className="flex gap-2">
+                {/* Left side actions can be added here if needed */}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSave}
+                  disabled={!canSave || isSubmitting}
+                >
+                  {isSubmitting ? "Creating..." : "Create Contact"}
+                </Button>
+              </div>
+            </div>
+          </SheetFooter>
+        </div>
       </SheetContent>
     </Sheet>
   )
