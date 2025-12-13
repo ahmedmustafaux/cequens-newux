@@ -35,28 +35,10 @@ import {
 import { cn } from "@/lib/utils"
 
 interface ContactFormData {
-  // Basic Information
-  firstName: string
-  lastName: string
-  email: string
+  // Essential fields only
+  name: string
   phone: string
-  profileType: "Lead" | "Customer"
-  
-  // Contact Information
-  country: string
-  region: string
-  address: string
-  
-  // Company Information (optional)
-  company: string
-  jobTitle: string
-  
-  // Additional Information
-  channels: {
-    whatsapp?: string
-    instagram?: string
-    messenger?: string
-  }
+  email: string
   tags: string[]
   notes: string
 }
@@ -126,17 +108,9 @@ export default function ContactsCreatePage() {
   }, [])
 
   const [formData, setFormData] = React.useState<ContactFormData>({
-    firstName: "",
-    lastName: "",
-    email: "",
+    name: "",
     phone: "",
-    profileType: "Lead",
-    country: "",
-    region: "",
-    address: "",
-    company: "",
-    jobTitle: "",
-    channels: {},
+    email: "",
     tags: [],
     notes: ""
   })
@@ -204,16 +178,6 @@ export default function ContactsCreatePage() {
     setSearchQuery(e.target.value)
   }
 
-  const handleChannelChange = (channel: keyof ContactFormData['channels'], value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      channels: {
-        ...prev.channels,
-        [channel]: value || undefined
-      }
-    }))
-    setIsDirty(true)
-  }
 
   const addTag = () => {
     if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
@@ -286,7 +250,7 @@ export default function ContactsCreatePage() {
     }
   }
 
-  const canSave = formData.firstName.trim() !== "" && formData.lastName.trim() !== ""
+  const canSave = formData.phone.trim() !== ""
 
   return (
     <PageWrapper isLoading={isInitialLoading}>
@@ -308,7 +272,7 @@ export default function ContactsCreatePage() {
             <Button
               size="sm"
               onClick={handleSave}
-              disabled={!canSave || !isDirty || isInitialLoading}
+              disabled={!canSave || isInitialLoading}
             >
               <Plus className="h-4 w-4" />
               {isSubmitting ? "Creating..." : "Create Contact"}
@@ -332,82 +296,165 @@ export default function ContactsCreatePage() {
           </div>
         ) : (
           <motion.div 
-            className="grid grid-cols-1 lg:grid-cols-3 gap-4"
+            className="max-w-2xl mx-auto"
             variants={pageVariants}
             initial="initial"
             animate="animate"
             transition={smoothTransition}
           >
             {/* Main Form */}
-            <div className="lg:col-span-2 grid gap-4">
-              {/* Basic Information */}
+            <div className="grid gap-4">
+              {/* Contact Information */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <User className="h-5 w-5" />
-                    Basic Information
+                    Contact Information
                   </CardTitle>
                   <CardDescription>
-                    Essential contact details and profile type
+                    Add a new contact to your list
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Field>
-                      <FieldLabel htmlFor="firstName">First Name *</FieldLabel>
-                      <FieldContent>
-                        <InputGroup>
-                          <InputGroupInput
-                            id="firstName"
-                            value={formData.firstName}
-                            onChange={(e) => handleInputChange("firstName", e.target.value)}
-                            placeholder="Enter first name"
-                            required
-                          />
-                        </InputGroup>
-                      </FieldContent>
-                    </Field>
-                    <Field>
-                      <FieldLabel htmlFor="lastName">Last Name *</FieldLabel>
-                      <FieldContent>
-                        <InputGroup>
-                          <InputGroupInput
-                            id="lastName"
-                            value={formData.lastName}
-                            onChange={(e) => handleInputChange("lastName", e.target.value)}
-                            placeholder="Enter last name"
-                            required
-                          />
-                        </InputGroup>
-                      </FieldContent>
-                    </Field>
-                  </div>
+                  <Field>
+                    <FieldLabel htmlFor="name">Name</FieldLabel>
+                    <FieldDescription>Optional - will use phone number if not provided</FieldDescription>
+                    <FieldContent>
+                      <InputGroup>
+                        <InputGroupAddon>
+                          <User className="h-4 w-4" />
+                        </InputGroupAddon>
+                        <InputGroupInput
+                          id="name"
+                          value={formData.name}
+                          onChange={(e) => handleInputChange("name", e.target.value)}
+                          placeholder="Enter contact name"
+                        />
+                      </InputGroup>
+                    </FieldContent>
+                  </Field>
 
                   <Field>
-                    <FieldLabel htmlFor="profileType">Profile Type *</FieldLabel>
+                    <FieldLabel htmlFor="phone">Phone Number *</FieldLabel>
+                    <FieldDescription>Required - include country code</FieldDescription>
                     <FieldContent>
-                      <Select
-                        value={formData.profileType}
-                        onValueChange={(value: "Lead" | "Customer") => handleInputChange("profileType", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Lead">
-                            <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                              Lead
+                      <div className="flex">
+                        <Popover open={isCountryPopoverOpen} onOpenChange={setIsCountryPopoverOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "justify-between font-normal h-9 px-3",
+                                "w-[130px] rounded-r-none border-r-0",
+                                "bg-transparent hover:bg-muted/50",
+                                "text-black hover:text-black"
+                              )}
+                            >
+                              <div className="flex items-center gap-2">
+                                <CircleFlag 
+                                  countryCode={selectedCountry.code} 
+                                  height="16" 
+                                  width="16" 
+                                />
+                                <span className="text-sm">{selectedCountry.dialCode}</span>
+                              </div>
+                              <ChevronDown className="h-4 w-4 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent 
+                            className="w-[300px] p-0" 
+                            align="start"
+                            onOpenAutoFocus={(e) => e.preventDefault()}
+                          >
+                            <div className="flex flex-col">
+                              <div className="flex flex-col">
+                                <div>
+                                  <Field>
+                                    <FieldContent>
+                                      <InputGroup className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none">
+                                        <InputGroupAddon>
+                                          <Search className="h-3 w-3" />
+                                        </InputGroupAddon>
+                                        <InputGroupInput
+                                          placeholder="Search countries..."
+                                          value={searchQuery}
+                                          onChange={handleSearchChange}
+                                          className="h-6 text-sm"
+                                          autoFocus={false}
+                                        />
+                                      </InputGroup>
+                                    </FieldContent>
+                                  </Field>
+                                </div>
+                                <div className="border-t border-border" />
+                              </div>
+                              
+                              <div className="relative">
+                                <div className="max-h-72 overflow-y-auto p-1">
+                                  {filteredCountries.length > 0 ? (
+                                    filteredCountries.map((country) => (
+                                      <div 
+                                        key={country.code} 
+                                        className={cn(
+                                          "flex items-center gap-2 p-2 hover:bg-accent rounded-sm cursor-pointer",
+                                          country.dialCode === countryCode && "bg-accent"
+                                        )}
+                                        onClick={() => handleCountryCodeChange(country.dialCode)}
+                                      >
+                                        <CircleFlag countryCode={country.code} height="16" width="16" />
+                                        <span className="text-sm">{country.name}</span>
+                                        <span className="text-sm text-muted-foreground ml-auto">{country.dialCode}</span>
+                                      </div>
+                                    ))
+                                  ) : (
+                                    <div className="px-2 py-1 text-sm text-muted-foreground text-center">
+                                      No results found
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {filteredCountries.length > 6 && (
+                                  <div className="absolute bottom-0 inset-x-0 flex justify-center bg-gradient-to-t from-white via-white/80 to-transparent py-1 pointer-events-none">
+                                    <ChevronDown className="h-4 w-4 text-muted-foreground animate-bounce" />
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </SelectItem>
-                          <SelectItem value="Customer">
-                            <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                              Customer
-                            </div>
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
+                          </PopoverContent>
+                        </Popover>
+                        <Input
+                          id="phone"
+                          type="tel"
+                          placeholder="Enter phone number"
+                          value={formData.phone}
+                          onChange={handlePhoneNumberChange}
+                          autoComplete="tel"
+                          autoCorrect="off"
+                          autoCapitalize="off"
+                          spellCheck="false"
+                          className="flex-1 rounded-l-none h-9"
+                          required
+                        />
+                      </div>
+                    </FieldContent>
+                  </Field>
+
+                  <Field>
+                    <FieldLabel htmlFor="email">Email Address</FieldLabel>
+                    <FieldDescription>Optional</FieldDescription>
+                    <FieldContent>
+                      <InputGroup>
+                        <InputGroupAddon>
+                          <Mail className="h-4 w-4" />
+                        </InputGroupAddon>
+                        <InputGroupInput
+                          id="email"
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => handleInputChange("email", e.target.value)}
+                          placeholder="Enter email address"
+                        />
+                      </InputGroup>
                     </FieldContent>
                   </Field>
                 </CardContent>
@@ -634,6 +681,107 @@ export default function ContactsCreatePage() {
                       </FieldContent>
                     </Field>
                   </div>
+                </CardContent>
+              </Card>
+
+              {/* Filter/Segment Fields */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Tag className="h-5 w-5" />
+                    Segment & Filter Fields
+                  </CardTitle>
+                  <CardDescription>
+                    Additional fields for segmentation and filtering
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Field>
+                      <FieldLabel htmlFor="language">Language</FieldLabel>
+                      <FieldContent>
+                        <InputGroup>
+                          <InputGroupInput
+                            id="language"
+                            value={formData.language || ""}
+                            onChange={(e) => handleInputChange("language", e.target.value)}
+                            placeholder="e.g., en, ar, fr"
+                          />
+                        </InputGroup>
+                      </FieldContent>
+                    </Field>
+                    <Field>
+                      <FieldLabel htmlFor="botStatus">Bot Status</FieldLabel>
+                      <FieldContent>
+                        <Select
+                          value={formData.botStatus || ""}
+                          onValueChange={(value) => handleInputChange("botStatus", value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select bot status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="inactive">Inactive</SelectItem>
+                            <SelectItem value="pending">Pending</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FieldContent>
+                    </Field>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Field>
+                      <FieldLabel htmlFor="lastInteractedChannel">Last Interacted Channel</FieldLabel>
+                      <FieldContent>
+                        <Select
+                          value={formData.lastInteractedChannel || ""}
+                          onValueChange={(value) => handleInputChange("lastInteractedChannel", value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select channel" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                            <SelectItem value="messenger">Messenger</SelectItem>
+                            <SelectItem value="instagram">Instagram</SelectItem>
+                            <SelectItem value="sms">SMS</SelectItem>
+                            <SelectItem value="email">Email</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FieldContent>
+                    </Field>
+                    <Field>
+                      <FieldLabel htmlFor="conversationStatus">Conversation Status</FieldLabel>
+                      <FieldContent>
+                        <Select
+                          value={formData.conversationStatus || "unassigned"}
+                          onValueChange={(value) => handleInputChange("conversationStatus", value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="unassigned">Unassigned</SelectItem>
+                            <SelectItem value="assigned">Assigned</SelectItem>
+                            <SelectItem value="closed">Closed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FieldContent>
+                    </Field>
+                  </div>
+                  <Field>
+                    <FieldLabel htmlFor="assignee">Assignee</FieldLabel>
+                    <FieldContent>
+                      <InputGroup>
+                        <InputGroupInput
+                          id="assignee"
+                          value={formData.assignee || ""}
+                          onChange={(e) => handleInputChange("assignee", e.target.value)}
+                          placeholder="Enter assignee name"
+                        />
+                      </InputGroup>
+                    </FieldContent>
+                  </Field>
                 </CardContent>
               </Card>
             </div>

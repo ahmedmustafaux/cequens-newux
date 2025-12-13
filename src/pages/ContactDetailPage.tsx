@@ -22,10 +22,11 @@ import {
   CheckCircle,
   AlertCircle,
   XCircle,
-  Plus
+  Plus,
+  Mail
 } from "lucide-react"
 import { toast } from "sonner"
-import { mockContacts, conversationStatusConfig } from "@/data/mock-data"
+import { mockContacts } from "@/data/mock-data"
 
 export default function ContactDetailPage() {
   const params = useParams()
@@ -124,21 +125,31 @@ export default function ContactDetailPage() {
     navigate("/contacts")
   }
 
-  const getConversationStatusConfig = (status: string) => {
-    const config = conversationStatusConfig[status as keyof typeof conversationStatusConfig];
-    return config || conversationStatusConfig.unassigned;
+  const getStatusLabel = (status: string) => {
+    return status.charAt(0).toUpperCase() + status.slice(1);
   }
 
-  const getStatusIcon = (iconName: string) => {
-    switch (iconName) {
-      case "AlertCircle":
-        return <AlertCircle className="w-3 h-3 mr-1 flex-shrink-0" />;
-      case "CheckCircle":
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "assigned":
         return <CheckCircle className="w-3 h-3 mr-1 flex-shrink-0" />;
-      case "XCircle":
+      case "closed":
         return <XCircle className="w-3 h-3 mr-1 flex-shrink-0" />;
+      case "unassigned":
       default:
         return <AlertCircle className="w-3 h-3 mr-1 flex-shrink-0" />;
+    }
+  };
+
+  const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
+    switch (status) {
+      case "assigned":
+        return "default";
+      case "closed":
+        return "secondary";
+      case "unassigned":
+      default:
+        return "outline";
     }
   };
 
@@ -255,13 +266,18 @@ export default function ContactDetailPage() {
                                   <p className="text-sm">{contact.name}</p>
                                 </div>
                                 <div>
-                                  <label className="text-sm font-medium text-muted-foreground">Last Conversation</label>
-                                  <div className="flex items-center gap-2 mt-1">
-                                    <Badge variant="outline" className={`text-xs whitespace-nowrap flex-shrink-0 ${getConversationStatusConfig(contact.conversationStatus).color}`}>
-                                      {getStatusIcon(getConversationStatusConfig(contact.conversationStatus).icon)}
-                                      {getConversationStatusConfig(contact.conversationStatus).label}
-                                    </Badge>
-                                  </div>
+                                  <label className="text-sm font-medium text-muted-foreground">First Name</label>
+                                  <p className="text-sm">{contact.firstName || '—'}</p>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="text-sm font-medium text-muted-foreground">Last Name</label>
+                                  <p className="text-sm">{contact.lastName || '—'}</p>
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium text-muted-foreground">Email Address</label>
+                                  <p className="text-sm">{contact.emailAddress || '—'}</p>
                                 </div>
                               </div>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -270,8 +286,33 @@ export default function ContactDetailPage() {
                                   <p className="text-sm">{contact.phone}</p>
                                 </div>
                                 <div>
+                                  <label className="text-sm font-medium text-muted-foreground">Language</label>
+                                  <p className="text-sm">{contact.language || '—'}</p>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
                                   <label className="text-sm font-medium text-muted-foreground">Channel</label>
                                   <p className="text-sm">{contact.channel}</p>
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium text-muted-foreground">Last Interacted Channel</label>
+                                  <p className="text-sm">{contact.lastInteractedChannel || contact.channel || '—'}</p>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="text-sm font-medium text-muted-foreground">Bot Status</label>
+                                  <p className="text-sm">{contact.botStatus || '—'}</p>
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium text-muted-foreground">Last Conversation</label>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <Badge variant={getStatusVariant(contact.conversationStatus)} className="text-xs whitespace-nowrap flex-shrink-0">
+                                      {getStatusIcon(contact.conversationStatus)}
+                                      {getStatusLabel(contact.conversationStatus)}
+                                    </Badge>
+                                  </div>
                                 </div>
                               </div>
                             </CardContent>
@@ -306,6 +347,22 @@ export default function ContactDetailPage() {
                                 <div>
                                   <label className="text-sm font-medium text-muted-foreground">Last Message</label>
                                   <p className="text-sm">{contact.lastMessage}</p>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="text-sm font-medium text-muted-foreground">Created At</label>
+                                  <p className="text-sm">{contact.createdAt ? new Date(contact.createdAt).toLocaleString() : '—'}</p>
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium text-muted-foreground">Last Interaction Time</label>
+                                  <p className="text-sm">{contact.lastInteractionTime ? new Date(contact.lastInteractionTime).toLocaleString() : '—'}</p>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="text-sm font-medium text-muted-foreground">Conversation Opened Time</label>
+                                  <p className="text-sm">{contact.conversationOpenedTime ? new Date(contact.conversationOpenedTime).toLocaleString() : '—'}</p>
                                 </div>
                               </div>
                             </CardContent>
@@ -444,6 +501,15 @@ export default function ContactDetailPage() {
                                 <p className="text-sm text-muted-foreground">{contact.phone}</p>
                               </div>
                             </div>
+                            {contact.emailAddress && (
+                              <div className="flex items-start gap-3">
+                                <Mail className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                <div>
+                                  <p className="text-sm font-medium">Email Address</p>
+                                  <p className="text-sm text-muted-foreground">{contact.emailAddress}</p>
+                                </div>
+                              </div>
+                            )}
                             <div className="flex items-start gap-3">
                               <Globe className="h-4 w-4 text-muted-foreground mt-0.5" />
                               <div>
@@ -456,6 +522,15 @@ export default function ContactDetailPage() {
                                 </div>
                               </div>
                             </div>
+                            {contact.language && (
+                              <div className="flex items-start gap-3">
+                                <Globe className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                <div>
+                                  <p className="text-sm font-medium">Language</p>
+                                  <p className="text-sm text-muted-foreground">{contact.language}</p>
+                                </div>
+                              </div>
+                            )}
                             <div className="flex items-start gap-3">
                               <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5" />
                               <div>
@@ -463,14 +538,32 @@ export default function ContactDetailPage() {
                                 <p className="text-sm text-muted-foreground">{contact.channel}</p>
                               </div>
                             </div>
+                            {contact.lastInteractedChannel && (
+                              <div className="flex items-start gap-3">
+                                <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                <div>
+                                  <p className="text-sm font-medium">Last Interacted Channel</p>
+                                  <p className="text-sm text-muted-foreground">{contact.lastInteractedChannel}</p>
+                                </div>
+                              </div>
+                            )}
+                            {contact.botStatus && (
+                              <div className="flex items-start gap-3">
+                                <User className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                <div>
+                                  <p className="text-sm font-medium">Bot Status</p>
+                                  <p className="text-sm text-muted-foreground">{contact.botStatus}</p>
+                                </div>
+                              </div>
+                            )}
                             <div className="flex items-start gap-3">
                               <User className="h-4 w-4 text-muted-foreground mt-0.5" />
                               <div>
                                 <p className="text-sm font-medium">Last Conversation</p>
                                 <div className="mt-1">
-                                  <Badge variant="outline" className={`text-xs whitespace-nowrap flex-shrink-0 ${getConversationStatusConfig(contact.conversationStatus).color}`}>
-                                    {getStatusIcon(getConversationStatusConfig(contact.conversationStatus).icon)}
-                                    {getConversationStatusConfig(contact.conversationStatus).label}
+                                  <Badge variant={getStatusVariant(contact.conversationStatus)} className="text-xs whitespace-nowrap flex-shrink-0">
+                                    {getStatusIcon(contact.conversationStatus)}
+                                    {getStatusLabel(contact.conversationStatus)}
                                   </Badge>
                                 </div>
                               </div>

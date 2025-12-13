@@ -31,6 +31,14 @@ export type Contact = {
   isSelected: boolean;
   createdAt?: Date; // Date when contact was created
   lastInteractionTime?: Date; // Date of last interaction
+  // Additional filter/segment fields
+  firstName?: string;
+  lastName?: string;
+  emailAddress?: string;
+  language?: string;
+  botStatus?: string;
+  lastInteractedChannel?: string;
+  conversationOpenedTime?: Date;
 };
 
 export type ChartDataPoint = {
@@ -195,7 +203,13 @@ export const mockContacts: Contact[] = [
     conversationStatus: "unassigned",
     assignee: null,
     lastMessage: "5 minutes ago",
-    isSelected: false
+    isSelected: false,
+    firstName: "Muthaher",
+    lastName: "Ahmed",
+    emailAddress: "muthaher.ahmed@example.com",
+    language: "en",
+    botStatus: "active",
+    lastInteractedChannel: "whatsapp"
   },
   {
     id: "2",
@@ -293,7 +307,13 @@ export const mockContacts: Contact[] = [
     conversationStatus: "assigned",
     assignee: "Salma",
     lastMessage: "2 hours ago",
-    isSelected: false
+    isSelected: false,
+    firstName: "Ahmed",
+    lastName: "Hassan",
+    emailAddress: "ahmed.hassan@example.com",
+    language: "ar",
+    botStatus: "active",
+    lastInteractedChannel: "whatsapp"
   },
   {
     id: "9",
@@ -335,7 +355,13 @@ export const mockContacts: Contact[] = [
     conversationStatus: "assigned",
     assignee: "Omar",
     lastMessage: "30 minutes ago",
-    isSelected: false
+    isSelected: false,
+    firstName: "Sarah",
+    lastName: "Johnson",
+    emailAddress: "sarah.johnson@example.com",
+    language: "en",
+    botStatus: "active",
+    lastInteractedChannel: "whatsapp"
   },
   {
     id: "12",
@@ -976,24 +1002,6 @@ export const getDashboardMetrics = (): DashboardMetrics => {
 // ============================================================================
 // CONFIGURATION DATA
 // ============================================================================
-
-export const conversationStatusConfig = {
-  unassigned: { 
-    label: "Unassigned", 
-    color: "bg-muted text-muted-foreground border-border-muted",
-    icon: "AlertCircle"
-  },
-  assigned: { 
-    label: "Assigned", 
-    color: "bg-info/10 text-info-foreground border-border-info",
-    icon: "CheckCircle"
-  },
-  closed: { 
-    label: "Closed", 
-    color: "bg-success/10 text-success-foreground border-border-success",
-    icon: "XCircle"
-  }
-};
 
 export const assigneeConfig = {
   available: { 
