@@ -7,7 +7,8 @@ import {
   Field, 
   FieldLabel, 
   FieldContent, 
-  FieldDescription 
+  FieldDescription,
+  FieldError
 } from "@/components/ui/field"
 import { 
   InputGroup, 
@@ -27,6 +28,7 @@ import { motion } from "framer-motion"
 import { pageVariants, smoothTransition } from "@/lib/transitions"
 import { Input } from "@/components/ui/input"
 import { CircleFlag } from "react-circle-flags"
+import { validatePhoneNumber } from "@/lib/validation"
 import {
   Popover,
   PopoverContent,
@@ -36,7 +38,8 @@ import { cn } from "@/lib/utils"
 
 interface ContactFormData {
   // Essential fields only
-  name: string
+  firstName: string
+  lastName: string
   phone: string
   email: string
   tags: string[]
@@ -52,6 +55,7 @@ export default function ContactsCreatePage() {
   const [countryCode, setCountryCode] = React.useState("+966") // Default to Saudi Arabia
   const [searchQuery, setSearchQuery] = React.useState("")
   const [isCountryPopoverOpen, setIsCountryPopoverOpen] = React.useState(false)
+  const [phoneError, setPhoneError] = React.useState<string>("")
   
   usePageTitle("Create Contact")
 
@@ -108,7 +112,8 @@ export default function ContactsCreatePage() {
   }, [])
 
   const [formData, setFormData] = React.useState<ContactFormData>({
-    name: "",
+    firstName: "",
+    lastName: "",
     phone: "",
     email: "",
     tags: [],
@@ -124,30 +129,14 @@ export default function ContactsCreatePage() {
   }
 
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
+    // Only allow digits
+    const value = e.target.value.replace(/\D/g, '')
     handleInputChange("phone", value)
+    setPhoneError("")
     
     // Auto-detect country based on phone number input
-    // If user is typing a full international number with +
-    if (value.startsWith('+')) {
-      // Extract the country code from the beginning
-      for (let i = 4; i >= 2; i--) {
-        const code = value.substring(0, i)
-        const matchedCountry = countryCodes.find(c => c.dialCode === code)
-        if (matchedCountry) {
-          setCountryCode(matchedCountry.dialCode)
-          // Remove the country code from the phone number
-          const phoneWithoutCode = value.substring(i)
-          setFormData(prev => ({
-            ...prev,
-            phone: phoneWithoutCode
-          }))
-          break
-        }
-      }
-    } 
     // Detect Egyptian numbers (starting with 010, 011, 012, 015)
-    else if (value.match(/^0(10|11|12|15)/) && value.length >= 4) {
+    if (value.match(/^0(10|11|12|15)/) && value.length >= 4) {
       setCountryCode('+20') // Egypt
     }
     // Detect Saudi numbers (starting with 05)
@@ -165,6 +154,16 @@ export default function ContactsCreatePage() {
     // Detect US/Canada numbers (starting with 1 and area code)
     else if (value.match(/^1[2-9]/) && value.length >= 2) {
       setCountryCode('+1') // US/Canada
+    }
+  }
+
+  const handlePhoneBlur = () => {
+    const fullPhone = countryCode + formData.phone
+    const validation = validatePhoneNumber(fullPhone)
+    if (!validation.isValid) {
+      setPhoneError(validation.message || "Please enter a valid phone number")
+    } else {
+      setPhoneError("")
     }
   }
 
@@ -199,6 +198,16 @@ export default function ContactsCreatePage() {
   }
 
   const handleSave = async () => {
+    // Validate phone number before saving
+    const fullPhone = countryCode + formData.phone
+    const phoneValidation = validatePhoneNumber(fullPhone)
+    
+    if (!phoneValidation.isValid) {
+      setPhoneError(phoneValidation.message || "Please enter a valid phone number")
+      toast.error(phoneValidation.message || "Please enter a valid phone number")
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
@@ -229,7 +238,9 @@ export default function ContactsCreatePage() {
     }
   }
 
-  const canSave = formData.phone.trim() !== ""
+  const fullPhone = countryCode + formData.phone
+  const phoneValidation = validatePhoneNumber(fullPhone)
+  const canSave = phoneValidation.isValid && formData.phone.trim() !== ""
 
   return (
     <PageWrapper isLoading={isInitialLoading}>
@@ -295,23 +306,41 @@ export default function ContactsCreatePage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Field>
-                    <FieldLabel htmlFor="name">Name</FieldLabel>
-                    <FieldDescription>Optional - will use phone number if not provided</FieldDescription>
-                    <FieldContent>
-                      <InputGroup>
-                        <InputGroupAddon>
-                          <User className="h-4 w-4" />
-                        </InputGroupAddon>
-                        <InputGroupInput
-                          id="name"
-                          value={formData.name}
-                          onChange={(e) => handleInputChange("name", e.target.value)}
-                          placeholder="Enter contact name"
-                        />
-                      </InputGroup>
-                    </FieldContent>
-                  </Field>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Field>
+                      <FieldLabel htmlFor="firstName">First Name</FieldLabel>
+                      <FieldContent>
+                        <InputGroup>
+                          <InputGroupAddon>
+                            <User className="h-4 w-4" />
+                          </InputGroupAddon>
+                          <InputGroupInput
+                            id="firstName"
+                            value={formData.firstName}
+                            onChange={(e) => handleInputChange("firstName", e.target.value)}
+                            placeholder="Enter first name"
+                          />
+                        </InputGroup>
+                      </FieldContent>
+                    </Field>
+
+                    <Field>
+                      <FieldLabel htmlFor="lastName">Last Name</FieldLabel>
+                      <FieldContent>
+                        <InputGroup>
+                          <InputGroupAddon>
+                            <User className="h-4 w-4" />
+                          </InputGroupAddon>
+                          <InputGroupInput
+                            id="lastName"
+                            value={formData.lastName}
+                            onChange={(e) => handleInputChange("lastName", e.target.value)}
+                            placeholder="Enter last name"
+                          />
+                        </InputGroup>
+                      </FieldContent>
+                    </Field>
+                  </div>
 
                   <Field>
                     <FieldLabel htmlFor="phone">Phone Number *</FieldLabel>
@@ -407,20 +436,24 @@ export default function ContactsCreatePage() {
                           placeholder="Enter phone number"
                           value={formData.phone}
                           onChange={handlePhoneNumberChange}
+                          onBlur={handlePhoneBlur}
                           autoComplete="tel"
                           autoCorrect="off"
                           autoCapitalize="off"
                           spellCheck="false"
-                          className="flex-1 rounded-l-none h-9"
+                          className={cn(
+                            "flex-1 rounded-l-none h-9",
+                            phoneError && "border-destructive focus-visible:ring-destructive"
+                          )}
                           required
                         />
                       </div>
+                      {phoneError && <FieldError>{phoneError}</FieldError>}
                     </FieldContent>
                   </Field>
 
                   <Field>
                     <FieldLabel htmlFor="email">Email Address</FieldLabel>
-                    <FieldDescription>Optional</FieldDescription>
                     <FieldContent>
                       <InputGroup>
                         <InputGroupAddon>
@@ -447,7 +480,7 @@ export default function ContactsCreatePage() {
                     Tags & Notes
                   </CardTitle>
                   <CardDescription>
-                    Optional - organize and add context to this contact
+                    Organize and add context to this contact
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">

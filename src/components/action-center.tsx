@@ -141,7 +141,8 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
     ? mockContacts
         .filter(contact => {
           const searchTerm = query.toLowerCase()
-          return contact.name.toLowerCase().includes(searchTerm) ||
+          const displayName = `${contact.firstName || ''} ${contact.lastName || ''}`.trim().toLowerCase()
+          return displayName.includes(searchTerm) ||
                  contact.phone.toLowerCase().includes(searchTerm)
         })
         .slice(0, 5)
@@ -483,7 +484,7 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
                         <Users className="h-4 w-4" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate">{contact.name}</div>
+                        <div className="text-sm font-medium truncate">{`${contact.firstName || ''} ${contact.lastName || ''}`.trim() || 'Contact'}</div>
                         <div className="text-xs text-muted-foreground truncate">{contact.phone}</div>
                       </div>
                     </motion.div>

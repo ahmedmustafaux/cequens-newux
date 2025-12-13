@@ -4,7 +4,8 @@ import {
   Field, 
   FieldLabel, 
   FieldContent, 
-  FieldDescription 
+  FieldDescription,
+  FieldError
 } from "@/components/ui/field"
 import { 
   InputGroup, 
@@ -32,9 +33,11 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
+import { validatePhoneNumber } from "@/lib/validation"
 
 interface ContactFormData {
-  name: string
+  firstName: string
+  lastName: string
   phone: string
   email: string
   tags: string[]
@@ -52,9 +55,11 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
   const [countryCode, setCountryCode] = React.useState("+966")
   const [searchQuery, setSearchQuery] = React.useState("")
   const [isCountryPopoverOpen, setIsCountryPopoverOpen] = React.useState(false)
+  const [phoneError, setPhoneError] = React.useState<string>("")
   
   const [formData, setFormData] = React.useState<ContactFormData>({
-    name: "",
+    firstName: "",
+    lastName: "",
     phone: "",
     email: "",
     tags: [],
@@ -65,7 +70,8 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
   React.useEffect(() => {
     if (!open) {
       setFormData({
-        name: "",
+        firstName: "",
+        lastName: "",
         phone: "",
         email: "",
         tags: [],
@@ -124,31 +130,32 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
   }
 
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
+    // Only allow digits
+    const value = e.target.value.replace(/\D/g, '')
     handleInputChange("phone", value)
+    setPhoneError("")
     
-    if (value.startsWith('+')) {
-      for (let i = 4; i >= 2; i--) {
-        const code = value.substring(0, i)
-        const matchedCountry = countryCodes.find(c => c.dialCode === code)
-        if (matchedCountry) {
-          setCountryCode(matchedCountry.dialCode)
-          const phoneWithoutCode = value.substring(i)
-          setFormData(prev => ({
-            ...prev,
-            phone: phoneWithoutCode
-          }))
-          break
-        }
-      }
-    } else if (value.match(/^0(10|11|12|15)/) && value.length >= 4) {
+    // Auto-detect country based on phone number input
+    if (value.match(/^0(10|11|12|15)/) && value.length >= 4) {
       setCountryCode('+20')
     } else if (value.match(/^05/) && value.length >= 3 && countryCode !== '+20') {
       setCountryCode('+966')
+    } else if (value.match(/^05/) && value.length >= 3 && countryCode !== '+966' && countryCode !== '+20') {
+      setCountryCode('+971')
     } else if (value.match(/^07/) && value.length >= 3) {
       setCountryCode('+44')
     } else if (value.match(/^1[2-9]/) && value.length >= 2) {
       setCountryCode('+1')
+    }
+  }
+
+  const handlePhoneBlur = () => {
+    const fullPhone = countryCode + formData.phone
+    const validation = validatePhoneNumber(fullPhone)
+    if (!validation.isValid) {
+      setPhoneError(validation.message || "Please enter a valid phone number")
+    } else {
+      setPhoneError("")
     }
   }
 
@@ -179,8 +186,13 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
   }
 
   const handleSave = async () => {
-    if (!formData.phone.trim()) {
-      toast.error("Phone number is required")
+    // Validate phone number before saving
+    const fullPhone = countryCode + formData.phone
+    const phoneValidation = validatePhoneNumber(fullPhone)
+    
+    if (!phoneValidation.isValid) {
+      setPhoneError(phoneValidation.message || "Please enter a valid phone number")
+      toast.error(phoneValidation.message || "Please enter a valid phone number")
       return
     }
 
@@ -197,7 +209,9 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
     }
   }
 
-  const canSave = formData.phone.trim() !== ""
+  const fullPhone = countryCode + formData.phone
+  const phoneValidation = validatePhoneNumber(fullPhone)
+  const canSave = phoneValidation.isValid && formData.phone.trim() !== ""
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -214,23 +228,41 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
             <div className="mt-4 space-y-6 pb-4">
               {/* Main Fields */}
               <div className="space-y-4">
-                <Field>
-                  <FieldLabel htmlFor="name">Name</FieldLabel>
-                  <FieldContent>
-                    <InputGroup>
-                      <InputGroupAddon>
-                        <User className="h-4 w-4" />
-                      </InputGroupAddon>
-                      <InputGroupInput
-                        id="name"
-                        value={formData.name}
-                        onChange={(e) => handleInputChange("name", e.target.value)}
-                        placeholder="Enter contact name"
-                      />
-                    </InputGroup>
-                    <FieldDescription>Optional - will use phone number if not provided</FieldDescription>
-                  </FieldContent>
-                </Field>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Field>
+                    <FieldLabel htmlFor="firstName">First Name</FieldLabel>
+                    <FieldContent>
+                      <InputGroup>
+                        <InputGroupAddon>
+                          <User className="h-4 w-4" />
+                        </InputGroupAddon>
+                        <InputGroupInput
+                          id="firstName"
+                          value={formData.firstName}
+                          onChange={(e) => handleInputChange("firstName", e.target.value)}
+                          placeholder="Enter first name"
+                        />
+                      </InputGroup>
+                    </FieldContent>
+                  </Field>
+
+                  <Field>
+                    <FieldLabel htmlFor="lastName">Last Name</FieldLabel>
+                    <FieldContent>
+                      <InputGroup>
+                        <InputGroupAddon>
+                          <User className="h-4 w-4" />
+                        </InputGroupAddon>
+                        <InputGroupInput
+                          id="lastName"
+                          value={formData.lastName}
+                          onChange={(e) => handleInputChange("lastName", e.target.value)}
+                          placeholder="Enter last name"
+                        />
+                      </InputGroup>
+                    </FieldContent>
+                  </Field>
+                </div>
 
                 <Field>
                   <FieldLabel htmlFor="phone">Phone Number *</FieldLabel>
@@ -325,15 +357,20 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
                         placeholder="Enter phone number"
                         value={formData.phone}
                         onChange={handlePhoneNumberChange}
+                        onBlur={handlePhoneBlur}
                         autoComplete="tel"
                         autoCorrect="off"
                         autoCapitalize="off"
                         spellCheck="false"
-                        className="flex-1 rounded-l-none h-9"
+                        className={cn(
+                          "flex-1 rounded-l-none h-9",
+                          phoneError && "border-destructive focus-visible:ring-destructive"
+                        )}
                         required
                       />
                     </div>
                     <FieldDescription>Required - include country code</FieldDescription>
+                    {phoneError && <FieldError>{phoneError}</FieldError>}
                   </FieldContent>
                 </Field>
               </div>
@@ -355,7 +392,6 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
                         placeholder="Enter email address"
                       />
                     </InputGroup>
-                    <FieldDescription>Optional</FieldDescription>
                   </FieldContent>
                 </Field>
 
