@@ -629,11 +629,32 @@ export const mockContacts: Contact[] = [
     lastMessage: "40 minutes ago",
     isSelected: false
   }
-].map((contact, index) => ({
-  ...contact,
-  createdAt: generateCreatedAt(index),
-  lastInteractionTime: parseLastMessageToDate(contact.lastMessage),
-}));
+].map((contact, index) => {
+  // Parse name into firstName and lastName if not already set
+  let firstName = contact.firstName
+  let lastName = contact.lastName
+  
+  if (!firstName && !lastName && contact.name) {
+    const nameParts = contact.name.trim().split(/\s+/)
+    if (nameParts.length === 1) {
+      // Single name - treat as first name
+      firstName = nameParts[0]
+      lastName = ""
+    } else if (nameParts.length >= 2) {
+      // Multiple parts - first part is firstName, rest is lastName
+      firstName = nameParts[0]
+      lastName = nameParts.slice(1).join(" ")
+    }
+  }
+  
+  return {
+    ...contact,
+    firstName: firstName || "",
+    lastName: lastName || "",
+    createdAt: generateCreatedAt(index),
+    lastInteractionTime: parseLastMessageToDate(contact.lastMessage),
+  }
+});
 
 // ============================================================================
 // CHART DATA

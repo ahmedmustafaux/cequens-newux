@@ -132,10 +132,14 @@ const ContactsPageContent = (): React.JSX.Element => {
       enableHiding: false,
     },
     {
-      accessorKey: "name",
+      id: "name",
       header: "Users",
       cell: ({ row }) => {
         const contact = row.original;
+        const firstName = contact.firstName || ''
+        const lastName = contact.lastName || ''
+        const hasName = firstName || lastName
+        
         return (
           <div className="flex items-center gap-2 min-w-0">
             <Avatar className="w-8 h-8 flex-shrink-0">
@@ -145,13 +149,19 @@ const ContactsPageContent = (): React.JSX.Element => {
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col min-w-0">
-              <div className="text-left group-hover:underline">
-                <Highlight 
-                  text={contact.name} 
-                  columnId="name"
-                  className="font-medium text-sm whitespace-nowrap truncate"
-                />
-              </div>
+              {hasName ? (
+                <div className="text-left group-hover:underline">
+                  <Highlight 
+                    text={`${firstName} ${lastName}`.trim()} 
+                    columnId="name"
+                    className="font-medium text-sm whitespace-nowrap truncate"
+                  />
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground">
+                  Contact
+                </div>
+              )}
             </div>
           </div>
         );

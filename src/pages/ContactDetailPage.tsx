@@ -54,7 +54,10 @@ export default function ContactDetailPage() {
   const contact = mockContacts.find(c => c.id === contactId)
   
   // Dynamic page title - must be called before any early returns
-  usePageTitle(contact ? `${contact.name}` : "Contact")
+  const displayName = contact 
+    ? `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || 'Contact'
+    : 'Contact'
+  usePageTitle(displayName)
   
   // Load active channels and segments
   React.useEffect(() => {
@@ -194,12 +197,12 @@ export default function ContactDetailPage() {
   return (
     <PageWrapper>
       <PageHeaderProfile
-        title={contact.name}
+        title={displayName}
         description={`Contact from ${contact.countryISO}`}
         avatar={{
           src: "", // No image source available
           fallback: contact.avatar,
-          alt: contact.name
+          alt: displayName
         }}
         onBack={handleBack}
         actions={
@@ -234,19 +237,15 @@ export default function ContactDetailPage() {
                             <CardContent className="space-y-4">
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                  <label className="text-sm font-medium text-muted-foreground">Full Name</label>
-                                  <p className="text-sm">{contact.name}</p>
-                                </div>
-                                <div>
                                   <label className="text-sm font-medium text-muted-foreground">First Name</label>
                                   <p className="text-sm">{contact.firstName || '—'}</p>
                                 </div>
-                              </div>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                   <label className="text-sm font-medium text-muted-foreground">Last Name</label>
                                   <p className="text-sm">{contact.lastName || '—'}</p>
                                 </div>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                   <label className="text-sm font-medium text-muted-foreground">Email Address</label>
                                   <p className="text-sm">{contact.emailAddress || '—'}</p>

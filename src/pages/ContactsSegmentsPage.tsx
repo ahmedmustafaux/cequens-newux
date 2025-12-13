@@ -285,7 +285,7 @@ const createContactColumns = (): ColumnDef<Contact>[] => [
           <div className="flex flex-col min-w-0">
             <div className="text-left group-hover:underline">
               <Highlight
-                text={contact.name}
+                text={`${contact.firstName || ''} ${contact.lastName || ''}`.trim() || 'Contact'}
                 columnId="name"
                 className="font-medium text-sm whitespace-nowrap truncate"
               />
