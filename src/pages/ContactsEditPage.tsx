@@ -153,6 +153,7 @@ export default function ContactsEditPage() {
 
   // Initialize form data from contact
   const [formData, setFormData] = React.useState<ContactFormData>({
+    name: "",
     firstName: "",
     lastName: "",
     phone: "",
@@ -190,6 +191,7 @@ export default function ContactsEditPage() {
       }
       
       setFormData({
+        name: contact.name || "",
         firstName: contact.firstName || "",
         lastName: contact.lastName || "",
         phone: phoneNumber,

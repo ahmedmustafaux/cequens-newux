@@ -2271,6 +2271,3 @@ export function CreateSegmentDialog({
     </>
   )
 }
-
-// Explicit export for TypeScript module resolution
-export type { CreateSegmentDialogProps }

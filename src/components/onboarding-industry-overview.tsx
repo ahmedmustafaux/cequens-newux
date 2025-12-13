@@ -386,7 +386,7 @@ export function OnboardingIndustryOverview({
                         <Check className="w-3.5 h-3.5 text-muted-foreground" />
                       </div>
                     </div>
-                    <p className="text-sm font-medium text-foreground">{useCase}</p>
+                    <p className="text-sm font-medium text-foreground">{useCase.text}</p>
                   </div>
                 ))}
               </div>
