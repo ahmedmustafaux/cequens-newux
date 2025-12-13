@@ -1285,7 +1285,6 @@ function ContactsSegmentsPageContent() {
                       <DropdownMenuItem onClick={() => handleEditSegment(segment)}>
                         Edit Segment
                       </DropdownMenuItem>
-                      <DropdownMenuSeparator />
                       <DropdownMenuItem
                         onClick={() => {
                           handleDeleteSegment(segment)
