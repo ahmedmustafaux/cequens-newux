@@ -342,7 +342,6 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
               <div className="border-t pt-4 space-y-4">
                 <Field>
                   <FieldLabel htmlFor="email">Email Address</FieldLabel>
-                  <FieldDescription>Optional</FieldDescription>
                   <FieldContent>
                     <InputGroup>
                       <InputGroupAddon>
@@ -356,6 +355,7 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
                         placeholder="Enter email address"
                       />
                     </InputGroup>
+                    <FieldDescription>Optional</FieldDescription>
                   </FieldContent>
                 </Field>
 
