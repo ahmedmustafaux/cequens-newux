@@ -31,6 +31,7 @@ import {
   Cloud,
 } from "lucide-react"
 import { PageWrapper } from "@/components/page-wrapper"
+import { CreateContactSheet } from "@/components/create-contact-sheet"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -79,6 +80,7 @@ const TAB_ARCHIVED = "archived"
 const ContactsPageContent = (): React.JSX.Element => {
   const navigate = useNavigate()
   const location = useLocation()
+  const [isCreateSheetOpen, setIsCreateSheetOpen] = React.useState(false)
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
@@ -378,7 +380,7 @@ const ContactsPageContent = (): React.JSX.Element => {
   }
 
   const handleCreateContact = () => {
-    navigate("/contacts/create")
+    setIsCreateSheetOpen(true)
   }
 
   return (
@@ -668,6 +670,7 @@ const ContactsPageContent = (): React.JSX.Element => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <CreateContactSheet open={isCreateSheetOpen} onOpenChange={setIsCreateSheetOpen} />
     </>
   )
 }
