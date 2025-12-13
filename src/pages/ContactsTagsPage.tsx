@@ -7,6 +7,7 @@ import {
   EmptyTitle,
   EmptyDescription,
   EmptyContent,
+  EmptyAction,
 } from "@/components/ui/empty"
 import { Button } from "@/components/ui/button"
 import { Tag, Plus } from "lucide-react"
@@ -17,6 +18,12 @@ export default function ContactsTagsPage() {
       <PageHeader
         title="Tags & Attributes"
         description="Manage your audience tags and attributes"
+        customActions={
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Tag
+          </Button>
+        }
       />
       <Empty>
         <EmptyHeader>
@@ -30,10 +37,10 @@ export default function ContactsTagsPage() {
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button>
+          <EmptyAction>
             <Plus />
             Create Tag
-          </Button>
+          </EmptyAction>
         </EmptyContent>
       </Empty>
     </PageWrapper>

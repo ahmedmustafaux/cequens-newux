@@ -90,6 +90,10 @@
   --color-border-card: var(--border-card);
   --color-border-popover: var(--border-popover);
   --color-border-input: var(--border-input);
+  --color-visual-bg: var(--visual-bg);
+  --color-visual-border: var(--visual-border);
+  --color-visual-accent: var(--visual-accent);
+  --color-visual-muted: var(--visual-muted);
 }
 
 :root {
@@ -149,6 +153,10 @@
   --border-card: oklch(0.9280 0.0060 264.5310);
   --border-popover: oklch(0.9280 0.0060 264.5310);
   --border-input: oklch(0.9280 0.0060 264.5310);
+  --visual-bg: oklch(0.9600 0 0);
+  --visual-border: oklch(0.8300 0 0);
+  --visual-accent: oklch(0.6400 0 0);
+  --visual-muted: oklch(0.9200 0 0);
   --font-sans: Inter, ui-sans-serif, sans-serif, system-ui;
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: DM Mono, ui-monospace, monospace;
@@ -224,6 +232,10 @@
   --border-input: oklch(0.3250 0 0);
   --border-ring: oklch(0.5560 0 0);
   --border-sidebar: oklch(0.2750 0 0);
+  --visual-bg: oklch(0.2450 0 0);
+  --visual-border: oklch(0.3500 0 0);
+  --visual-accent: oklch(0.5500 0 0);
+  --visual-muted: oklch(0.3000 0 0);
 }
 
 @layer base {

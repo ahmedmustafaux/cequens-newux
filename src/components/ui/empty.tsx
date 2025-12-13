@@ -1,4 +1,5 @@
 import { cva, type VariantProps } from "class-variance-authority"
+import { Button } from "@/components/ui/button"
 
 import { cn } from "@/lib/utils"
 
@@ -94,6 +95,21 @@ function EmptyContent({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+function EmptyAction({
+  className,
+  variant = "outline",
+  ...props
+}: React.ComponentProps<typeof Button>) {
+  return (
+    <Button
+      data-slot="empty-action"
+      variant={variant}
+      className={className}
+      {...props}
+    />
+  )
+}
+
 export {
   Empty,
   EmptyHeader,
@@ -101,4 +117,5 @@ export {
   EmptyDescription,
   EmptyContent,
   EmptyMedia,
+  EmptyAction,
 }

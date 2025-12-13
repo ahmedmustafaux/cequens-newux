@@ -2,6 +2,7 @@ import * as React from "react"
 import { motion } from "framer-motion"
 import { GettingStartedGuide, Persona } from "@/components/getting-started-guide"
 import { GettingStartedResources } from "@/components/getting-started-resources"
+import { IndustryUseCases } from "@/components/industry-use-cases"
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { useAuth } from "@/hooks/use-auth"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -154,9 +155,9 @@ export default function GettingStartedPage() {
                     </h1>
                     {/* Persona Switcher */}
                     <Select value={persona} onValueChange={(value) => setPersona(value as Persona)}>
-                      <SelectTrigger className="w-auto gap-6 h-auto py-5 bg-white [&_[data-slot=select-value]]:hidden">
+                      <SelectTrigger className="w-auto gap-6 h-auto bg-card py-5 [&_[data-slot=select-value]]:hidden">
                         <SelectValue />
-                        <h1 className="text-xl font-semibold bg-white">
+                        <h1 className="text-xl font-semibold bg-card">
                           {persona === "business" ? "Marketeer" : "Developer"}
                         </h1>
                       </SelectTrigger>
@@ -164,13 +165,13 @@ export default function GettingStartedPage() {
                         <SelectItem value="business" className="text-xl">
                           <div className="flex items-center gap-2">
                             <Briefcase className="w-4 h-4" />
-                            <span>Marketeer</span>
+                            <text>Marketeer</text>
                           </div>
                         </SelectItem>
                         <SelectItem value="api" className="text-xl">
                           <div className="flex items-center gap-2">
                             <Code className="w-4 h-4" />
-                            <span>Developer</span>
+                            <text>Developer</text>
                           </div>
                         </SelectItem>
                       </SelectContent>
@@ -219,14 +220,25 @@ export default function GettingStartedPage() {
         </div>
 
         {/* Resources Section - 1/3 width (4 columns) */}
-        <div className="lg:col-span-4">
+        <div className="lg:col-span-4 lg:pt-2.5">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
+            className="mb-6"
           >
+            <h2 className="text-sm font-semibold mb-4">Resources</h2>
             <GettingStartedResources />
           </motion.div>
+          
+          {/* Industry Use Cases Section */}
+          <div>
+            <h2 className="text-sm font-semibold mb-4">Use Cases</h2>
+            <IndustryUseCases 
+              industry={onboardingData?.industry || "ecommerce"}
+              isLoading={isDataLoading}
+            />
+          </div>
         </div>
       </div>
     </motion.div>

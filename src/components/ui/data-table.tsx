@@ -50,6 +50,7 @@ interface ViewsConfig {
   options: ViewOption[]
   selectedView: string
   onViewChange: (view: string) => void
+  renderSelectedView?: (view: ViewOption, onClick: () => void) => React.ReactNode
 }
 interface DataTableProps {
   children: React.ReactNode
@@ -370,22 +371,35 @@ function DataTable({
                     <tr>
                       <th colSpan={999} className="px-2 py-2 bg-card border-b border-border">
                         <div className="flex items-center gap-2">
-                          {views.options.map((view) => (
-                            <Button
-                              key={view.value}
-                              variant={views.selectedView === view.value ? "secondary" : "ghost"}
-                              size="sm"
-                              onClick={() => views.onViewChange(view.value)}
-                              className="h-8"
-                            >
-                              {view.label}
-                              {view.count !== undefined && (
-                                <span className="ml-1.5 text-xs text-muted-foreground">
-                                  ({view.count})
-                                </span>
-                              )}
-                            </Button>
-                          ))}
+                          {views.options.map((view) => {
+                            const isSelected = views.selectedView === view.value
+                            const handleClick = () => views.onViewChange(view.value)
+                            
+                            if (isSelected && views.renderSelectedView) {
+                              return (
+                                <React.Fragment key={view.value}>
+                                  {views.renderSelectedView(view, handleClick)}
+                                </React.Fragment>
+                              )
+                            }
+                            
+                            return (
+                              <Button
+                                key={view.value}
+                                variant={isSelected ? "secondary" : "ghost"}
+                                size="sm"
+                                onClick={handleClick}
+                                className="h-8"
+                              >
+                                {view.label}
+                                {view.count !== undefined && (
+                                  <span className="ml-1.5 text-xs text-muted-foreground">
+                                    ({view.count})
+                                  </span>
+                                )}
+                              </Button>
+                            )
+                          })}
                         </div>
                       </th>
                     </tr>

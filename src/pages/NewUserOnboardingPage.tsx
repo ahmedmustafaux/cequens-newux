@@ -54,19 +54,19 @@ const CodeSnippetVisual = () => (
     preserveAspectRatio="xMidYMid meet"
   >
     {/* Code editor background */}
-    <rect x="10" y="15" width="80" height="70" rx="5" fill="#F5F5F5" stroke="#D4D4D4" strokeWidth="2"/>
+    <rect x="10" y="15" width="80" height="70" rx="5" fill="var(--visual-bg)" stroke="var(--visual-border)" strokeWidth="2"/>
     {/* Window controls */}
-    <circle cx="22" cy="25" r="4" fill="#A3A3A3"/>
-    <circle cx="35" cy="25" r="4" fill="#A3A3A3"/>
-    <circle cx="48" cy="25" r="4" fill="#A3A3A3"/>
+    <circle cx="22" cy="25" r="4" fill="var(--visual-accent)"/>
+    <circle cx="35" cy="25" r="4" fill="var(--visual-accent)"/>
+    <circle cx="48" cy="25" r="4" fill="var(--visual-accent)"/>
     {/* Code lines */}
-    <rect x="20" y="40" width="60" height="4" rx="2" fill="#D4D4D4"/>
-    <rect x="20" y="50" width="50" height="4" rx="2" fill="#D4D4D4"/>
-    <rect x="20" y="60" width="65" height="4" rx="2" fill="#D4D4D4"/>
-    <rect x="25" y="70" width="55" height="4" rx="2" fill="#D4D4D4"/>
+    <rect x="20" y="40" width="60" height="4" rx="2" fill="var(--visual-border)"/>
+    <rect x="20" y="50" width="50" height="4" rx="2" fill="var(--visual-border)"/>
+    <rect x="20" y="60" width="65" height="4" rx="2" fill="var(--visual-border)"/>
+    <rect x="25" y="70" width="55" height="4" rx="2" fill="var(--visual-border)"/>
     {/* Syntax highlighting accents */}
-    <rect x="20" y="40" width="10" height="4" rx="2" fill="#A3A3A3"/>
-    <rect x="20" y="50" width="15" height="4" rx="2" fill="#A3A3A3"/>
+    <rect x="20" y="40" width="10" height="4" rx="2" fill="var(--visual-accent)"/>
+    <rect x="20" y="50" width="15" height="4" rx="2" fill="var(--visual-accent)"/>
   </svg>
 );
 
@@ -81,25 +81,25 @@ const DashboardVisual = () => (
     preserveAspectRatio="xMidYMid meet"
   >
     {/* Dashboard background */}
-    <rect x="10" y="15" width="80" height="70" rx="5" fill="#F5F5F5" stroke="#D4D4D4" strokeWidth="2"/>
+    <rect x="10" y="15" width="80" height="70" rx="5" fill="var(--visual-bg)" stroke="var(--visual-border)" strokeWidth="2"/>
     {/* Header bar */}
-    <rect x="10" y="15" width="80" height="15" rx="5" fill="#E5E5E5"/>
+    <rect x="10" y="15" width="80" height="15" rx="5" fill="var(--visual-muted)"/>
     {/* Sidebar */}
-    <rect x="10" y="30" width="20" height="55" rx="0" fill="#E5E5E5"/>
+    <rect x="10" y="30" width="20" height="55" rx="0" fill="var(--visual-muted)"/>
     {/* Chart area */}
-    <rect x="35" y="35" width="50" height="25" rx="2" fill="#D4D4D4" opacity="0.5"/>
+    <rect x="35" y="35" width="50" height="25" rx="2" fill="var(--visual-border)" opacity="0.5"/>
     {/* Chart bars */}
-    <rect x="40" y="50" width="5" height="10" rx="1" fill="#A3A3A3"/>
-    <rect x="50" y="45" width="5" height="15" rx="1" fill="#A3A3A3"/>
-    <rect x="60" y="48" width="5" height="12" rx="1" fill="#A3A3A3"/>
-    <rect x="70" y="42" width="5" height="18" rx="1" fill="#A3A3A3"/>
+    <rect x="40" y="50" width="5" height="10" rx="1" fill="var(--visual-accent)"/>
+    <rect x="50" y="45" width="5" height="15" rx="1" fill="var(--visual-accent)"/>
+    <rect x="60" y="48" width="5" height="12" rx="1" fill="var(--visual-accent)"/>
+    <rect x="70" y="42" width="5" height="18" rx="1" fill="var(--visual-accent)"/>
     {/* Stats cards */}
-    <rect x="35" y="65" width="22" height="15" rx="2" fill="#D4D4D4" opacity="0.5"/>
-    <rect x="63" y="65" width="22" height="15" rx="2" fill="#D4D4D4" opacity="0.5"/>
+    <rect x="35" y="65" width="22" height="15" rx="2" fill="var(--visual-border)" opacity="0.5"/>
+    <rect x="63" y="65" width="22" height="15" rx="2" fill="var(--visual-border)" opacity="0.5"/>
     {/* Sidebar items */}
-    <rect x="15" y="38" width="10" height="2.5" rx="1" fill="#A3A3A3"/>
-    <rect x="15" y="45" width="10" height="2.5" rx="1" fill="#A3A3A3"/>
-    <rect x="15" y="52" width="10" height="2.5" rx="1" fill="#A3A3A3"/>
+    <rect x="15" y="38" width="10" height="2.5" rx="1" fill="var(--visual-accent)"/>
+    <rect x="15" y="45" width="10" height="2.5" rx="1" fill="var(--visual-accent)"/>
+    <rect x="15" y="52" width="10" height="2.5" rx="1" fill="var(--visual-accent)"/>
   </svg>
 );
 
@@ -394,7 +394,7 @@ export default function NewUserOnboardingPage() {
       
       <div className="min-h-screen flex flex-col items-center justify-start p-4 pt-16">
         {/* Wizard Card */}
-        <Card ref={wizardCardRef} className="w-full max-w-xl shadow-none bg-card rounded-lg overflow-hidden p-4">
+        <Card ref={wizardCardRef} className="w-full max-w-xl bg-card rounded-lg overflow-hidden p-4">
           {!isCompleted ? (
             <motion.div
               initial="initial"
@@ -490,15 +490,15 @@ export default function NewUserOnboardingPage() {
                             <div
                               key={option.id}
                               onClick={() => handleOptionSelect(option.id)}
-                              className={`relative flex flex-col rounded-lg border cursor-pointer ${
+                              className={`relative flex flex-col rounded-lg border cursor-pointer transition-colors ${
                                 isSelected
-                                  ? "border-primary shadow-sm hover:bg-accent hover:shadow-md"
-                                  : "border-border hover:border-primary/50 hover:bg-accent hover:shadow-md"
+                                  ? "border-primary hover:bg-accent"
+                                  : "border-border hover:bg-accent"
                               }`}
                             >
                               {/* Visual/Icon above - full width */}
                               {hasIconData && (
-                                <div className="w-full flex items-center justify-center bg-muted/30 rounded-t-lg overflow-hidden">
+                                <div className="w-full flex items-center justify-center rounded-t-lg overflow-hidden">
                                   {renderIcon(option, "large")}
                                 </div>
                               )}
@@ -532,7 +532,7 @@ export default function NewUserOnboardingPage() {
                           <div
                             key={option.id}
                             onClick={() => handleOptionSelect(option.id)}
-                            className={`group flex items-center gap-2.5 cursor-pointer rounded-md p-2 -mx-2 hover:bg-accent hover:shadow-sm`}
+                            className={`group flex items-center gap-2.5 cursor-pointer rounded-md p-2 -mx-2 transition-colors hover:bg-accent`}
                           >
                             {onboardingSteps[currentStep - 1].multiSelect ? (
                               <Checkbox 
@@ -592,7 +592,10 @@ export default function NewUserOnboardingPage() {
                   className="flex items-center"
                 >
                   {currentStep === totalSteps - 1 ? (
-                    "Complete"
+                    <>
+                      Get Started
+                      <ChevronRight className="ml-1 h-4 w-4" />
+                    </>
                   ) : (
                     <>
                       Next

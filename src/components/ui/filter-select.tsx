@@ -1,15 +1,6 @@
 import * as React from "react"
 import { ChevronDown, Check, Search, X, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { 
-  Field, 
-  FieldContent 
-} from "@/components/ui/field"
-import { 
-  InputGroup, 
-  InputGroupInput, 
-  InputGroupAddon 
-} from "@/components/ui/input-group"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -17,6 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { FilterSearchInput } from "@/components/ui/filter-search-input"
 import { cn } from "@/lib/utils"
 interface FilterOption {
   value: string
@@ -145,27 +137,12 @@ export function FilterSelect({
         <div className="flex flex-col">
             {/* Search input at the top */}
             {searchable && onSearchChange ? (
-              <div className="flex flex-col">
-                <div>
-                  <Field>
-                    <FieldContent>
-                      <InputGroup className="border-0 bg-background focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none">
-                        <InputGroupAddon>
-                          <Search className="h-3 w-3" />
-                        </InputGroupAddon>
-                        <InputGroupInput
-                          placeholder={searchPlaceholder}
-                          value={searchQuery}
-                          onChange={(e) => onSearchChange(e.target.value)}
-                          className="h-6 text-sm"
-                          autoFocus={false}
-                        />
-                      </InputGroup>
-                    </FieldContent>
-                  </Field>
-                </div>
-                <div className="border-t border-border" />
-              </div>
+              <FilterSearchInput
+                placeholder={searchPlaceholder}
+                value={searchQuery}
+                onChange={onSearchChange}
+                autoFocus={false}
+              />
             ) : (
               /* Clear/All option - only show if not searchable */
               <div className="p-1">

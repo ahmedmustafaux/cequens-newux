@@ -3,15 +3,11 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
   Check, 
-  ChevronDown, 
+  ChevronDown,
   ChevronRight, 
-  MessageSquare, 
   Users, 
   Send,
   Settings,
-  Sparkles,
-  Minimize2,
-  Maximize2,
   Lock,
   Code,
   Briefcase,
@@ -21,12 +17,11 @@ import {
   Webhook,
   FileCode
 } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { smoothTransition } from "@/lib/transitions"
+import { Separator } from "@/components/ui/separator"
+import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-import { Alert } from "./ui/alert"
 import { hasActiveChannels } from "@/lib/channel-utils"
 import {
   Tooltip,
@@ -41,20 +36,11 @@ interface SetupStep {
   title: string
   description: string
   completed: boolean
+  icon?: React.ReactNode
   action?: {
     label: string
     href: string
   }
-}
-
-// Define setup section interface
-interface SetupSection {
-  id: string
-  title: string
-  description?: string
-  icon: React.ReactNode
-  steps: SetupStep[]
-  illustration?: React.ReactNode
 }
 
 // Persona type
@@ -67,7 +53,7 @@ interface GettingStartedGuideProps {
   goals?: string[]
   persona?: Persona
   onDismiss?: () => void
-  inline?: boolean // If true, renders inline instead of fixed position
+  inline?: boolean // Always true now, kept for backward compatibility
 }
 
 export function GettingStartedGuide({ 
@@ -76,23 +62,11 @@ export function GettingStartedGuide({
   goals = [],
   persona = "business",
   onDismiss,
-  inline = false
+  inline = true
 }: GettingStartedGuideProps) {
   // LocalStorage keys - persona-specific
   const STORAGE_KEY_COMPLETED = `cequens-setup-guide-completed-steps-${persona}`
-  const STORAGE_KEY_MINIMIZED = `cequens-setup-guide-minimized-${persona}`
-  const STORAGE_KEY_EXPANDED = `cequens-setup-guide-expanded-section-${persona}`
-
-  // Initialize state from localStorage
-  // In inline mode, default to first section expanded
-  const [expandedSection, setExpandedSection] = useState<string | null>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY_EXPANDED)
-      return saved ? saved : "section-1" // Default to first section
-    } catch {
-      return "section-1"
-    }
-  })
+  const STORAGE_KEY_EXPANDED = `cequens-setup-guide-expanded-steps-${persona}`
 
   const [completedSteps, setCompletedSteps] = useState<Set<string>>(() => {
     try {
@@ -100,36 +74,33 @@ export function GettingStartedGuide({
       if (saved) {
         const parsed = JSON.parse(saved) as string[]
         const savedSteps = new Set<string>(parsed)
-        // Automatically mark step-1-1 as completed if any channel is active (only for business persona)
+        // Automatically mark step-1 as completed if any channel is active (only for business persona)
         if (persona === "business" && hasActiveChannels()) {
-          savedSteps.add("step-1-1")
+          savedSteps.add("step-1")
         }
         return savedSteps
       } else {
         const steps = new Set<string>()
-        // Automatically mark step-1-1 as completed if any channel is active (only for business persona)
+        // Automatically mark step-1 as completed if any channel is active (only for business persona)
         if (persona === "business" && hasActiveChannels()) {
-          steps.add("step-1-1")
+          steps.add("step-1")
         }
         return steps
       }
     } catch {
       const steps = new Set<string>()
-      // Automatically mark step-1-1 as completed if any channel is active (only for business persona)
+      // Automatically mark step-1 as completed if any channel is active (only for business persona)
       if (persona === "business" && hasActiveChannels()) {
-        steps.add("step-1-1")
+        steps.add("step-1")
       }
       return steps
     }
   })
 
-  const [isMinimized, setIsMinimized] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY_MINIMIZED)
-      return saved === 'true'
-    } catch {
-      return false
-    }
+
+  // Initialize expanded steps - always start fresh, don't load from localStorage
+  const [expandedSteps, setExpandedSteps] = useState<Set<string>>(() => {
+    return new Set()
   })
 
   // Save completed steps to localStorage whenever they change
@@ -141,7 +112,7 @@ export function GettingStartedGuide({
     }
   }, [completedSteps, persona])
 
-  // Listen for active channels changes and update step-1-1 completion (only for business persona)
+  // Listen for active channels changes and update step-1 completion (only for business persona)
   useEffect(() => {
     if (persona !== "business") return
 
@@ -150,9 +121,9 @@ export function GettingStartedGuide({
       setCompletedSteps(prev => {
         const newSet = new Set(prev)
         if (hasActive) {
-          newSet.add("step-1-1")
+          newSet.add("step-1")
         } else {
-          newSet.delete("step-1-1")
+          newSet.delete("step-1")
         }
         return newSet
       })
@@ -167,37 +138,7 @@ export function GettingStartedGuide({
     }
   }, [persona])
 
-  // Save minimized state to localStorage whenever it changes
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY_MINIMIZED, String(isMinimized))
-    } catch (error) {
-      console.error('Failed to save minimized state:', error)
-    }
-  }, [isMinimized, persona])
 
-  // Save expanded section to localStorage whenever it changes
-  useEffect(() => {
-    try {
-      if (expandedSection) {
-        localStorage.setItem(STORAGE_KEY_EXPANDED, expandedSection)
-      } else {
-        localStorage.removeItem(STORAGE_KEY_EXPANDED)
-      }
-    } catch (error) {
-      console.error('Failed to save expanded section:', error)
-    }
-  }, [expandedSection, persona])
-
-  // Reset expanded section when persona changes
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY_EXPANDED)
-      setExpandedSection(saved ? saved : "section-1")
-    } catch {
-      setExpandedSection("section-1")
-    }
-  }, [persona])
 
   // Reset completed steps when persona changes
   useEffect(() => {
@@ -206,15 +147,15 @@ export function GettingStartedGuide({
       if (saved) {
         const parsed = JSON.parse(saved) as string[]
         const savedSteps = new Set<string>(parsed)
-        // Only auto-mark step-1-1 for business persona
+        // Only auto-mark step-1 for business persona
         if (persona === "business" && hasActiveChannels()) {
-          savedSteps.add("step-1-1")
+          savedSteps.add("step-1")
         }
         setCompletedSteps(savedSteps)
       } else {
         const steps = new Set<string>()
         if (persona === "business" && hasActiveChannels()) {
-          steps.add("step-1-1")
+          steps.add("step-1")
         }
         setCompletedSteps(steps)
       }
@@ -227,397 +168,339 @@ export function GettingStartedGuide({
     }
   }, [persona])
 
-  // Generate personalized setup sections based on persona, industry and selections
-  const setupSections: SetupSection[] = React.useMemo(() => {
-    const sections: SetupSection[] = []
+  // Generate personalized setup steps based on persona, industry and selections
+  const setupSteps: SetupStep[] = React.useMemo(() => {
+    const steps: SetupStep[] = []
 
     if (persona === "business") {
-      // BUSINESS PERSONA (MARKETEER) SECTIONS
+      // BUSINESS PERSONA (MARKETEER) STEPS
       
-      // Section 1: Send your first campaign
-      sections.push({
-        id: "section-1",
-        title: "Send your first campaign",
-        description: "Get started by sending your first message to customers",
+      // Step 1: Configure your channel
+      steps.push({
+        id: "step-1",
+        title: "Configure your channel",
+        description: channels.length > 0 
+          ? `Set up channels with authentication and API settings. Enable multiple channels simultaneously. You can enable SMS, WhatsApp, Email, Voice, and Messenger channels based on your business needs.`
+          : "Configure messaging channels (SMS, WhatsApp, Email, Voice, Messenger) with authentication credentials and API settings.",
         icon: <Send className="w-5 h-5" />,
-        steps: [
-          {
-            id: "step-1-1",
-            title: "Configure your channel",
-            description: channels.length > 0 
-              ? `Set up ${channels.map(c => getChannelName(c)).join(", ")} for messaging`
-              : "Choose and configure your preferred messaging channel",
-            completed: false,
-            action: {
-              label: "Configure channels",
-              href: "/channels"
-            }
-          },
-          {
-            id: "step-1-2",
-            title: "Add your audience",
-            description: "Add contacts or create a segment",
-            completed: false,
-            action: {
-              label: "Add contacts",
-              href: "/contacts"
-            }
-          },
-          {
-            id: "step-1-3",
-            title: "Send your campaign",
-            description: "Create and send your first message",
-            completed: false,
-            action: {
-              label: "Create campaign",
-              href: "/campaigns/create"
-            }
-          }
-        ],
-        illustration: (
-          <div className="relative w-full h-32 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg p-4 flex items-center justify-center">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="relative">
-                <div className="w-16 h-16 bg-card rounded-lg shadow-md flex items-center justify-center border border-border">
-                  <Send className="w-8 h-8 text-primary" />
-                </div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-success rounded-full flex items-center justify-center">
-                  <Check className="w-4 h-4 text-success-foreground" />
-                </div>
-              </div>
-            </div>
-          </div>
-        )
+        completed: false,
+        action: {
+          label: "Configure channels",
+          href: "/channels"
+        }
       })
 
-      // Section 2: Industry-specific setup for Business persona
-      if (industry === "ecommerce") {
-      sections.push({
-        id: "section-2",
-        title: "Set up your store",
-        description: "Configure your e-commerce integrations",
-        icon: <Settings className="w-5 h-5" />,
-        steps: [
-          {
-            id: "step-2-1",
-            title: "Connect your store",
-            description: "Integrate with Shopify, WooCommerce, or your platform",
-            completed: false,
-            action: {
-              label: "Browse integrations",
-              href: "/settings/plugins"
-            }
-          },
-          {
-            id: "step-2-2",
-            title: "Set up abandoned cart recovery",
-            description: "Automatically recover lost sales with smart reminders",
-            completed: false,
-            action: {
-              label: "Configure automation",
-              href: "/automation"
-            }
-          },
-          {
-            id: "step-2-3",
-            title: "Create order notification templates",
-            description: "Keep customers informed about their orders",
-            completed: false,
-            action: {
-              label: "Create templates",
-              href: "/campaigns/templates"
-            }
-          }
-        ]
-      })
-    } else if (industry === "healthcare") {
-      sections.push({
-        id: "section-2",
-        title: "Configure healthcare workflows",
-        description: "Set up patient communication",
-        icon: <Settings className="w-5 h-5" />,
-        steps: [
-          {
-            id: "step-2-1",
-            title: "Set up appointment reminders",
-            description: "Reduce no-shows with automated reminders",
-            completed: false,
-            action: {
-              label: "Configure automation",
-              href: "/automation"
-            }
-          },
-          {
-            id: "step-2-2",
-            title: "Create notification templates",
-            description: "Templates for test results, prescriptions, and more",
-            completed: false,
-            action: {
-              label: "Create templates",
-              href: "/campaigns/templates"
-            }
-          },
-          {
-            id: "step-2-3",
-            title: "Configure HIPAA compliance",
-            description: "Ensure secure patient communication",
-            completed: false,
-            action: {
-              label: "Security settings",
-              href: "/settings/organization"
-            }
-          }
-        ]
-      })
-    } else if (industry === "finance") {
-      sections.push({
-        id: "section-2",
-        title: "Configure financial services",
-        description: "Set up secure banking communications",
-        icon: <Settings className="w-5 h-5" />,
-        steps: [
-          {
-            id: "step-2-1",
-            title: "Set up transaction alerts",
-            description: "Real-time notifications for account activity",
-            completed: false,
-            action: {
-              label: "Configure automation",
-              href: "/automation"
-            }
-          },
-          {
-            id: "step-2-2",
-            title: "Enable two-factor authentication",
-            description: "Secure customer accounts with OTP",
-            completed: false,
-            action: {
-              label: "Configure OTP",
-              href: "/developer/apis/otp"
-            }
-          },
-          {
-            id: "step-2-3",
-            title: "Create security notification templates",
-            description: "Alert customers about suspicious activity",
-            completed: false,
-            action: {
-              label: "Create templates",
-              href: "/campaigns/templates"
-            }
-          }
-        ]
-      })
-    } else {
-      // Generic setup for other industries
-      sections.push({
-        id: "section-2",
-        title: "Customize your setup",
-        description: "Configure platform features",
-        icon: <Settings className="w-5 h-5" />,
-        steps: [
-          {
-            id: "step-2-1",
-            title: "Set up automation workflows",
-            description: "Create automated message sequences",
-            completed: false,
-            action: {
-              label: "Configure automation",
-              href: "/automation"
-            }
-          },
-          {
-            id: "step-2-2",
-            title: "Create message templates",
-            description: "Save time with reusable templates",
-            completed: false,
-            action: {
-              label: "Create templates",
-              href: "/campaigns/templates"
-            }
-          },
-          {
-            id: "step-2-3",
-            title: "Configure integrations",
-            description: "Connect your existing tools",
-            completed: false,
-            action: {
-              label: "Browse integrations",
-              href: "/settings/plugins"
-            }
-          }
-        ]
-      })
-    }
-
-      // Section 3: Team collaboration (if applicable)
-      sections.push({
-        id: "section-3",
-        title: "Invite your team",
-        description: "Collaborate with team members",
+      // Step 2: Add your audience
+      steps.push({
+        id: "step-2",
+        title: "Add your audience",
+        description: "Import contacts from CSV or CRM, or add manually. Create targeted segments using demographics, purchase history, or custom attributes.",
         icon: <Users className="w-5 h-5" />,
-        steps: [
-          {
-            id: "step-3-1",
-            title: "Add team members",
-            description: "Invite colleagues to collaborate",
-            completed: false,
-            action: {
-              label: "Manage team",
-              href: "/settings/organization"
-            }
-          },
-          {
-            id: "step-3-2",
-            title: "Set up roles and permissions",
-            description: "Control who can access what",
-            completed: false,
-            action: {
-              label: "Configure roles",
-              href: "/settings/organization"
-            }
+        completed: false,
+        action: {
+          label: "Add contacts",
+          href: "/contacts"
+        }
+      })
+
+      // Step 3: Send your campaign
+      steps.push({
+        id: "step-3",
+        title: "Send your first campaign",
+        description: "Create personalized campaigns with dynamic content. Schedule delivery times, segment audiences, and track open rates, clicks, and conversions.",
+        icon: <Send className="w-5 h-5" />,
+        completed: false,
+        action: {
+          label: "Create campaign",
+          href: "/campaigns/create"
+        }
+      })
+
+      // Industry-specific steps for Business persona
+      if (industry === "ecommerce") {
+        steps.push({
+          id: "step-4",
+          title: "Connect your store",
+          description: "Integrate Shopify, WooCommerce, or other platforms to sync customer data, orders, and products. Enable real-time webhooks for updates.",
+          icon: <Settings className="w-5 h-5" />,
+          completed: false,
+          action: {
+            label: "Browse integrations",
+            href: "/settings/plugins"
           }
-        ]
+        })
+        steps.push({
+          id: "step-5",
+          title: "Set up abandoned cart recovery",
+          description: "Automatically send reminder messages to customers who abandoned carts. Customize timing, add discounts, and track recovery rates.",
+          icon: <Settings className="w-5 h-5" />,
+          completed: false,
+          action: {
+            label: "Configure automation",
+            href: "/automation"
+          }
+        })
+        steps.push({
+          id: "step-6",
+          title: "Create order notification templates",
+          description: "Create automated order notification templates for confirmations, shipping updates, and delivery notifications with tracking links.",
+          icon: <Settings className="w-5 h-5" />,
+          completed: false,
+          action: {
+            label: "Create templates",
+            href: "/campaigns/templates"
+          }
+        })
+      } else if (industry === "healthcare") {
+        steps.push({
+          id: "step-4",
+          title: "Set up appointment reminders",
+          description: "Send automated appointment reminders 24 hours and 2 hours before appointments. Include confirmation and rescheduling options.",
+          icon: <Settings className="w-5 h-5" />,
+          completed: false,
+          action: {
+            label: "Configure automation",
+            href: "/automation"
+          }
+        })
+        steps.push({
+          id: "step-5",
+          title: "Create notification templates",
+          description: "Create HIPAA-compliant templates for test results, prescriptions, medication reminders, and health alerts with secure messaging.",
+          icon: <Settings className="w-5 h-5" />,
+          completed: false,
+          action: {
+            label: "Create templates",
+            href: "/campaigns/templates"
+          }
+        })
+        steps.push({
+          id: "step-6",
+          title: "Configure HIPAA compliance",
+          description: "Configure HIPAA-compliant settings with encryption, access controls, audit logging, and secure authentication for patient communications.",
+          icon: <Settings className="w-5 h-5" />,
+          completed: false,
+          action: {
+            label: "Security settings",
+            href: "/settings/organization"
+          }
+        })
+      } else if (industry === "finance") {
+        steps.push({
+          id: "step-4",
+          title: "Set up transaction alerts",
+          description: "Send real-time transaction alerts for deposits, withdrawals, transfers, and payments. Include transaction details and account balances.",
+          icon: <Settings className="w-5 h-5" />,
+          completed: false,
+          action: {
+            label: "Configure automation",
+            href: "/automation"
+          }
+        })
+        steps.push({
+          id: "step-5",
+          title: "Enable two-factor authentication",
+          description: "Implement two-factor authentication using OTP via SMS or WhatsApp for login verification and transaction authorization.",
+          icon: <Settings className="w-5 h-5" />,
+          completed: false,
+          action: {
+            label: "Configure OTP",
+            href: "/developer/apis/otp"
+          }
+        })
+        steps.push({
+          id: "step-6",
+          title: "Create security notification templates",
+          description: "Create security notification templates for suspicious activities, password changes, new device logins, and fraud alerts.",
+          icon: <Settings className="w-5 h-5" />,
+          completed: false,
+          action: {
+            label: "Create templates",
+            href: "/campaigns/templates"
+          }
+        })
+      } else {
+        // Generic setup for other industries
+        steps.push({
+          id: "step-4",
+          title: "Set up automation workflows",
+          description: "Create automation workflows that trigger messages based on customer actions or events. Build multi-step sequences with conditional logic.",
+          icon: <Settings className="w-5 h-5" />,
+          completed: false,
+          action: {
+            label: "Configure automation",
+            href: "/automation"
+          }
+        })
+        steps.push({
+          id: "step-5",
+          title: "Create message templates",
+          description: "Create reusable message templates with dynamic variables and media attachments. Organize by category for campaigns and workflows.",
+          icon: <Settings className="w-5 h-5" />,
+          completed: false,
+          action: {
+            label: "Create templates",
+            href: "/campaigns/templates"
+          }
+        })
+        steps.push({
+          id: "step-6",
+          title: "Configure integrations",
+          description: "Connect CRM, help desk, analytics, and e-commerce platforms. Set up webhooks and API connections for data synchronization.",
+          icon: <Settings className="w-5 h-5" />,
+          completed: false,
+          action: {
+            label: "Browse integrations",
+            href: "/settings/plugins"
+          }
+        })
+      }
+
+      // Team collaboration steps
+      steps.push({
+        id: "step-7",
+        title: "Add team members",
+        description: "Invite team members to collaborate on campaigns and manage contacts. Send invitations with role-based access and track activity.",
+        icon: <Users className="w-5 h-5" />,
+        completed: false,
+        action: {
+          label: "Manage team",
+          href: "/settings/organization"
+        }
+      })
+      steps.push({
+        id: "step-8",
+        title: "Set up roles and permissions",
+        description: "Configure role-based permissions for campaigns, contacts, templates, and analytics. Define custom roles to control team access.",
+        icon: <Users className="w-5 h-5" />,
+        completed: false,
+        action: {
+          label: "Configure roles",
+          href: "/settings/organization"
+        }
       })
     } else {
-      // API PERSONA (DEVELOPER) SECTIONS
+      // API PERSONA (DEVELOPER) STEPS
       
-      // Section 1: Get API Access
-      sections.push({
-        id: "section-1",
-        title: "Get API Access",
-        description: "Set up your API credentials and authentication",
+      // Step 1: Generate API Key
+      steps.push({
+        id: "step-1",
+        title: "Generate API Key",
+        description: "Generate API keys for authentication. Create separate keys for development and production with IP restrictions and permissions.",
         icon: <Key className="w-5 h-5" />,
-        steps: [
-          {
-            id: "step-1-1",
-            title: "Generate API Key",
-            description: "Create your API key for authentication",
-            completed: false,
-            action: {
-              label: "Get API Key",
-              href: "/developer-apis"
-            }
-          },
-          {
-            id: "step-1-2",
-            title: "Review API Documentation",
-            description: "Explore our comprehensive API documentation",
-            completed: false,
-            action: {
-              label: "View API Docs",
-              href: "/developer-apis/docs"
-            }
-          },
-          {
-            id: "step-1-3",
-            title: "Test API Connection",
-            description: "Verify your API credentials are working",
-            completed: false,
-            action: {
-              label: "Test Connection",
-              href: "/developer-apis"
-            }
-          }
-        ],
-        illustration: (
-          <div className="relative w-full h-32 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg p-4 flex items-center justify-center">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="relative">
-                <div className="w-16 h-16 bg-card rounded-lg shadow-md flex items-center justify-center border border-border">
-                  <Key className="w-8 h-8 text-primary" />
-                </div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-success rounded-full flex items-center justify-center">
-                  <Check className="w-4 h-4 text-success-foreground" />
-                </div>
-              </div>
-            </div>
-          </div>
-        )
+        completed: false,
+        action: {
+          label: "Get API Key",
+          href: "/developer-apis"
+        }
       })
 
-      // Section 2: Integrate APIs
-      sections.push({
-        id: "section-2",
-        title: "Integrate APIs",
-        description: "Start integrating messaging APIs into your application",
-        icon: <Code className="w-5 h-5" />,
-        steps: [
-          {
-            id: "step-2-1",
-            title: "Choose your API",
-            description: "Select SMS, WhatsApp, Voice, or other APIs",
-            completed: false,
-            action: {
-              label: "Browse APIs",
-              href: "/developer-apis/listing"
-            }
-          },
-          {
-            id: "step-2-2",
-            title: "Set up webhooks",
-            description: "Configure webhooks to receive message status updates",
-            completed: false,
-            action: {
-              label: "Configure Webhooks",
-              href: "/developer-apis/docs"
-            }
-          },
-          {
-            id: "step-2-3",
-            title: "Send your first API request",
-            description: "Make your first API call to send a message",
-            completed: false,
-            action: {
-              label: "Try SMS API",
-              href: "/developer-apis/sms"
-            }
-          }
-        ]
+      // Step 2: Review API Documentation
+      steps.push({
+        id: "step-2",
+        title: "Review API Documentation",
+        description: "Review API documentation for endpoints, request formats, authentication, and error handling. Access code examples and test endpoints.",
+        icon: <BookOpen className="w-5 h-5" />,
+        completed: false,
+        action: {
+          label: "View API Docs",
+          href: "/developer-apis/docs"
+        }
       })
 
-      // Section 3: Advanced Features
-      sections.push({
-        id: "section-3",
-        title: "Advanced Features",
-        description: "Explore advanced API features and capabilities",
+      // Step 3: Test API Connection
+      steps.push({
+        id: "step-3",
+        title: "Test API Connection",
+        description: "Test API credentials and connection using testing tools, curl, or Postman. Verify authentication and request formats before production.",
         icon: <Terminal className="w-5 h-5" />,
-        steps: [
-          {
-            id: "step-3-1",
-            title: "Explore SDKs and Libraries",
-            description: "Use our SDKs for faster integration",
-            completed: false,
-            action: {
-              label: "View SDKs",
-              href: "/developer-apis/docs"
-            }
-          },
-          {
-            id: "step-3-2",
-            title: "Set up OTP verification",
-            description: "Implement OTP verification in your app",
-            completed: false,
-            action: {
-              label: "OTP API",
-              href: "/developer-apis/otp"
-            }
-          },
-          {
-            id: "step-3-3",
-            title: "Configure rate limits",
-            description: "Understand and manage API rate limits",
-            completed: false,
-            action: {
-              label: "Rate Limits",
-              href: "/developer-apis/docs"
-            }
-          }
-        ]
+        completed: false,
+        action: {
+          label: "Test Connection",
+          href: "/developer-apis"
+        }
+      })
+
+      // Step 4: Choose your API
+      steps.push({
+        id: "step-4",
+        title: "Choose your API",
+        description: "Choose from SMS, WhatsApp, Email, Voice, or Messenger APIs. Review capabilities, pricing, and features for your use case.",
+        icon: <Code className="w-5 h-5" />,
+        completed: false,
+        action: {
+          label: "Browse APIs",
+          href: "/developer-apis/listing"
+        }
+      })
+
+      // Step 5: Set up webhooks
+      steps.push({
+        id: "step-5",
+        title: "Set up webhooks",
+        description: "Configure webhooks to receive real-time notifications for delivery status, receipts, and errors. Set up endpoints with authentication.",
+        icon: <Webhook className="w-5 h-5" />,
+        completed: false,
+        action: {
+          label: "Configure Webhooks",
+          href: "/developer-apis/docs"
+        }
+      })
+
+      // Step 6: Send your first API request
+      steps.push({
+        id: "step-6",
+        title: "Send your first API request",
+        description: "Send your first test message using API sandbox or production endpoints. Track delivery status and handle errors with retry logic.",
+        icon: <Send className="w-5 h-5" />,
+        completed: false,
+        action: {
+          label: "Try SMS API",
+          href: "/developer-apis/sms"
+        }
+      })
+
+      // Step 7: Explore SDKs and Libraries
+      steps.push({
+        id: "step-7",
+        title: "Explore SDKs and Libraries",
+        description: "Use official SDKs for JavaScript, Python, PHP, Java, Ruby, and Go. Pre-built functions handle authentication and error handling.",
+        icon: <FileCode className="w-5 h-5" />,
+        completed: false,
+        action: {
+          label: "View SDKs",
+          href: "/developer-apis/docs"
+        }
+      })
+
+      // Step 8: Set up OTP verification
+      steps.push({
+        id: "step-8",
+        title: "Set up OTP verification",
+        description: "Implement OTP verification for user authentication and 2FA. Configure generation, expiration, templates, and validation with retry logic.",
+        icon: <Key className="w-5 h-5" />,
+        completed: false,
+        action: {
+          label: "OTP API",
+          href: "/developer-apis/otp"
+        }
+      })
+
+      // Step 9: Configure rate limits
+      steps.push({
+        id: "step-9",
+        title: "Configure rate limits",
+        description: "Review rate limit policies for endpoints. Implement rate limit handling, exponential backoff, and request queuing strategies.",
+        icon: <Settings className="w-5 h-5" />,
+        completed: false,
+        action: {
+          label: "Rate Limits",
+          href: "/developer-apis/docs"
+        }
       })
     }
 
-    return sections
+    return steps
   }, [industry, channels, persona])
 
   // Helper function to get channel name
@@ -632,19 +515,105 @@ export function GettingStartedGuide({
     return channelMap[channelId] || channelId
   }
 
-  // Calculate progress
-  const totalSteps = setupSections.reduce((acc, section) => acc + section.steps.length, 0)
-  const completedCount = completedSteps.size
-  const progressPercentage = totalSteps > 0 ? Math.round((completedCount / totalSteps) * 100) : 0
-
-  // Toggle section expansion
-  const toggleSection = (sectionId: string) => {
-    setExpandedSection(expandedSection === sectionId ? null : sectionId)
+  // Helper function to get step image name from step title
+  function getStepImageName(stepTitle: string): string {
+    // Convert title to filename: lowercase, replace spaces with hyphens, remove special chars
+    const filename = stepTitle
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+      .trim()
+    return `${filename}.png`
   }
 
-  // Toggle step completion
-  const toggleStepCompletion = (stepId: string) => {
-    setCompletedSteps(prev => {
+  // Helper function to check if a step is a goal step
+  function isGoalStep(stepTitle: string): boolean {
+    if (persona !== "business" || goals.length === 0) return false
+    
+    // Map goal IDs to step titles that should be tagged
+    const goalStepMapping: Record<string, string[]> = {
+      "goal-2": ["Send your first campaign"], // Marketing campaigns
+      "goal-1": ["Add your audience", "Send your first campaign"], // Customer engagement
+      "goal-3": ["Add your audience"], // Support automation
+      "goal-4": ["Add your audience", "Send your first campaign"], // Lead generation
+      "goal-6": ["Send your first campaign"], // Sales automation
+      "goal-7": ["Add your audience", "Send your first campaign"], // Customer retention
+      "goal-9": ["Configure your channel"], // Multi-channel messaging
+    }
+    
+    // Check if any selected goal maps to this step title
+    return goals.some(goalId => {
+      const mappedSteps = goalStepMapping[goalId] || []
+      return mappedSteps.includes(stepTitle)
+    })
+  }
+
+  // Track if we've initialized expanded steps on this mount/persona
+  const hasInitializedExpanded = React.useRef(false)
+  
+  // Reset initialization flag when persona changes
+  useEffect(() => {
+    hasInitializedExpanded.current = false
+  }, [persona])
+  
+  // Initialize expanded steps - always expand first incomplete step on mount/refresh
+  // This runs once when setupSteps is ready, ensuring we always start fresh on refresh
+  useEffect(() => {
+    if (!hasInitializedExpanded.current && setupSteps.length > 0) {
+      hasInitializedExpanded.current = true
+      const firstIncomplete = setupSteps.find(step => !completedSteps.has(step.id))
+      if (firstIncomplete) {
+        setExpandedSteps(new Set([firstIncomplete.id]))
+      } else {
+        // If all steps are completed, expand the first one
+        setExpandedSteps(new Set([setupSteps[0].id]))
+      }
+    }
+  }, [setupSteps.length, completedSteps.size, persona]) // Run when setupSteps, completedSteps, or persona changes
+
+  // Auto-expand next incomplete step when a step is completed (if the completed step was expanded)
+  useEffect(() => {
+    // Find any completed step that is currently expanded
+    const expandedCompletedStep = setupSteps.find(step => 
+      completedSteps.has(step.id) && expandedSteps.has(step.id)
+    )
+    
+    if (expandedCompletedStep) {
+      const currentIndex = setupSteps.findIndex(step => step.id === expandedCompletedStep.id)
+      const nextIncomplete = setupSteps.slice(currentIndex + 1).find(step => !completedSteps.has(step.id))
+      
+      if (nextIncomplete) {
+        setExpandedSteps(prev => {
+          const newExpanded = new Set(prev)
+          newExpanded.delete(expandedCompletedStep.id) // Collapse the completed step
+          newExpanded.add(nextIncomplete.id) // Expand the next incomplete step
+          return newExpanded
+        })
+      } else {
+        // If no next incomplete step, just collapse the completed one
+        setExpandedSteps(prev => {
+          const newExpanded = new Set(prev)
+          newExpanded.delete(expandedCompletedStep.id)
+          return newExpanded
+        })
+      }
+    }
+  }, [completedSteps, setupSteps]) // Run when completed steps or setup steps change
+
+  // Save expanded steps to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_EXPANDED, JSON.stringify(Array.from(expandedSteps)))
+    } catch (error) {
+      console.error('Failed to save expanded steps:', error)
+    }
+  }, [expandedSteps, persona])
+
+
+  // Toggle step expansion
+  const toggleStepExpansion = (stepId: string) => {
+    setExpandedSteps(prev => {
       const newSet = new Set(prev)
       if (newSet.has(stepId)) {
         newSet.delete(stepId)
@@ -655,13 +624,203 @@ export function GettingStartedGuide({
     })
   }
 
-  const containerClasses = inline 
-    ? "relative w-full" 
-    : "fixed bottom-6 right-6 z-50 w-full max-w-md"
-  
-  const containerStyle = inline 
-    ? undefined 
-    : { width: 'calc(25vw - 1.5rem)', minWidth: '480px', maxWidth: '600px' }
+  // Toggle step completion
+  const toggleStepCompletion = (stepId: string) => {
+    setCompletedSteps(prev => {
+      const newSet = new Set(prev)
+      const wasCompleted = newSet.has(stepId)
+      
+      if (wasCompleted) {
+        newSet.delete(stepId)
+      } else {
+        newSet.add(stepId)
+        
+        // If step was just completed and was expanded, expand the next incomplete step
+        if (expandedSteps.has(stepId)) {
+          const currentIndex = setupSteps.findIndex(step => step.id === stepId)
+          const nextIncomplete = setupSteps.slice(currentIndex + 1).find(step => !newSet.has(step.id))
+          
+          if (nextIncomplete) {
+            setExpandedSteps(prev => {
+              const newExpanded = new Set(prev)
+              newExpanded.delete(stepId) // Collapse the completed step
+              newExpanded.add(nextIncomplete.id) // Expand the next incomplete step
+              return newExpanded
+            })
+          } else {
+            // If no next incomplete step, just collapse the completed one
+            setExpandedSteps(prev => {
+              const newExpanded = new Set(prev)
+              newExpanded.delete(stepId)
+              return newExpanded
+            })
+          }
+        }
+      }
+      
+      return newSet
+    })
+  }
+
+  // Helper function to render a step item
+  const renderStepItem = (
+    step: SetupStep,
+    isCompleted: boolean,
+    isExpanded: boolean,
+    isLocked: boolean,
+    variant: "inline" | "compact"
+  ) => {
+    const isInline = variant === "inline"
+    const padding = isInline ? "p-4" : "p-3"
+    const gap = isInline ? "gap-3" : "gap-2"
+    const titleSize = isInline ? "font-semibold text-sm" : "font-medium text-xs"
+    const descriptionSize = isInline ? "text-sm" : "text-xs"
+    const checkboxSize = isInline ? "w-5 h-5" : "w-4 h-4"
+    const checkIconSize = isInline ? "w-2.5 h-2.5" : "w-2 h-2"
+    const lockIconSize = isInline ? "w-4 h-4" : "w-3 h-3"
+    const chevronSize = isInline ? "w-4 h-4" : "w-3 h-3"
+    const buttonVariant = isInline ? "default" : "link"
+    const buttonSize = isInline ? "sm" : "sm"
+    const buttonClassName = isInline ? "" : "h-auto p-0 text-xs"
+    const buttonMargin = isInline ? "mt-8" : "mt-2"
+    const contentPadding = isInline ? "pt-4" : "pt-1"
+    const contentGap = isInline ? "gap-3" : "gap-2"
+
+    // Use Card component for all steps
+    const wrapperProps = { 
+      className: "group overflow-hidden py-0" 
+    }
+
+    return (
+      <Card
+        key={step.id}
+        {...wrapperProps}
+      >
+        {/* Step Header - Clickable to toggle expansion */}
+        <div
+          onClick={() => toggleStepExpansion(step.id)}
+          className={cn("w-full flex items-start cursor-pointer text-left", padding, gap)}
+        >
+          {/* Column 1: Completion checkbox */}
+          <div className="flex-shrink-0 flex items-start">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                if (!isLocked) {
+                  toggleStepCompletion(step.id)
+                }
+              }}
+              disabled={isLocked}
+              className={cn(
+                `${checkboxSize} rounded-full border-2 flex items-center justify-center`,
+                isCompleted
+                  ? "border-green-700 bg-green-700"
+                  : isLocked
+                    ? "border-muted-foreground/30 bg-muted cursor-not-allowed"
+                    : "border-border"
+              )}
+            >
+              {isCompleted && (
+                <Check className={`${checkIconSize} text-white`} />
+              )}
+            </button>
+          </div>
+
+          {/* Column 2: Content (title, description, button) */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+              <h4 className={cn(
+                titleSize,
+                isCompleted && "line-through text-muted-foreground/60"
+              )}>
+                {step.title}
+              </h4>
+              {isGoalStep(step.title) && (
+                <Badge variant="secondary" className="text-xs">
+                  Goal
+                </Badge>
+              )}
+              {isLocked && (
+                <Lock className={`${lockIconSize} text-muted-foreground flex-shrink-0`} />
+              )}
+            </div>
+
+            {/* Step Content - Collapsible with animation */}
+            <AnimatePresence initial={false}>
+              {isExpanded && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className={cn("flex items-start", contentGap)}>
+                    <div className={cn("flex-1 space-y-2", contentPadding)}>
+                    <p className={cn(
+                      descriptionSize,
+                      isCompleted ? "text-muted-foreground/60" : "text-muted-foreground"
+                    )}>
+                      {step.description}
+                    </p>
+                    {step.action && !isCompleted && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className={cn("inline-block", buttonMargin)}>
+                              <Button
+                                variant={buttonVariant}
+                                size={buttonSize}
+                                className={buttonClassName}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  if (!isLocked) {
+                                    window.location.href = step.action!.href
+                                  }
+                                }}
+                                disabled={isLocked}
+                              >
+                                {step.action.label}
+                                <ChevronRight className={`${chevronSize} ml-0.5`} />
+                              </Button>
+                            </span>
+                          </TooltipTrigger>
+                          {isLocked && (
+                            <TooltipContent>
+                              <p>You must configure a channel first</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
+
+                    {/* Column 3: Visual - 24% of content column width */}
+                    <div className="w-[24%] flex-shrink-0 flex items-start pt-1 hidden md:block">
+                      <img 
+                        src={`/steps/${getStepImageName(step.title)}`}
+                        alt={step.title}
+                        className="w-full aspect-square rounded-lg object-cover"
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Column 4: Expand/Collapse icon */}
+          <div className="flex-shrink-0 flex items-start pt-0.5">
+            <motion.div
+              animate={{ rotate: isExpanded ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ChevronDown className={`${chevronSize} text-muted-foreground`} />
+            </motion.div>
+          </div>
+        </div>
+      </Card>
+    )
+  }
 
   return (
     <motion.div
@@ -669,397 +828,19 @@ export function GettingStartedGuide({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      className={containerClasses}
-      style={containerStyle}
+      className="relative w-full"
     >
-      {inline ? (
-        // Inline mode: no card wrapper, collapsible sections
-        <div className="space-y-3">
-          {setupSections.map((section, sectionIndex) => {
-            const isExpanded = expandedSection === section.id
-            const sectionCompletedSteps = section.steps.filter(step => 
-              completedSteps.has(step.id)
-            ).length
-            const allStepsCompleted = sectionCompletedSteps === section.steps.length
-
-            return (
-              <div
-                key={section.id}
-                className={cn(
-                  "group border rounded-lg overflow-hidden bg-card transition-colors",
-                  allStepsCompleted ? "border-border-success bg-muted" : "border-border"
-                )}
-              >
-                {/* Section Header - Clickable to toggle */}
-                <div
-                  onClick={() => toggleSection(section.id)}
-                  className="w-full p-3 flex items-center justify-between cursor-pointer text-left"
-                >
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <div className={cn(
-                      "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 border",
-                      allStepsCompleted 
-                        ? "bg-success text-success-foreground border-border-success" 
-                        : "bg-muted text-muted-foreground border-border"
-                    )}>
-                      {allStepsCompleted ? (
-                        <Check className="w-4 h-4" />
-                      ) : (
-                        <span className="[&>svg]:w-5 [&>svg]:h-5">
-                          {section.icon}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className={cn(
-                        "font-semibold truncate",
-                        "text-sm"
-                      )}>
-                        {section.title}
-                      </h3>
-                      {section.description && (
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {section.description}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      <Badge variant="secondary" className="text-xs">
-                        {sectionCompletedSteps}/{section.steps.length}
-                      </Badge>
-                      <motion.div
-                        animate={{ rotate: isExpanded ? 180 : 0 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                      </motion.div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Section Content - Collapsible with animation */}
-                <AnimatePresence initial={false}>
-                  {isExpanded && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <div className="px-3 pb-3 space-y-2">
-                        {section.steps.map((step, stepIndex) => {
-                          const isCompleted = completedSteps.has(step.id)
-                          
-                          const isChannelConfigStep = step.id === "step-1-1"
-                          const isSendCampaignStep = step.id === "step-1-3"
-                          const isChannelConfigured = completedSteps.has("step-1-1")
-                          const isLocked = isSendCampaignStep && !isChannelConfigured
-                          
-                          return (
-                            <div
-                              key={step.id}
-                              className={cn(
-                                "group relative flex items-start gap-3 p-3 rounded-lg border",
-                                "overflow-hidden",
-                                isCompleted 
-                                  ? "border-border-success bg-success/10" 
-                                  : "border-border bg-card"
-                              )}
-                            >
-                              <div className="relative z-10 flex items-start gap-3 w-full">
-                                <button
-                                  onClick={() => !isLocked && toggleStepCompletion(step.id)}
-                                  disabled={isLocked}
-                                  className={cn(
-                                    "w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0",
-                                    isCompleted
-                                      ? "border-success bg-success"
-                                      : isLocked
-                                        ? "border-muted-foreground/30 bg-muted cursor-not-allowed"
-                                        : "border-border"
-                                  )}
-                                >
-                                  {isCompleted && (
-                                    <Check className="w-2.5 h-2.5 text-success-foreground" />
-                                  )}
-                                </button>
-
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-1.5">
-                                    <h4 className={cn(
-                                      "font-semibold text-sm",
-                                      isCompleted && "line-through text-muted-foreground"
-                                    )}>
-                                      {step.title}
-                                    </h4>
-                                    {isLocked && (
-                                      <Lock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                                    )}
-                                  </div>
-                                  <p className="text-sm text-muted-foreground mt-0.5">
-                                    {step.description}
-                                  </p>
-                                  {step.action && !isCompleted && (
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <span className="inline-block mt-2">
-                                            <Button
-                                              variant="link"
-                                              size="sm"
-                                              className="text-sm h-auto p-0"
-                                              onClick={(e) => {
-                                                e.stopPropagation()
-                                                if (!isLocked) {
-                                                  window.location.href = step.action!.href
-                                                }
-                                              }}
-                                              disabled={isLocked}
-                                            >
-                                              {step.action.label}
-                                              <ChevronRight className="w-4 h-4 ml-0.5" />
-                                            </Button>
-                                          </span>
-                                        </TooltipTrigger>
-                                        {isLocked && (
-                                          <TooltipContent>
-                                            <p>You must configure a channel first</p>
-                                          </TooltipContent>
-                                        )}
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            )
-          })}
-        </div>
-      ) : (
-        // Floating widget mode: use Card wrapper
-        <Card className="shadow-2xl border-2 border-border overflow-hidden">
-          <CardHeader className="pb-3">
-            <div className="flex items-start justify-between">
-              <div className="flex items-start gap-3 flex-1">
-                <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                  <Sparkles className="w-5 h-5 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <CardTitle className="text-lg">Setup guide</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    {completedCount} of {totalSteps} tasks complete
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 flex-shrink-0">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsMinimized(!isMinimized)}
-                  className="h-8 w-8 p-0"
-                  title={isMinimized ? "Maximize" : "Minimize"}
-                >
-                  {isMinimized ? (
-                    <Maximize2 className="h-4 w-4" />
-                  ) : (
-                    <Minimize2 className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            {/* Progress bar */}
-            <div className="mt-4">
-              <div className="flex items-center gap-3">
-                <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden border border-border">
-                  <motion.div
-                    className="h-full bg-primary"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progressPercentage}%` }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                  />
-                </div>
-                {isMinimized && (
-                  <p className="text-xs text-muted-foreground whitespace-nowrap">
-                    {progressPercentage}% complete
-                  </p>
-                )}
-              </div>
-            </div>
-          </CardHeader>
-
-          <AnimatePresence>
-            {!isMinimized && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <CardContent className="space-y-4 max-h-[calc(100vh-16rem)] overflow-y-auto">
-                {setupSections.map((section, sectionIndex) => {
-                  const isExpanded = expandedSection === section.id
-                  const sectionCompletedSteps = section.steps.filter(step => 
-                    completedSteps.has(step.id)
-                  ).length
-                  const allStepsCompleted = sectionCompletedSteps === section.steps.length
-
-                  return (
-                    <div
-                      key={section.id}
-                      className={cn(
-                        "group border rounded-lg overflow-hidden transition-colors",
-                        allStepsCompleted ? "border-border-success bg-muted" : "border-border"
-                      )}
-                    >
-                      {/* Section Header */}
-                      <div
-                        onClick={() => toggleSection(section.id)}
-                        className="w-full p-4 flex items-center justify-between cursor-pointer text-left"
-                      >
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <div className={cn(
-                            "w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 border",
-                            allStepsCompleted 
-                              ? "bg-success text-success-foreground border-border-success" 
-                              : "bg-muted text-muted-foreground border-border"
-                          )}>
-                            {allStepsCompleted ? (
-                              <Check className="w-4 h-4" />
-                            ) : (
-                              <span className="[&>svg]:w-4 [&>svg]:h-4">
-                                {section.icon}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold truncate text-sm">
-                              {section.title}
-                            </h3>
-                          </div>
-                          <div className="flex items-center gap-1.5 flex-shrink-0">
-                            <Badge variant="secondary" className="text-xs">
-                              {sectionCompletedSteps}/{section.steps.length}
-                            </Badge>
-                            <motion.div
-                              animate={{ rotate: isExpanded ? 180 : 0 }}
-                              transition={{ duration: 0.2 }}
-                            >
-                              <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                            </motion.div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Section Content */}
-                      <AnimatePresence initial={false}>
-                        {isExpanded && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            <div className="px-3 pb-3 space-y-2">
-                              {section.steps.map((step, stepIndex) => {
-                                const isCompleted = completedSteps.has(step.id)
-                                
-                                const isChannelConfigStep = step.id === "step-1-1"
-                                const isSendCampaignStep = step.id === "step-1-3"
-                                const isChannelConfigured = completedSteps.has("step-1-1")
-                                const isLocked = isSendCampaignStep && !isChannelConfigured
-                                
-                                return (
-                                  <div
-                                    key={step.id}
-                                    className={cn(
-                                      "flex items-start gap-2 p-3 rounded-lg border",
-                                      isCompleted 
-                                        ? "border-border-success bg-success/10" 
-                                        : "border-border bg-card"
-                                    )}
-                                  >
-                                    <button
-                                      onClick={() => !isLocked && toggleStepCompletion(step.id)}
-                                      disabled={isLocked}
-                                      className={cn(
-                                        "w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0",
-                                        isCompleted
-                                          ? "border-success bg-success"
-                                          : isLocked
-                                            ? "border-muted-foreground/30 bg-muted cursor-not-allowed"
-                                            : "border-border"
-                                      )}
-                                    >
-                                      {isCompleted && (
-                                        <Check className="w-2 h-2 text-success-foreground" />
-                                      )}
-                                    </button>
-
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-center gap-1.5">
-                                        <h4 className={cn(
-                                          "font-medium text-xs",
-                                          isCompleted && "line-through text-muted-foreground"
-                                        )}>
-                                          {step.title}
-                                        </h4>
-                                        {isLocked && (
-                                          <Lock className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-                                        )}
-                                      </div>
-                                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                                        {step.description}
-                                      </p>
-                                      {step.action && !isCompleted && (
-                                        <TooltipProvider>
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <span className="inline-block mt-4">
-                                                <Button
-                                                  variant="link"
-                                                  size="sm"
-                                                  className="h-auto p-0 text-xs"
-                                                  onClick={() => !isLocked && (window.location.href = step.action!.href)}
-                                                  disabled={isLocked}
-                                                >
-                                                  {step.action.label}
-                                                  <ChevronRight className="w-3 h-3 ml-0.5" />
-                                                </Button>
-                                              </span>
-                                            </TooltipTrigger>
-                                            {isLocked && (
-                                              <TooltipContent>
-                                                <p>You must configure a channel first</p>
-                                              </TooltipContent>
-                                            )}
-                                          </Tooltip>
-                                        </TooltipProvider>
-                                      )}
-                                    </div>
-                                  </div>
-                                )
-                              })}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  )
-                })}
-              </CardContent>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </Card>
-      )}
+      <div className="space-y-3">
+        {setupSteps.map((step) => {
+          const isCompleted = completedSteps.has(step.id)
+          const isExpanded = expandedSteps.has(step.id)
+          const isSendCampaignStep = step.id === "step-3"
+          const isChannelConfigured = completedSteps.has("step-1")
+          const isLocked = isSendCampaignStep && !isChannelConfigured
+          
+          return renderStepItem(step, isCompleted, isExpanded, isLocked, "inline")
+        })}
+      </div>
     </motion.div>
   )
 }

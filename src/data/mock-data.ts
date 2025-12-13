@@ -63,6 +63,22 @@ export type Notification = {
   archived?: boolean;
 };
 
+export type SegmentFilter = {
+  field: 'countryISO' | 'tags' | 'channel' | 'conversationStatus' | 'firstName' | 'lastName' | 'phoneNumber' | 'emailAddress' | 'language' | 'botStatus' | 'lastInteractedChannel' | 'timeSinceLastIncomingMessage' | 'lastMessageDate' | 'createdDate' | 'assignee' | 'conversationOpenedTime' | 'createdAt' | 'lastInteractionTime';
+  operator: 'equals' | 'notEquals' | 'contains' | 'notContains' | 'startsWith' | 'endsWith' | 'isEmpty' | 'isNotEmpty' | 'exists' | 'doesNotExist' | 'in' | 'notIn' | 'hasAnyOf' | 'hasAllOf' | 'hasNoneOf' | 'greaterThan' | 'lessThan' | 'between' | 'from' | 'to' | 'fromOnly' | 'isTimestampAfter' | 'isTimestampBefore' | 'isTimestampBetween' | 'isGreaterThanTime' | 'isLessThanTime' | 'isBetweenTime';
+  value: string | string[] | number | number[] | Date | { from: Date; to: Date };
+};
+
+export type Segment = {
+  id: string;
+  name: string;
+  description?: string;
+  filters: SegmentFilter[];
+  contactIds: string[]; // IDs of contacts that match this segment
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 // ============================================================================
 // CAMPAIGNS DATA
 // ============================================================================
@@ -933,3 +949,185 @@ export const assigneeConfig = {
     color: "bg-muted text-muted-foreground border-border-muted"
   }
 };
+
+// ============================================================================
+// SEGMENTS DATA
+// ============================================================================
+
+export const mockSegments: Segment[] = [];
+
+// ============================================================================
+// SEGMENT UTILITIES
+// ============================================================================
+
+/**
+ * Checks if a contact matches a segment filter
+ */
+export function contactMatchesFilter(contact: Contact, filter: SegmentFilter): boolean {
+  const { field, operator, value } = filter;
+
+  switch (field) {
+    case 'countryISO':
+      if (operator === 'equals' && typeof value === 'string') {
+        return contact.countryISO === value;
+      }
+      if (operator === 'notEquals' && typeof value === 'string') {
+        return contact.countryISO !== value;
+      }
+      if (operator === 'in' && Array.isArray(value)) {
+        return value.some(v => typeof v === 'string' && v === contact.countryISO);
+      }
+      if (operator === 'notIn' && Array.isArray(value)) {
+        return !value.some(v => typeof v === 'string' && v === contact.countryISO);
+      }
+      if (operator === 'hasAnyOf' && Array.isArray(value)) {
+        return value.some(v => typeof v === 'string' && v === contact.countryISO);
+      }
+      return false;
+
+    case 'tags':
+      if (operator === 'equals' && typeof value === 'string') {
+        return contact.tags.includes(value);
+      }
+      if (operator === 'notEquals' && typeof value === 'string') {
+        return !contact.tags.includes(value);
+      }
+      if (operator === 'contains' && typeof value === 'string') {
+        return contact.tags.includes(value);
+      }
+      if (operator === 'notContains' && typeof value === 'string') {
+        return !contact.tags.includes(value);
+      }
+      if (operator === 'in' && Array.isArray(value)) {
+        return value.some(tag => typeof tag === 'string' && contact.tags.includes(tag));
+      }
+      if (operator === 'notIn' && Array.isArray(value)) {
+        return !value.some(tag => typeof tag === 'string' && contact.tags.includes(tag));
+      }
+      if (operator === 'hasAnyOf' && Array.isArray(value)) {
+        return value.some(tag => typeof tag === 'string' && contact.tags.includes(tag));
+      }
+      if (operator === 'hasAllOf' && Array.isArray(value)) {
+        return value.every(tag => typeof tag === 'string' && contact.tags.includes(tag));
+      }
+      if (operator === 'hasNoneOf' && Array.isArray(value)) {
+        return !value.some(tag => typeof tag === 'string' && contact.tags.includes(tag));
+      }
+      if (operator === 'isEmpty') {
+        return contact.tags.length === 0;
+      }
+      if (operator === 'isNotEmpty') {
+        return contact.tags.length > 0;
+      }
+      return false;
+
+    case 'channel':
+      if (operator === 'exists') {
+        return !!contact.channel;
+      }
+      if (operator === 'doesNotExist') {
+        return !contact.channel;
+      }
+      if (operator === 'equals' && typeof value === 'string') {
+        return contact.channel === value;
+      }
+      if (operator === 'notEquals' && typeof value === 'string') {
+        return contact.channel !== value;
+      }
+      if (operator === 'in' && Array.isArray(value)) {
+        return value.some(v => typeof v === 'string' && v === contact.channel);
+      }
+      if (operator === 'notIn' && Array.isArray(value)) {
+        return !value.some(v => typeof v === 'string' && v === contact.channel);
+      }
+      if (operator === 'hasAnyOf' && Array.isArray(value)) {
+        return value.some(v => typeof v === 'string' && v === contact.channel);
+      }
+      if (operator === 'hasAllOf' && Array.isArray(value)) {
+        return value.every(v => typeof v === 'string' && v === contact.channel);
+      }
+      if (operator === 'hasNoneOf' && Array.isArray(value)) {
+        return !value.some(v => typeof v === 'string' && v === contact.channel);
+      }
+      return false;
+
+    case 'conversationStatus':
+      if (operator === 'equals' && typeof value === 'string') {
+        return contact.conversationStatus === value;
+      }
+      if (operator === 'notEquals' && typeof value === 'string') {
+        return contact.conversationStatus !== value;
+      }
+      if (operator === 'in' && Array.isArray(value)) {
+        return value.some(v => typeof v === 'string' && v === contact.conversationStatus);
+      }
+      if (operator === 'notIn' && Array.isArray(value)) {
+        return !value.some(v => typeof v === 'string' && v === contact.conversationStatus);
+      }
+      if (operator === 'hasAnyOf' && Array.isArray(value)) {
+        return value.some(v => typeof v === 'string' && v === contact.conversationStatus);
+      }
+      return false;
+
+    // Date/time fields - basic stub implementations
+    case 'conversationOpenedTime':
+    case 'createdAt':
+    case 'lastInteractionTime':
+    case 'timeSinceLastIncomingMessage':
+      if (operator === 'exists') {
+        // Assume exists if we have a contact (placeholder logic)
+        return true;
+      }
+      if (operator === 'doesNotExist') {
+        return false;
+      }
+      // For timestamp operators, we'd need actual date fields on Contact
+      // This is a placeholder - in a real implementation, you'd compare actual dates
+      if (operator === 'isTimestampAfter' || operator === 'isTimestampBefore' || operator === 'isTimestampBetween') {
+        // Placeholder: would compare contact's actual date field with filter value
+        return true;
+      }
+      if (operator === 'isGreaterThanTime' || operator === 'isLessThanTime' || operator === 'isBetweenTime') {
+        // Placeholder: would calculate time difference and compare
+        return true;
+      }
+      if (operator === 'from' || operator === 'to' || operator === 'fromOnly' || operator === 'between') {
+        // Placeholder: would compare contact's actual date field with filter date range
+        return true;
+      }
+      return false;
+
+    default:
+      return false;
+  }
+}
+
+/**
+ * Checks if a contact matches all filters in a segment
+ */
+export function contactMatchesSegment(contact: Contact, segment: Segment): boolean {
+  if (segment.filters.length === 0) {
+    return false; // Segment with no filters matches nothing
+  }
+
+  return segment.filters.every(filter => contactMatchesFilter(contact, filter));
+}
+
+/**
+ * Finds all contacts that match a segment's filters
+ */
+export function getContactsForSegment(contacts: Contact[], segment: Segment): Contact[] {
+  return contacts.filter(contact => contactMatchesSegment(contact, segment));
+}
+
+/**
+ * Updates segment's contact IDs based on current contacts
+ */
+export function updateSegmentContacts(segment: Segment, contacts: Contact[]): Segment {
+  const matchingContacts = getContactsForSegment(contacts, segment);
+  return {
+    ...segment,
+    contactIds: matchingContacts.map(c => c.id),
+    updatedAt: new Date()
+  };
+}

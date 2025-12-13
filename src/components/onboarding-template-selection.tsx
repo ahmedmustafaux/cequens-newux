@@ -572,7 +572,7 @@ export function OnboardingTemplateSelection({
                   <div className="p-2 border-b border-border">
                     <Field>
                       <FieldContent>
-                        <InputGroup className="border-0 bg-background focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none">
+                        <InputGroup className="border-0 bg-background focus-visible:ring-0 focus-visible:ring-offset-0">
                           <InputGroupAddon>
                             <Search className="h-4 w-4" />
                           </InputGroupAddon>
@@ -807,7 +807,7 @@ export function OnboardingTemplateSelection({
           transition={smoothTransition}
         >
           <Alert 
-            variant={inlineMode ? "default" : "info"} 
+            variant={inlineMode ? "default" : "default"} 
             className={cn(
               "text-sm"
             )}
@@ -843,7 +843,7 @@ export function OnboardingTemplateSelection({
   return (
     <div className="min-h-screen bg-layout flex items-start justify-center p-4 pt-16">
       <div className="w-full max-w-xl">
-        <Card className="bg-card rounded-lg overflow-hidden shadow-none">
+        <Card className="bg-card rounded-lg overflow-hidden">
           <CardContent className="p-4">
             <motion.div
               initial={{ opacity: 0, y: -20 }}
