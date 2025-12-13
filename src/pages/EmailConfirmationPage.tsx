@@ -29,7 +29,8 @@ export default function EmailConfirmationPage() {
   const userData = location.state?.userData || {
     email: "user@example.com",
     firstName: "User",
-    lastName: "Name"
+    lastName: "Name",
+    password: ""
   }
   
   // Get the intended redirect path
@@ -68,27 +69,48 @@ export default function EmailConfirmationPage() {
     // Switch to loading state first
     setCurrentStep(ConfirmationStep.LOADING)
     
-    // Simulate API call delay - empty page with spinner
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    // Switch to success state
-    setCurrentStep(ConfirmationStep.SUCCESS)
-    
-    toast.success("Email verified successfully!", {
-      description: "Your email has been verified. You will now be redirected to the signin page.",
-      duration: 4000,
-    })
-    
-    // Simulate final email verification
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    // Redirect to signin page after email verification
-    navigate("/login", { 
-      state: { 
-        emailVerified: true,
-        userData 
-      } 
-    })
+    try {
+      // Create user account in database
+      const { createUser } = await import('@/lib/supabase/users')
+      
+      const newUser = await createUser({
+        email: userData.email,
+        password_hash: userData.password, // This will be hashed inside createUser
+        first_name: userData.firstName,
+        last_name: userData.lastName,
+        company_name: userData.companyName,
+      })
+      
+      // Switch to success state
+      setCurrentStep(ConfirmationStep.SUCCESS)
+      
+      toast.success("Email verified successfully!", {
+        description: "Your account has been created. You will now be redirected to sign in.",
+        duration: 4000,
+      })
+      
+      // Small delay before redirect
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      // Redirect to signin page after email verification
+      navigate("/login", { 
+        state: { 
+          emailVerified: true,
+          userData: {
+            email: userData.email,
+            firstName: userData.firstName,
+            lastName: userData.lastName
+          }
+        } 
+      })
+    } catch (error: any) {
+      console.error("Error creating user:", error)
+      setCurrentStep(ConfirmationStep.WAITING)
+      toast.error("Account creation failed", {
+        description: error.message || "An error occurred. Please try again.",
+        duration: 5000,
+      })
+    }
     
     setIsLoading(false)
   }

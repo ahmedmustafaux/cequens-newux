@@ -200,7 +200,7 @@ export default function NewUserOnboardingPage() {
   const [buildingProgress, setBuildingProgress] = useState(0)
   const wizardCardRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, updateOnboardingStatus } = useAuth()
   const { completeOnboarding: markOnboardingComplete } = useOnboarding()
 
   // All steps including industry selection as first step
@@ -308,7 +308,7 @@ export default function NewUserOnboardingPage() {
     if (currentStep < totalSteps - 1) {
       setCurrentStep(prev => prev + 1)
     } else {
-      completeOnboarding()
+      handleCompleteOnboarding()
     }
   }
 
@@ -318,12 +318,12 @@ export default function NewUserOnboardingPage() {
     }
   }
 
-  const completeOnboarding = async () => {
+  const handleCompleteOnboarding = async () => {
     setIsCompleted(true)
     setIsLoading(true)
 
     // Prepare onboarding data to save
-    const onboardingData = {
+    const onboardingDataToSave = {
       industry: selectedTemplate?.industry || (customIndustryName ? "custom" : "none"),
       customIndustryName: customIndustryName || undefined,
       channels: selectedOptions[2] || [],
@@ -338,14 +338,26 @@ export default function NewUserOnboardingPage() {
         const newProgress = prev + 5
         if (newProgress >= 100) {
           clearInterval(interval)
-          setTimeout(() => {
-            setIsLoading(false)
-            // Mark onboarding as completed with data
-            markOnboardingComplete(onboardingData)
-            // Redirect after completion
-            // Special handling: ahmed@cequens should go to guide page, others go to dashboard
-            const isAhmedUser = user?.email?.toLowerCase().includes("ahmed@cequens")
-            navigate(isAhmedUser ? "/getting-started" : "/")
+          setTimeout(async () => {
+            try {
+              // Update onboarding status in database and context
+              await markOnboardingComplete(onboardingDataToSave)
+              if (user?.id) {
+                await updateOnboardingStatus(true)
+              }
+              
+              setIsLoading(false)
+              // Redirect after completion
+              // Special handling: ahmed@cequens should go to guide page, others go to dashboard
+              const isAhmedUser = user?.email?.toLowerCase().includes("ahmed@cequens")
+              navigate(isAhmedUser ? "/getting-started" : "/")
+            } catch (error) {
+              console.error("Error completing onboarding:", error)
+              toast.error("Failed to save preferences", {
+                description: "Please try again.",
+              })
+              setIsLoading(false)
+            }
           }, 1000)
           return 100
         }

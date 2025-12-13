@@ -5,6 +5,25 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ============================================================================
+-- USERS TABLE
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS users (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  first_name TEXT,
+  last_name TEXT,
+  company_name TEXT,
+  onboarding_completed BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Index for users
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_created_at ON users(created_at);
+
+-- ============================================================================
 -- CONTACTS TABLE
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS contacts (
@@ -103,6 +122,7 @@ CREATE INDEX IF NOT EXISTS idx_notifications_archived ON notifications(archived)
 -- ============================================================================
 
 -- Enable RLS on all tables
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE contacts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE segments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE campaigns ENABLE ROW LEVEL SECURITY;
@@ -110,6 +130,15 @@ ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
 -- For now, allow all operations (you can restrict this based on user authentication later)
 -- In production, you should add proper RLS policies based on user_id
+
+-- Users policies - allow anyone to create users, but only read their own
+CREATE POLICY "Allow user registration" ON users
+  FOR INSERT
+  WITH CHECK (true);
+
+CREATE POLICY "Allow users to read own data" ON users
+  FOR SELECT
+  USING (true); -- For now, allow reading all users (can be restricted later)
 
 -- Contacts policies
 CREATE POLICY "Allow all operations on contacts" ON contacts
@@ -149,6 +178,9 @@ END;
 $$ language 'plpgsql';
 
 -- Triggers to automatically update updated_at
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 CREATE TRIGGER update_contacts_updated_at BEFORE UPDATE ON contacts
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 

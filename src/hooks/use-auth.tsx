@@ -5,19 +5,22 @@ import { useNavigate, useLocation } from "react-router-dom"
 export type UserType = "newUser" | "existingUser"
 
 interface User {
+  id?: string
   email: string
   name?: string
   userType: UserType
+  onboardingCompleted?: boolean
 }
 
 interface AuthContextType {
   user: User | null
   isAuthenticated: boolean
   isLoading: boolean
-  login: (email: string, name?: string, userType?: UserType, redirectTo?: string) => void
+  login: (email: string, name?: string, userType?: UserType, redirectTo?: string, userId?: string, onboardingCompleted?: boolean) => void
   logout: () => void
   isNewUser: () => boolean
   isExistingUser: () => boolean
+  updateOnboardingStatus: (completed: boolean) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -50,6 +53,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const userEmail = localStorage.getItem("userEmail")
         const userName = localStorage.getItem("userName")
         const userType = localStorage.getItem("userType") as UserType
+        const userId = localStorage.getItem("userId")
+        const onboardingCompleted = localStorage.getItem("onboardingCompleted")
 
         if (isAuthenticated === "true" && userEmail) {
           // Default to existingUser if not specified
@@ -58,9 +63,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             : determineUserType(userEmail)
           
           setUser({
+            id: userId || undefined,
             email: userEmail,
             name: userName || undefined,
-            userType: validUserType
+            userType: validUserType,
+            onboardingCompleted: onboardingCompleted === "true"
           })
         } else {
           // Clear any partial auth data if invalid
@@ -106,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [navigate, isClient])
 
-  const login = (email: string, name?: string, userType?: UserType, redirectTo?: string) => {
+  const login = (email: string, name?: string, userType?: UserType, redirectTo?: string, userId?: string, onboardingCompleted?: boolean) => {
     try {
       // Determine user type if not provided
       const determinedUserType = userType || determineUserType(email)
@@ -117,15 +124,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (name) {
         localStorage.setItem("userName", name)
       }
+      if (userId) {
+        localStorage.setItem("userId", userId)
+      }
+      if (onboardingCompleted !== undefined) {
+        localStorage.setItem("onboardingCompleted", onboardingCompleted.toString())
+      }
       
       setUser({ 
+        id: userId,
         email, 
         name,
-        userType: determinedUserType
+        userType: determinedUserType,
+        onboardingCompleted: onboardingCompleted
       })
       
-      // Navigate to intended page or guide page
-      const destination = redirectTo || "/getting-started"
+      // Determine redirect destination
+      let destination = redirectTo
+      
+      // If no specific redirect and user hasn't completed onboarding, redirect to onboarding
+      if (!destination) {
+        if (onboardingCompleted === false) {
+          destination = "/onboarding"
+        } else {
+          destination = "/getting-started"
+        }
+      }
+      
       navigate(destination, { replace: true })
     } catch (error) {
       console.error("Error during login:", error)
@@ -138,8 +163,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("userEmail")
     localStorage.removeItem("userName")
     localStorage.removeItem("userType")
+    localStorage.removeItem("userId")
+    localStorage.removeItem("onboardingCompleted")
     setUser(null)
     navigate("/login")
+  }
+
+  const updateOnboardingStatus = async (completed: boolean) => {
+    if (!user?.id) return
+    
+    try {
+      const { updateUserOnboarding } = await import('@/lib/supabase/users')
+      await updateUserOnboarding(user.id, completed)
+      
+      // Update local state
+      localStorage.setItem("onboardingCompleted", completed.toString())
+      setUser(prev => prev ? { ...prev, onboardingCompleted: completed } : null)
+      
+      // Update user type based on onboarding status
+      if (completed) {
+        localStorage.setItem("userType", "existingUser")
+        setUser(prev => prev ? { ...prev, userType: "existingUser" } : null)
+      }
+    } catch (error) {
+      console.error("Error updating onboarding status:", error)
+      throw error
+    }
   }
   
   // Helper methods to check user type
@@ -158,7 +207,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     logout,
     isNewUser,
-    isExistingUser
+    isExistingUser,
+    updateOnboardingStatus
   }
 
   return (

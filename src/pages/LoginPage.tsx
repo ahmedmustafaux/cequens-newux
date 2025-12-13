@@ -234,13 +234,42 @@ export default function LoginPage() {
         return
       }
 
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Authenticate user against database
+      try {
+        const { authenticateUser } = await import('@/lib/supabase/users')
+        const dbUser = await authenticateUser(email, password)
+        
+        if (dbUser) {
+          // User authenticated successfully
+          const userName = dbUser.first_name && dbUser.last_name 
+            ? `${dbUser.first_name} ${dbUser.last_name}` 
+            : undefined
+          
+          // Determine user type based on onboarding status
+          // New users (haven't completed onboarding) are "newUser", others are "existingUser"
+          const userType = dbUser.onboarding_completed ? "existingUser" : "newUser"
+          
+          // Use auth context to login with user ID and onboarding status
+          login(email, userName, userType as any, from, dbUser.id, dbUser.onboarding_completed)
+          
+          // Show success message
+          toast.success("Welcome back! 👋", {
+            description: "You've successfully signed in. Redirecting...",
+            duration: 3000,
+          })
+          
+          setIsLoading(false)
+          return
+        }
+      } catch (error) {
+        console.error("Error authenticating user:", error)
+        // Fall through to show error
+      }
 
-      // Get test user if email matches
+      // Fallback: Check test users (for demo/development purposes)
       const testUser = getTestUserByEmail(email)
       
-      // Check credentials
+      // Check credentials against test users
       if (testUser && password === testUser.password) {
         if (testUser.requiresOtp) {
           // User requires OTP verification
@@ -285,6 +314,7 @@ export default function LoginPage() {
         // Show general error instead of individual field errors
         setGeneralError("Invalid email or password")
         setErrors({})
+        setIsLoading(false)
       }
     } else if (currentStep === 'otp') {
       // Mark OTP field as touched

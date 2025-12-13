@@ -1,6 +1,7 @@
 import * as React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
 import { useAuth } from "@/hooks/use-auth"
+import { updateUserOnboarding } from "@/lib/supabase/users"
 
 interface OnboardingData {
   industry?: string
@@ -12,7 +13,7 @@ interface OnboardingData {
 
 interface OnboardingContextType {
   hasCompletedOnboarding: boolean
-  completeOnboarding: (data?: OnboardingData) => void
+  completeOnboarding: (data?: OnboardingData) => Promise<void>
   onboardingData: OnboardingData | null
 }
 
@@ -26,8 +27,11 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   // Check if user has completed onboarding
   useEffect(() => {
     if (user) {
-      // For new users, check localStorage for onboarding completion
-      if (user.userType === "newUser") {
+      // Check onboarding status from user object (comes from database)
+      if (user.onboardingCompleted !== undefined) {
+        setHasCompletedOnboarding(user.onboardingCompleted)
+      } else if (user.userType === "newUser") {
+        // Fallback: check localStorage for onboarding completion
         const completed = localStorage.getItem(`onboarding-completed-${user.email}`)
         setHasCompletedOnboarding(completed === "true")
         
@@ -51,12 +55,32 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   }, [user])
   
   // Function to mark onboarding as completed
-  const completeOnboarding = (data?: OnboardingData) => {
-    if (user) {
+  const completeOnboarding = async (data?: OnboardingData) => {
+    if (user && user.id) {
+      try {
+        // Update in database
+        await updateUserOnboarding(user.id, true)
+        
+        // Update local storage
+        localStorage.setItem(`onboarding-completed-${user.email}`, "true")
+        localStorage.setItem("onboardingCompleted", "true")
+        localStorage.setItem("userType", "existingUser")
+        setHasCompletedOnboarding(true)
+        
+        // Save onboarding data if provided
+        if (data) {
+          localStorage.setItem(`onboarding-data-${user.email}`, JSON.stringify(data))
+          setOnboardingData(data)
+        }
+      } catch (error) {
+        console.error("Error completing onboarding:", error)
+        throw error
+      }
+    } else if (user) {
+      // Fallback to localStorage if no user ID
       localStorage.setItem(`onboarding-completed-${user.email}`, "true")
       setHasCompletedOnboarding(true)
       
-      // Save onboarding data if provided
       if (data) {
         localStorage.setItem(`onboarding-data-${user.email}`, JSON.stringify(data))
         setOnboardingData(data)

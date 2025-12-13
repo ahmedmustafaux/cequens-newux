@@ -254,28 +254,48 @@ export default function SignupPage() {
       return
     }
 
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    // Check if email already exists
+    try {
+      const { emailExists } = await import('@/lib/supabase/users')
+      const exists = await emailExists(formData.email)
+      
+      if (exists) {
+        toast.error("Email already registered", {
+          description: "This email is already registered. Please sign in instead.",
+          duration: 5000,
+        })
+        setIsLoading(false)
+        return
+      }
 
-    // Show confirmation email sent toast
-    toast.info("Confirmation email sent", {
-      description: `We've sent a confirmation link to ${formData.email}. Please check your inbox.`,
-      duration: 10000,
-    })
+      // Show confirmation email sent toast
+      toast.info("Confirmation email sent", {
+        description: `We've sent a confirmation link to ${formData.email}. Please check your inbox.`,
+        duration: 10000,
+      })
 
-    console.log("Redirecting to email confirmation page")
-    
-    // Redirect to email confirmation page with user data
-    navigate("/email-confirmation", { 
-      state: { 
-        userData: {
-          email: formData.email,
-          firstName: formData.firstName,
-          lastName: formData.lastName
-        },
-        from: from
-      } 
-    })
+      console.log("Redirecting to email confirmation page")
+      
+      // Redirect to email confirmation page with user data (including password)
+      navigate("/email-confirmation", { 
+        state: { 
+          userData: {
+            email: formData.email,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            companyName: formData.companyName,
+            password: formData.password // Include password for account creation after email confirmation
+          },
+          from: from
+        } 
+      })
+    } catch (error) {
+      console.error("Error checking email:", error)
+      toast.error("Signup failed", {
+        description: "An error occurred. Please try again.",
+        duration: 5000,
+      })
+    }
     
     setIsLoading(false)
   }
