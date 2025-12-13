@@ -27,6 +27,7 @@ import CampaignsAiBotsPage from '@/pages/CampaignsAiBotsPage'
 import CampaignsAutomationPage from '@/pages/CampaignsAutomationPage'
 import ContactsPage from '@/pages/ContactsPage'
 import ContactsCreatePage from '@/pages/ContactsCreatePage'
+import ContactsEditPage from '@/pages/ContactsEditPage'
 import ContactDetailPage from '@/pages/ContactDetailPage'
 import ContactsSegmentsPage from '@/pages/ContactsSegmentsPage'
 import ContactsTagsPage from '@/pages/ContactsTagsPage'
@@ -225,6 +226,15 @@ function App() {
             <RootLayout>
               <DashboardLayout>
                 <ContactsTagsPage />
+              </DashboardLayout>
+            </RootLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/contacts/:id/edit" element={
+          <ProtectedRoute>
+            <RootLayout>
+              <DashboardLayout>
+                <ContactsEditPage />
               </DashboardLayout>
             </RootLayout>
           </ProtectedRoute>

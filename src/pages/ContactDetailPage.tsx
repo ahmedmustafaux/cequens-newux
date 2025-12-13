@@ -6,11 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CardSkeleton } from "@/components/ui/card"
 import { PageHeaderProfile } from "@/components/page-header"
-import { motion, AnimatePresence } from "framer-motion"
-import { directionalTabVariants, smoothTransition, initialTabContentVariants } from "@/lib/transitions"
+import { motion } from "framer-motion"
+import { smoothTransition } from "@/lib/transitions"
 import { CircleFlag } from "react-circle-flags"
 import { 
   User, 
@@ -23,10 +22,12 @@ import {
   AlertCircle,
   XCircle,
   Plus,
-  Mail
+  Mail,
+  Smartphone
 } from "lucide-react"
 import { toast } from "sonner"
-import { mockContacts } from "@/data/mock-data"
+import { mockContacts, mockSegments, type Segment, contactMatchesSegment, updateSegmentContacts } from "@/data/mock-data"
+import { getActiveChannels } from "@/lib/channel-utils"
 
 export default function ContactDetailPage() {
   const params = useParams()
@@ -35,9 +36,8 @@ export default function ContactDetailPage() {
   
   // All state declarations must be at the top before any early returns
   const [newTag, setNewTag] = React.useState("")
-  const [activeTab, setActiveTab] = React.useState("overview")
-  const [direction, setDirection] = React.useState(0)
-  const [isInitialLoad, setIsInitialLoad] = React.useState(true)
+  const [activeChannels, setActiveChannels] = React.useState<string[]>([])
+  const [segments, setSegments] = React.useState<Segment[]>([])
   
   // Function to add a new tag
   const addTag = () => {
@@ -56,6 +56,41 @@ export default function ContactDetailPage() {
   // Dynamic page title - must be called before any early returns
   usePageTitle(contact ? `${contact.name}` : "Contact")
   
+  // Load active channels and segments
+  React.useEffect(() => {
+    setActiveChannels(getActiveChannels())
+    
+    // Load segments from localStorage
+    try {
+      const stored = localStorage.getItem("cequens-segments")
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        const loadedSegments = parsed.map((seg: any) => ({
+          ...seg,
+          createdAt: new Date(seg.createdAt),
+          updatedAt: new Date(seg.updatedAt),
+        }))
+        // Update segments with current contacts
+        const updatedSegments = loadedSegments.map((seg: Segment) => updateSegmentContacts(seg, mockContacts))
+        setSegments(updatedSegments)
+      } else {
+        // Use default segments if none in storage
+        const updatedSegments = mockSegments.map(seg => updateSegmentContacts(seg, mockContacts))
+        setSegments(updatedSegments)
+      }
+    } catch (error) {
+      console.error("Error loading segments:", error)
+      const updatedSegments = mockSegments.map(seg => updateSegmentContacts(seg, mockContacts))
+      setSegments(updatedSegments)
+    }
+  }, [])
+
+  // Find segments that include this contact
+  const contactSegments = React.useMemo(() => {
+    if (!contact) return []
+    return segments.filter(segment => contactMatchesSegment(contact, segment))
+  }, [contact, segments])
+
   // If contact not found, redirect to contacts page
   React.useEffect(() => {
     if (!contact) {
@@ -109,17 +144,9 @@ export default function ContactDetailPage() {
   const tabOrder = ["overview", "contact", "attributes"]
 
   const handleEdit = () => {
-    // TODO: Navigate to edit page
-    toast.info("Edit functionality coming soon")
+    navigate(`/contacts/${contactId}/edit`)
   }
 
-  const handleTabChange = (newTab: string) => {
-    const currentIndex = tabOrder.indexOf(activeTab)
-    const newIndex = tabOrder.indexOf(newTab)
-    setDirection(newIndex > currentIndex ? 1 : -1)
-    setActiveTab(newTab)
-    setIsInitialLoad(false)
-  }
 
   const handleBack = () => {
     navigate("/contacts")
@@ -190,67 +217,12 @@ export default function ContactDetailPage() {
 
         {/* Profile Content */}
         <div className="flex flex-col">
-          <div>
-          <Tabs 
-            value={activeTab} 
-            onValueChange={handleTabChange}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={smoothTransition}
             className="w-full"
-            isLoading={!contact}
-            loadingTabCount={3}
-            showContentSkeleton={true}
-            skeletonComponent={
-              <div className="grid grid-cols-1 lg:grid-cols-3 items-start">
-                <div className="lg:col-span-2 grid grid-cols-1 items-start">
-                  <CardSkeleton />
-                  <CardSkeleton />
-                  <CardSkeleton />
-                </div>
-                <div className="grid grid-cols-1 items-start">
-                  <CardSkeleton />
-                  <CardSkeleton />
-                  <CardSkeleton />
-                </div>
-              </div>
-            }
           >
-            <motion.div 
-              className="flex justify-start"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={smoothTransition}
-            >
-              <TabsList className="inline-flex h-10 items-center justify-center rounded-md p-1 text-muted-foreground">
-                <motion.div transition={smoothTransition}>
-                  <TabsTrigger value="overview">Overview</TabsTrigger>
-                </motion.div>
-                <motion.div transition={smoothTransition}>
-                  <TabsTrigger value="contact">Contact Information</TabsTrigger>
-                </motion.div>
-                <motion.div transition={smoothTransition}>
-                  <TabsTrigger value="attributes">Attributes, Tags & Events</TabsTrigger>
-                </motion.div>
-              </TabsList>
-            </motion.div>
-
-              <motion.div 
-                className="relative w-full"
-              variants={isInitialLoad ? initialTabContentVariants : {}}
-              initial={isInitialLoad ? "initial" : false}
-              animate={isInitialLoad ? "animate" : false}
-              transition={smoothTransition}
-            >
-              <AnimatePresence mode="wait">
-                {activeTab === "overview" && (
-                  <motion.div
-                    key="overview"
-                    variants={isInitialLoad ? initialTabContentVariants : directionalTabVariants(direction)}
-                    initial={isInitialLoad ? "initial" : "hidden"}
-                    animate={isInitialLoad ? "animate" : "visible"}
-                    exit="exit"
-                    transition={smoothTransition}
-                    className="w-full"
-                  >
-                    <TabsContent value="overview" className="mt-0">
                       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
                         {/* Main Content */}
                         <div className="lg:col-span-2 grid grid-cols-1 gap-4 items-start">
@@ -288,16 +260,6 @@ export default function ContactDetailPage() {
                                 <div>
                                   <label className="text-sm font-medium text-muted-foreground">Language</label>
                                   <p className="text-sm">{contact.language || '—'}</p>
-                                </div>
-                              </div>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                  <label className="text-sm font-medium text-muted-foreground">Channel</label>
-                                  <p className="text-sm">{contact.channel}</p>
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium text-muted-foreground">Last Interacted Channel</label>
-                                  <p className="text-sm">{contact.lastInteractedChannel || contact.channel || '—'}</p>
                                 </div>
                               </div>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -384,11 +346,24 @@ export default function ContactDetailPage() {
                                     <p className="text-xs text-muted-foreground mt-1">Recently</p>
                                   </div>
                                 </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+
+
+                          {/* All Events */}
+                          <Card className="py-5 gap-5">
+                            <CardHeader>
+                              <CardTitle>All Events</CardTitle>
+                              <CardDescription>Complete activity history</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="space-y-4 max-h-96 overflow-y-auto">
                                 <div className="flex items-start gap-3">
-                                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                                   <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium">Last Message</p>
-                                    <p className="text-sm text-muted-foreground">{contact.lastMessage}</p>
+                                    <p className="text-sm font-medium">Contact Created</p>
+                                    <p className="text-sm text-muted-foreground">Contact profile was created</p>
                                     <p className="text-xs text-muted-foreground mt-1">Recently</p>
                                   </div>
                                 </div>
@@ -439,22 +414,76 @@ export default function ContactDetailPage() {
                             </CardContent>
                           </Card>
 
+                          {/* Channels */}
+                          <Card className="py-5 gap-5">
+                            <CardHeader>
+                              <CardTitle>Channels</CardTitle>
+                              <CardDescription>Communication channels for this contact</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="space-y-3">
+                                {(() => {
+                                  const getChannelIcon = (channelId: string) => {
+                                    switch (channelId.toLowerCase()) {
+                                      case "whatsapp":
+                                        return <img src="/icons/WhatsApp.svg" alt="WhatsApp" className="w-4 h-4 flex-shrink-0" onError={(e) => { e.currentTarget.style.display = "none" }} />
+                                      case "instagram":
+                                        return <img src="/icons/Instagram.svg" alt="Instagram" className="w-4 h-4 flex-shrink-0" onError={(e) => { e.currentTarget.style.display = "none" }} />
+                                      case "messenger":
+                                        return <img src="/icons/Messenger.png" alt="Messenger" className="w-4 h-4 flex-shrink-0" onError={(e) => { e.currentTarget.style.display = "none" }} />
+                                      case "sms":
+                                        return <Smartphone className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+                                      case "email":
+                                        return <Mail className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+                                      case "phone":
+                                        return <Phone className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+                                      default:
+                                        return <MessageSquare className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+                                    }
+                                  }
+                                  const getChannelName = (channelId: string) => {
+                                    return channelId.charAt(0).toUpperCase() + channelId.slice(1)
+                                  }
+                                  
+                                  // Collect unique channels
+                                  const channels = new Set<string>()
+                                  if (contact.channel) channels.add(contact.channel)
+                                  if (contact.lastInteractedChannel) channels.add(contact.lastInteractedChannel)
+                                  
+                                  if (channels.size === 0) {
+                                    return <p className="text-sm text-muted-foreground">No channels assigned</p>
+                                  }
+                                  
+                                  return Array.from(channels).map((channelId) => (
+                                    <div key={channelId} className="flex items-center gap-2">
+                                      {getChannelIcon(channelId)}
+                                      <span className="text-sm">{getChannelName(channelId)}</span>
+                                    </div>
+                                  ))
+                                })()}
+                              </div>
+                            </CardContent>
+                          </Card>
+
                           {/* Segments */}
                           <Card className="py-5 gap-5">
                             <CardHeader>
                               <CardTitle>Audience Segments</CardTitle>
+                              <CardDescription>Segments this contact belongs to</CardDescription>
                             </CardHeader>
                             <CardContent>
-                              <div className="space-y-4">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                  <span className="text-sm">{contact.channel} Users</span>
+                              {contactSegments.length > 0 ? (
+                                <div className="space-y-3">
+                                  {contactSegments.map((segment) => (
+                                    <div key={segment.id} className="flex items-center gap-2">
+                                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                      <span className="text-sm">{segment.name}</span>
+                                    </div>
+                                  ))}
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                  <span className="text-sm">{contact.conversationStatus}</span>
-                                </div>
-                              </div>
+                              ) : (
+                                <p className="text-sm text-muted-foreground">This contact is not in any segments yet.</p>
+                              )}
                             </CardContent>
                           </Card>
 
@@ -465,210 +494,13 @@ export default function ContactDetailPage() {
                             </CardHeader>
                             <CardContent>
                               <p className="text-sm text-muted-foreground">
-                                Contact information and communication preferences. Last message: {contact.lastMessage}
+                                Contact information and communication preferences.
                               </p>
                             </CardContent>
                           </Card>
                         </div>
                       </div>
-                    </TabsContent>
-                  </motion.div>
-                )}
-
-                {activeTab === "contact" && (
-                  <motion.div
-                    key="contact"
-                    variants={isInitialLoad ? initialTabContentVariants : directionalTabVariants(direction)}
-                    initial={isInitialLoad ? "initial" : "hidden"}
-                    animate={isInitialLoad ? "animate" : "visible"}
-                    exit="exit"
-                    transition={smoothTransition}
-                    className="w-full"
-                  >
-                    <TabsContent value="contact" className="mt-0">
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-                        {/* Contact Details */}
-                        <Card className="py-5 gap-5">
-                          <CardHeader>
-                            <CardTitle>Contact Details</CardTitle>
-                            <CardDescription>Contact information and communication details</CardDescription>
-                          </CardHeader>
-                          <CardContent className="space-y-4">
-                            <div className="flex items-start gap-3">
-                              <Phone className="h-4 w-4 text-muted-foreground mt-0.5" />
-                              <div>
-                                <p className="text-sm font-medium">Phone</p>
-                                <p className="text-sm text-muted-foreground">{contact.phone}</p>
-                              </div>
-                            </div>
-                            {contact.emailAddress && (
-                              <div className="flex items-start gap-3">
-                                <Mail className="h-4 w-4 text-muted-foreground mt-0.5" />
-                                <div>
-                                  <p className="text-sm font-medium">Email Address</p>
-                                  <p className="text-sm text-muted-foreground">{contact.emailAddress}</p>
-                                </div>
-                              </div>
-                            )}
-                            <div className="flex items-start gap-3">
-                              <Globe className="h-4 w-4 text-muted-foreground mt-0.5" />
-                              <div>
-                                <p className="text-sm font-medium">Country</p>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <div className="w-4 h-4 flex-shrink-0 overflow-hidden rounded-full">
-                                    <CircleFlag countryCode={contact.countryISO.toLowerCase()} className="w-full h-full" />
-                                  </div>
-                                  <p className="text-sm text-muted-foreground">{contact.countryISO}</p>
-                                </div>
-                              </div>
-                            </div>
-                            {contact.language && (
-                              <div className="flex items-start gap-3">
-                                <Globe className="h-4 w-4 text-muted-foreground mt-0.5" />
-                                <div>
-                                  <p className="text-sm font-medium">Language</p>
-                                  <p className="text-sm text-muted-foreground">{contact.language}</p>
-                                </div>
-                              </div>
-                            )}
-                            <div className="flex items-start gap-3">
-                              <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5" />
-                              <div>
-                                <p className="text-sm font-medium">Channel</p>
-                                <p className="text-sm text-muted-foreground">{contact.channel}</p>
-                              </div>
-                            </div>
-                            {contact.lastInteractedChannel && (
-                              <div className="flex items-start gap-3">
-                                <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5" />
-                                <div>
-                                  <p className="text-sm font-medium">Last Interacted Channel</p>
-                                  <p className="text-sm text-muted-foreground">{contact.lastInteractedChannel}</p>
-                                </div>
-                              </div>
-                            )}
-                            {contact.botStatus && (
-                              <div className="flex items-start gap-3">
-                                <User className="h-4 w-4 text-muted-foreground mt-0.5" />
-                                <div>
-                                  <p className="text-sm font-medium">Bot Status</p>
-                                  <p className="text-sm text-muted-foreground">{contact.botStatus}</p>
-                                </div>
-                              </div>
-                            )}
-                            <div className="flex items-start gap-3">
-                              <User className="h-4 w-4 text-muted-foreground mt-0.5" />
-                              <div>
-                                <p className="text-sm font-medium">Last Conversation</p>
-                                <div className="mt-1">
-                                  <Badge variant={getStatusVariant(contact.conversationStatus)} className="text-xs whitespace-nowrap flex-shrink-0">
-                                    {getStatusIcon(contact.conversationStatus)}
-                                    {getStatusLabel(contact.conversationStatus)}
-                                  </Badge>
-                                </div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-
-                        {/* Channel Information */}
-                        <Card className="py-5 gap-5">
-                          <CardHeader>
-                            <CardTitle>Channel Information</CardTitle>
-                            <CardDescription>Communication channels and their status</CardDescription>
-                          </CardHeader>
-                          <CardContent className="space-y-4">
-                            <div className="flex items-center justify-between p-3 border rounded-lg">
-                              <div className="flex items-center gap-3">
-                                {getChannelStatusIcon("Active")}
-                                <div>
-                                  <p className="text-sm font-medium">{contact.channel}</p>
-                                  <p className="text-xs text-muted-foreground">Primary communication channel</p>
-                                </div>
-                              </div>
-                              <Badge variant="default">Active</Badge>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </div>
-                    </TabsContent>
-                  </motion.div>
-                )}
-
-                {activeTab === "attributes" && (
-                  <motion.div
-                    key="attributes"
-                    variants={isInitialLoad ? initialTabContentVariants : directionalTabVariants(direction)}
-                    initial={isInitialLoad ? "initial" : "hidden"}
-                    animate={isInitialLoad ? "animate" : "visible"}
-                    exit="exit"
-                    transition={smoothTransition}
-                    className="w-full"
-                  >
-                    <TabsContent value="attributes" className="mt-0">
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-                        {/* Custom Attributes */}
-                        <Card className="py-5 gap-5">
-                          <CardHeader>
-                            <CardTitle>Custom Attributes</CardTitle>
-                            <CardDescription>Additional profile information</CardDescription>
-                          </CardHeader>
-                          <CardContent className="space-y-4">
-                            <div className="flex justify-between items-center py-2 border-b">
-                              <span className="text-sm font-medium">Contact ID</span>
-                              <span className="text-sm text-muted-foreground">{contact.id}</span>
-                            </div>
-                            <div className="flex justify-between items-center py-2 border-b">
-                              <span className="text-sm font-medium">Country</span>
-                              <div className="flex items-center gap-2">
-                                <div className="w-4 h-4 flex-shrink-0 overflow-hidden rounded-full">
-                                  <CircleFlag countryCode={contact.countryISO.toLowerCase()} className="w-full h-full" />
-                                </div>
-                                <span className="text-sm text-muted-foreground">{contact.countryISO}</span>
-                              </div>
-                            </div>
-                            <div className="flex justify-between items-center py-2 border-b last:border-b-0">
-                              <span className="text-sm font-medium">Assignee</span>
-                              <span className="text-sm text-muted-foreground">{contact.assignee || 'Unassigned'}</span>
-                            </div>
-                          </CardContent>
-                        </Card>
-
-                        {/* All Events */}
-                        <Card className="py-5 gap-5">
-                          <CardHeader>
-                            <CardTitle>All Events</CardTitle>
-                            <CardDescription>Complete activity history</CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="space-y-4 max-h-96 overflow-y-auto">
-                              <div className="flex items-start gap-3">
-                                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium">Contact Created</p>
-                                  <p className="text-sm text-muted-foreground">Contact profile was created</p>
-                                  <p className="text-xs text-muted-foreground mt-1">Recently</p>
-                                </div>
-                              </div>
-                              <div className="flex items-start gap-3">
-                                <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium">Message Received</p>
-                                  <p className="text-sm text-muted-foreground">{contact.lastMessage}</p>
-                                  <p className="text-xs text-muted-foreground mt-1">Recently</p>
-                                </div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </div>
-                    </TabsContent>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          </Tabs>
-          </div>
+                    </motion.div>
         </div>
       </PageWrapper>
   )
