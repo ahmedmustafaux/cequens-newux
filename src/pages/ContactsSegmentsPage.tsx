@@ -1283,7 +1283,6 @@ function ContactsSegmentsPageContent() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
                       <DropdownMenuItem onClick={() => handleEditSegment(segment)}>
-                        <Edit className="mr-2 h-4 w-4" />
                         Edit Segment
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
@@ -1291,9 +1290,7 @@ function ContactsSegmentsPageContent() {
                         onClick={() => {
                           handleDeleteSegment(segment)
                         }}
-                        className="text-destructive"
                       >
-                        <Trash2 className="mr-2 h-4 w-4" />
                         Delete Segment
                       </DropdownMenuItem>
                     </DropdownMenuContent>
