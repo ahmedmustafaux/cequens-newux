@@ -71,7 +71,11 @@ import {
   DataTableRow,
 } from "@/components/ui/data-table"
 import { usePageTitle } from "@/hooks/use-dynamic-title"
-import { mockContacts, type Contact } from "@/data/mock-data"
+import { useContacts } from "@/hooks/use-contacts"
+import type { AppContact } from "@/lib/supabase/types"
+
+// Type alias for backward compatibility
+type Contact = AppContact
 
 // Tab values as constants
 const TAB_ALL = "all"
@@ -86,7 +90,6 @@ const ContactsPageContent = (): React.JSX.Element => {
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
   const [globalFilter, setGlobalFilter] = React.useState("")
-  const [isDataLoading, setIsDataLoading] = React.useState(true)
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
     pageSize: 15,
@@ -105,6 +108,9 @@ const ContactsPageContent = (): React.JSX.Element => {
   
   // Dynamic page title
   usePageTitle("Audience")
+  
+  // Fetch contacts from Supabase
+  const { data: contacts = [], isLoading: isDataLoading, error } = useContacts()
   
   // Column definitions for the contacts table
   const columns: ColumnDef<Contact>[] = [
@@ -271,16 +277,6 @@ const ContactsPageContent = (): React.JSX.Element => {
     },
   ];
 
-  // Simulate initial data loading from server
-  React.useEffect(() => {
-    setIsDataLoading(true)
-    const timer = setTimeout(() => {
-      setIsDataLoading(false)
-    }, 400)
-
-    return () => clearTimeout(timer)
-  }, [])
-
   // Apply global search from query param (?query=...)
   React.useEffect(() => {
     const params = new URLSearchParams(location.search)
@@ -293,10 +289,10 @@ const ContactsPageContent = (): React.JSX.Element => {
   // Filter data based on selected view
   const filteredDataByView = React.useMemo(() => {
     if (selectedView === TAB_ARCHIVED) {
-      return mockContacts.filter(c => c.conversationStatus === "closed")
+      return contacts.filter(c => c.conversationStatus === "closed")
     }
-    return mockContacts
-  }, [selectedView])
+    return contacts
+  }, [selectedView, contacts])
 
   // Apply filters to table
   React.useEffect(() => {
@@ -408,6 +404,14 @@ const ContactsPageContent = (): React.JSX.Element => {
         onOpenChange={setIsImportDialogOpen}
       />
 
+      {error && (
+        <div className="mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+          <p className="text-sm text-destructive">
+            Error loading contacts: {error instanceof Error ? error.message : 'Unknown error'}
+          </p>
+        </div>
+      )}
+      
       <PageHeader
         title="Audience"
         description="Create and manage your audience."
@@ -455,8 +459,8 @@ const ContactsPageContent = (): React.JSX.Element => {
           isLoading={isDataLoading}
           views={{
             options: [
-              { label: "All contacts", value: TAB_ALL, count: mockContacts.length },
-              { label: "Archived", value: TAB_ARCHIVED, count: mockContacts.filter(c => c.conversationStatus === "closed").length }
+              { label: "All contacts", value: TAB_ALL, count: contacts.length },
+              { label: "Archived", value: TAB_ARCHIVED, count: contacts.filter(c => c.conversationStatus === "closed").length }
             ],
             selectedView: selectedView,
             onViewChange: setSelectedView

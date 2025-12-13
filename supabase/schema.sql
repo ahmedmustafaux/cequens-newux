@@ -1,0 +1,160 @@
+-- Cequens Database Schema for Supabase
+-- Run this in your Supabase SQL Editor to create the database schema
+
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- ============================================================================
+-- CONTACTS TABLE
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS contacts (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  first_name TEXT,
+  last_name TEXT,
+  phone TEXT NOT NULL,
+  email_address TEXT,
+  country_iso TEXT NOT NULL,
+  avatar TEXT,
+  avatar_color TEXT,
+  tags TEXT[] DEFAULT '{}',
+  channel TEXT,
+  conversation_status TEXT DEFAULT 'unassigned',
+  assignee TEXT,
+  last_message TEXT,
+  language TEXT,
+  bot_status TEXT,
+  last_interacted_channel TEXT,
+  conversation_opened_time TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  last_interaction_time TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes for contacts
+CREATE INDEX IF NOT EXISTS idx_contacts_country_iso ON contacts(country_iso);
+CREATE INDEX IF NOT EXISTS idx_contacts_conversation_status ON contacts(conversation_status);
+CREATE INDEX IF NOT EXISTS idx_contacts_channel ON contacts(channel);
+CREATE INDEX IF NOT EXISTS idx_contacts_created_at ON contacts(created_at);
+CREATE INDEX IF NOT EXISTS idx_contacts_last_interaction_time ON contacts(last_interaction_time);
+CREATE INDEX IF NOT EXISTS idx_contacts_assignee ON contacts(assignee);
+CREATE INDEX IF NOT EXISTS idx_contacts_tags ON contacts USING GIN(tags);
+
+-- ============================================================================
+-- SEGMENTS TABLE
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS segments (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  description TEXT,
+  filters JSONB NOT NULL DEFAULT '[]',
+  contact_ids UUID[] DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Index for segments
+CREATE INDEX IF NOT EXISTS idx_segments_created_at ON segments(created_at);
+
+-- ============================================================================
+-- CAMPAIGNS TABLE
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS campaigns (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'Draft',
+  type TEXT NOT NULL,
+  recipients INTEGER DEFAULT 0,
+  sent_date TIMESTAMPTZ,
+  open_rate DECIMAL(5, 2) DEFAULT 0,
+  click_rate DECIMAL(5, 2) DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Index for campaigns
+CREATE INDEX IF NOT EXISTS idx_campaigns_status ON campaigns(status);
+CREATE INDEX IF NOT EXISTS idx_campaigns_type ON campaigns(type);
+CREATE INDEX IF NOT EXISTS idx_campaigns_created_at ON campaigns(created_at);
+
+-- ============================================================================
+-- NOTIFICATIONS TABLE
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS notifications (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+  type TEXT NOT NULL,
+  category TEXT,
+  priority TEXT,
+  read BOOLEAN DEFAULT FALSE,
+  archived BOOLEAN DEFAULT FALSE,
+  timestamp TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Index for notifications
+CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read);
+CREATE INDEX IF NOT EXISTS idx_notifications_timestamp ON notifications(timestamp);
+CREATE INDEX IF NOT EXISTS idx_notifications_archived ON notifications(archived);
+
+-- ============================================================================
+-- ROW LEVEL SECURITY (RLS) POLICIES
+-- ============================================================================
+
+-- Enable RLS on all tables
+ALTER TABLE contacts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE segments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE campaigns ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+
+-- For now, allow all operations (you can restrict this based on user authentication later)
+-- In production, you should add proper RLS policies based on user_id
+
+-- Contacts policies
+CREATE POLICY "Allow all operations on contacts" ON contacts
+  FOR ALL
+  USING (true)
+  WITH CHECK (true);
+
+-- Segments policies
+CREATE POLICY "Allow all operations on segments" ON segments
+  FOR ALL
+  USING (true)
+  WITH CHECK (true);
+
+-- Campaigns policies
+CREATE POLICY "Allow all operations on campaigns" ON campaigns
+  FOR ALL
+  USING (true)
+  WITH CHECK (true);
+
+-- Notifications policies
+CREATE POLICY "Allow all operations on notifications" ON notifications
+  FOR ALL
+  USING (true)
+  WITH CHECK (true);
+
+-- ============================================================================
+-- FUNCTIONS & TRIGGERS
+-- ============================================================================
+
+-- Function to update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Triggers to automatically update updated_at
+CREATE TRIGGER update_contacts_updated_at BEFORE UPDATE ON contacts
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_segments_updated_at BEFORE UPDATE ON segments
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_campaigns_updated_at BEFORE UPDATE ON campaigns
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
