@@ -176,14 +176,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { updateUserOnboarding } = await import('@/lib/supabase/users')
       await updateUserOnboarding(user.id, completed)
       
-      // Update local state
+      // Update local storage
       localStorage.setItem("onboardingCompleted", completed.toString())
-      setUser(prev => prev ? { ...prev, onboardingCompleted: completed } : null)
       
       // Update user type based on onboarding status
       if (completed) {
         localStorage.setItem("userType", "existingUser")
-        setUser(prev => prev ? { ...prev, userType: "existingUser" } : null)
+        // Update user state atomically to ensure both fields update together
+        setUser(prev => prev ? { 
+          ...prev, 
+          onboardingCompleted: completed,
+          userType: "existingUser"
+        } : null)
+      } else {
+        setUser(prev => prev ? { 
+          ...prev, 
+          onboardingCompleted: completed
+        } : null)
       }
     } catch (error) {
       console.error("Error updating onboarding status:", error)

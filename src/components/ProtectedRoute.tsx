@@ -28,11 +28,15 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   // If authenticated but new user hasn't completed onboarding and not already on onboarding page
-  if (
-    user?.userType === "newUser" && 
-    !hasCompletedOnboarding && 
+  // Check onboardingCompleted from user object first, then fall back to context
+  const userNeedsOnboarding = user?.onboardingCompleted === false || 
+    (user?.userType === "newUser" && user?.onboardingCompleted !== true)
+  
+  const needsOnboarding = 
+    (userNeedsOnboarding || !hasCompletedOnboarding) && 
     currentPath !== "/onboarding"
-  ) {
+  
+  if (needsOnboarding) {
     return <Navigate to="/onboarding" replace />
   }
 

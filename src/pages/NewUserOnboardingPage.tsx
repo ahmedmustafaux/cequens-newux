@@ -344,6 +344,8 @@ export default function NewUserOnboardingPage() {
               await markOnboardingComplete(onboardingDataToSave)
               if (user?.id) {
                 await updateOnboardingStatus(true)
+                // Small delay to ensure state updates propagate
+                await new Promise(resolve => setTimeout(resolve, 100))
               }
               
               setIsLoading(false)

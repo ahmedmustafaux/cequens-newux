@@ -28,8 +28,14 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     if (user) {
       // Check onboarding status from user object (comes from database)
+      // Also check localStorage as fallback
+      const localCompleted = localStorage.getItem("onboardingCompleted") === "true"
+      const userCompleted = user.onboardingCompleted !== undefined ? user.onboardingCompleted : localCompleted
+      
       if (user.onboardingCompleted !== undefined) {
         setHasCompletedOnboarding(user.onboardingCompleted)
+      } else if (localCompleted) {
+        setHasCompletedOnboarding(true)
       } else if (user.userType === "newUser") {
         // Fallback: check localStorage for onboarding completion
         const completed = localStorage.getItem(`onboarding-completed-${user.email}`)
