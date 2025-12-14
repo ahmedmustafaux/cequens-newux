@@ -785,11 +785,11 @@ const ContactsPageContent = (): React.JSX.Element => {
 
                   try {
                     await archiveContactsMutation.mutateAsync(selectedIds)
-                    toast.success(`Successfully archived ${selectedIds.length} contact${selectedIds.length > 1 ? 's' : ''}`)
-                    table.resetRowSelection()
                     // Close dialog and reset confirmation immediately after success
                     setArchiveConfirmation("")
                     setShowArchiveDialog(false)
+                    toast.success(`Successfully archived ${selectedIds.length} contact${selectedIds.length > 1 ? 's' : ''}`)
+                    table.resetRowSelection()
                   } catch (error) {
                     console.error("Error archiving contacts:", error)
                     toast.error("Failed to archive contacts. Please try again.")
