@@ -13,7 +13,7 @@ import {
   EmptyAction,
 } from "@/components/ui/empty"
 import { Button } from "@/components/ui/button"
-import { Plus, Users2, X, Download, Trash2 as TrashIcon, Send, Save, RotateCcw, ArrowLeft, ChevronDown, Smartphone, Mail, Phone, Bell } from "lucide-react"
+import { Plus, Users2, X, Download, Trash2 as TrashIcon, Send, Save, RotateCcw, ArrowLeft, ChevronDown, Smartphone, Mail, Phone, Bell, AlertTriangle } from "lucide-react"
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -140,6 +140,15 @@ import { Calendar } from "@/components/ui/calendar"
 import { format } from "date-fns"
 import { type DateRange } from "react-day-picker"
 import { Label } from "@/components/ui/label"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { toast } from "sonner"
 
 // Helper function to get all tags from contacts
 const getAllTags = (contacts: AppContact[]): string[] => {
@@ -926,6 +935,9 @@ function ContactsSegmentsPageContent() {
   const [selectedSegmentId, setSelectedSegmentId] = React.useState<string | null>(null)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false)
   const [editingSegment, setEditingSegment] = React.useState<MockSegment | null>(null)
+  const [showDeleteDialog, setShowDeleteDialog] = React.useState(false)
+  const [deleteConfirmation, setDeleteConfirmation] = React.useState("")
+  const [segmentToDelete, setSegmentToDelete] = React.useState<Segment | null>(null)
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
@@ -998,7 +1010,9 @@ function ContactsSegmentsPageContent() {
     [updateSegmentMutation, refetchSegments]
   )
 
-  const handleDeleteSegment = React.useCallback(async (segmentToDelete: Segment) => {
+  const handleDeleteSegment = React.useCallback(async () => {
+    if (!segmentToDelete) return
+    
     try {
       await deleteSegmentMutation.mutateAsync(segmentToDelete.id)
       await refetchSegments()
@@ -1007,10 +1021,20 @@ function ContactsSegmentsPageContent() {
         const remainingSegments = segments.filter(s => s.id !== segmentToDelete.id)
         setSelectedSegmentId(remainingSegments.length > 0 ? remainingSegments[0].id : null)
       }
+      toast.success(`Successfully deleted segment "${segmentToDelete.name}"`)
+      setShowDeleteDialog(false)
+      setDeleteConfirmation("")
+      setSegmentToDelete(null)
     } catch (error) {
       console.error("Error deleting segment:", error)
+      toast.error("Failed to delete segment. Please try again.")
     }
-  }, [selectedSegmentId, segments, deleteSegmentMutation, refetchSegments])
+  }, [selectedSegmentId, segments, deleteSegmentMutation, refetchSegments, segmentToDelete])
+
+  const handleOpenDeleteDialog = React.useCallback((segment: Segment) => {
+    setSegmentToDelete(segment)
+    setShowDeleteDialog(true)
+  }, [])
 
   const handleRemoveFromSegment = React.useCallback(async () => {
     if (!selectedSegmentId) return
@@ -1789,7 +1813,7 @@ function ContactsSegmentsPageContent() {
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => {
-                          handleDeleteSegment(segment)
+                          handleOpenDeleteDialog(segment)
                         }}
                       >
                         Delete Segment
@@ -1798,6 +1822,16 @@ function ContactsSegmentsPageContent() {
                   </DropdownMenu>
                 )
               },
+              addButton: (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8"
+                  onClick={() => setIsCreateDialogOpen(true)}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              ),
             }}
             searchConfig={{
               placeholder: "Search contacts by name or phone",
@@ -1924,6 +1958,85 @@ function ContactsSegmentsPageContent() {
         editingSegment={editingSegment}
         onUpdate={editingSegment ? handleUpdateSegment : undefined}
       />
+
+      {/* Delete Segment Dialog */}
+      <Dialog 
+        open={showDeleteDialog} 
+        onOpenChange={(open) => {
+          setShowDeleteDialog(open)
+          if (!open) {
+            setDeleteConfirmation("")
+            setSegmentToDelete(null)
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-lg p-0 gap-0">
+          <DialogHeader className="p-4">
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              Delete Segment
+            </DialogTitle>
+            <DialogDescription className="mt-2">
+              Are you sure you want to delete this segment? 
+              This action cannot be undone and will permanently remove the segment and all its associated data.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="p-4 space-y-4">
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                <div className="space-y-1 flex-1">
+                  <p className="text-sm text-destructive font-semibold">Warning</p>
+                  <p className="text-sm text-destructive/90 leading-relaxed">
+                    Deleting this segment will permanently remove it and cannot be undone. 
+                    All contacts associated with this segment will remain, but the segment itself will be deleted.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {segmentToDelete && (
+              <div className="text-sm text-muted-foreground">
+                <span className="font-medium">Segment:</span> {segmentToDelete.name}
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="deleteConfirm" className="text-sm font-medium">
+                Type <code className="bg-gray-100 px-2 py-1 rounded font-mono text-xs">delete</code> to confirm:
+              </Label>
+              <Input
+                id="deleteConfirm"
+                value={deleteConfirmation}
+                onChange={(e) => setDeleteConfirmation(e.target.value)}
+                placeholder="Type 'delete' to confirm"
+                className="font-mono"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="px-4 py-4 border-t gap-3">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowDeleteDialog(false)
+                setDeleteConfirmation("")
+                setSegmentToDelete(null)
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteSegment}
+              disabled={deleteConfirmation.toLowerCase() !== "delete" || deleteSegmentMutation.isPending}
+            >
+              {deleteSegmentMutation.isPending ? "Deleting..." : "Delete Segment"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
     </PageWrapper>
   )

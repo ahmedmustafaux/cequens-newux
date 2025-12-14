@@ -51,6 +51,7 @@ interface ViewsConfig {
   selectedView: string
   onViewChange: (view: string) => void
   renderSelectedView?: (view: ViewOption, onClick: () => void) => React.ReactNode
+  addButton?: React.ReactNode
 }
 interface DataTableProps {
   children: React.ReactNode
@@ -400,6 +401,7 @@ function DataTable({
                               </Button>
                             )
                           })}
+                          {views.addButton}
                         </div>
                       </th>
                     </tr>
