@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchContacts, fetchContactById, createContact, updateContact, deleteContact, fetchContactsByStatus, archiveContacts, unarchiveContacts } from '@/lib/supabase/contacts'
 import type { AppContact } from '@/lib/supabase/types'
 import { useAuth } from '@/hooks/use-auth'
+import { segmentKeys } from '@/hooks/use-segments'
 
 // Query keys
 export const contactKeys = {
@@ -78,6 +79,8 @@ export function useCreateContact() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: contactKeys.lists() })
+      // Invalidate segments so they refresh with updated contact counts
+      queryClient.invalidateQueries({ queryKey: segmentKeys.lists() })
     },
   })
 }
@@ -97,6 +100,8 @@ export function useUpdateContact() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: contactKeys.lists() })
       queryClient.invalidateQueries({ queryKey: contactKeys.detail(data.id) })
+      // Invalidate segments so they refresh with updated contact counts
+      queryClient.invalidateQueries({ queryKey: segmentKeys.lists() })
     },
   })
 }
@@ -115,6 +120,8 @@ export function useDeleteContact() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: contactKeys.lists() })
+      // Invalidate segments so they refresh with updated contact counts
+      queryClient.invalidateQueries({ queryKey: segmentKeys.lists() })
     },
   })
 }
@@ -133,6 +140,8 @@ export function useArchiveContacts() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: contactKeys.lists() })
+      // Invalidate segments so they refresh with updated contact counts
+      queryClient.invalidateQueries({ queryKey: segmentKeys.lists() })
     },
   })
 }
@@ -151,6 +160,8 @@ export function useUnarchiveContacts() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: contactKeys.lists() })
+      // Invalidate segments so they refresh with updated contact counts
+      queryClient.invalidateQueries({ queryKey: segmentKeys.lists() })
     },
   })
 }

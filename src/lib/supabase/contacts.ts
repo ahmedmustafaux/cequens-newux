@@ -1,6 +1,7 @@
 import { supabase } from '../supabase'
 import type { Contact, AppContact } from './types'
 import { detectCountryFromPhoneNumber } from '../phone-utils'
+import { updateAllSegmentsForUser } from './segments'
 
 /**
  * Extracts country ISO from phone number if not already set
@@ -184,7 +185,15 @@ export async function createContact(userId: string, contact: Partial<AppContact>
     throw error
   }
 
-  return dbContactToAppContact(data)
+  const createdContact = dbContactToAppContact(data)
+
+  // Update all segments for this user in the background
+  // Don't await to avoid blocking the contact creation
+  updateAllSegmentsForUser(userId).catch(err => {
+    console.error('Error updating segments after contact creation:', err)
+  })
+
+  return createdContact
 }
 
 /**
@@ -215,7 +224,15 @@ export async function updateContact(userId: string, id: string, contact: Partial
     throw error
   }
 
-  return dbContactToAppContact(data)
+  const updatedContact = dbContactToAppContact(data)
+
+  // Update all segments for this user in the background
+  // Don't await to avoid blocking the contact update
+  updateAllSegmentsForUser(userId).catch(err => {
+    console.error('Error updating segments after contact update:', err)
+  })
+
+  return updatedContact
 }
 
 /**
@@ -238,6 +255,12 @@ export async function deleteContact(userId: string, id: string): Promise<void> {
     console.error('Error deleting contact:', error)
     throw error
   }
+
+  // Update all segments for this user in the background
+  // Don't await to avoid blocking the contact deletion
+  updateAllSegmentsForUser(userId).catch(err => {
+    console.error('Error updating segments after contact deletion:', err)
+  })
 }
 
 /**
@@ -289,6 +312,12 @@ export async function archiveContacts(userId: string, ids: string[]): Promise<vo
     console.error('Error archiving contacts:', error)
     throw error
   }
+
+  // Update all segments for this user in the background
+  // Don't await to avoid blocking the archive operation
+  updateAllSegmentsForUser(userId).catch(err => {
+    console.error('Error updating segments after archiving contacts:', err)
+  })
 }
 
 /**
@@ -315,5 +344,11 @@ export async function unarchiveContacts(userId: string, ids: string[]): Promise<
     console.error('Error unarchiving contacts:', error)
     throw error
   }
+
+  // Update all segments for this user in the background
+  // Don't await to avoid blocking the unarchive operation
+  updateAllSegmentsForUser(userId).catch(err => {
+    console.error('Error updating segments after unarchiving contacts:', err)
+  })
 }
 

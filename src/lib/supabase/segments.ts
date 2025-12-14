@@ -164,6 +164,48 @@ export async function deleteSegment(userId: string, id: string): Promise<void> {
 }
 
 /**
+ * Update all segments for a user when contacts change
+ * This function recalculates contact_ids for all segments belonging to a user
+ * @param userId - The ID of the user whose segments to update
+ */
+export async function updateAllSegmentsForUser(userId: string): Promise<void> {
+  if (!userId) {
+    throw new Error('userId is required to update segments')
+  }
+
+  try {
+    // Fetch all segments for the user
+    const segments = await fetchSegments(userId)
+    
+    if (segments.length === 0) {
+      // No segments to update
+      return
+    }
+
+    console.log(`[Segments] Updating ${segments.length} segment(s) for user ${userId}`)
+    
+    // Update each segment's contact_ids based on current contacts
+    await Promise.all(
+      segments.map(async (segment) => {
+        try {
+          const updated = await updateSegmentContacts(userId, segment.id)
+          console.log(`[Segments] Updated segment "${segment.name}": ${updated.contact_ids.length} contacts`)
+          return updated
+        } catch (error) {
+          console.error(`[Segments] Error updating segment "${segment.name}":`, error)
+          throw error
+        }
+      })
+    )
+    
+    console.log(`[Segments] Successfully updated all segments for user ${userId}`)
+  } catch (error) {
+    console.error('[Segments] Error updating all segments for user:', error)
+    // Don't throw - this is a background operation and shouldn't fail contact operations
+  }
+}
+
+/**
  * Update segment's contact_ids based on filters
  * This function evaluates the segment filters and updates the contact_ids array
  * @param userId - The ID of the user who owns the segment
@@ -175,10 +217,11 @@ export async function updateSegmentContacts(userId: string, segmentId: string): 
     throw new Error('Segment not found')
   }
 
-  // For now, we'll use a simple approach - in production you might want to
-  // use Supabase's PostgREST filters or create a database function
-  // For complex filters, you may need to fetch all contacts and filter in memory
-  const contacts = await fetchContacts(userId)
+  // Fetch all non-archived contacts for the user
+  // Archived contacts are excluded from segments by default
+  const contacts = await fetchContacts(userId, undefined, false) // includeArchived = false
+  
+  // Filter contacts based on segment filters and get matching contact IDs
   const matchingContactIds = getMatchingContactIds(contacts, segment.filters)
 
   const { data, error } = await supabase
@@ -202,14 +245,21 @@ export async function updateSegmentContacts(userId: string, segmentId: string): 
 
 /**
  * Helper function to match contacts against segment filters
- * This is a simplified version - you may need to enhance this based on your filter logic
+ * Returns an array of contact IDs that match all the segment's filters
+ * 
+ * @param contacts - Array of contacts to filter
+ * @param filters - Array of segment filters to apply
+ * @returns Array of contact IDs that match all filters
  */
 function getMatchingContactIds(contacts: AppContact[], filters: SegmentFilter[]): string[] {
   if (filters.length === 0) {
     return []
   }
 
+  // Filter contacts that match ALL filters (AND logic)
+  // Only include non-archived contacts
   return contacts
+    .filter(contact => !contact.archived) // Exclude archived contacts
     .filter(contact => filters.every(filter => contactMatchesFilter(contact, filter)))
     .map(contact => contact.id)
 }
