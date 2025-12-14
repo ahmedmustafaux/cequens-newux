@@ -11,7 +11,14 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      // Polyfill process for browser compatibility
+      // whatsapp-number-verify package requires process.env
+      'process': 'process/browser',
     },
+  },
+  define: {
+    // Provide process.env for browser
+    'process.env': JSON.stringify(process.env),
   },
   optimizeDeps: {
     exclude: ['react-circle-flags'],
