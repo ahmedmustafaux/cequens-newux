@@ -44,6 +44,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { IPhoneMockup } from "react-device-mockup"
 
 interface CampaignFormData {
   name: string
@@ -1300,7 +1301,8 @@ export default function CampaignsCreatePage() {
                           </FieldDescription>
                         </Field>
 
-                        {formData.type && formData.message && (
+                        {/* Email Preview (keep existing for Email type) */}
+                        {formData.type === "Email" && formData.message && (
                           <>
                             <Separator />
                             <div>
@@ -1309,16 +1311,14 @@ export default function CampaignsCreatePage() {
                                 <FieldLabel>Preview</FieldLabel>
                               </div>
                               <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
-                                {formData.type === "Email" && formData.subject && (
+                                {formData.subject && (
                                   <div>
                                     <p className="text-xs text-muted-foreground mb-1">Subject:</p>
                                     <p className="font-medium">{formData.subject}</p>
                                   </div>
                                 )}
                                 <div>
-                                  {formData.type === "Email" && (
-                                    <p className="text-xs text-muted-foreground mb-1">Message:</p>
-                                  )}
+                                  <p className="text-xs text-muted-foreground mb-1">Message:</p>
                                   <p className="text-sm whitespace-pre-wrap">{previewMessage}</p>
                                 </div>
                               </div>
@@ -1540,6 +1540,120 @@ export default function CampaignsCreatePage() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Mobile Preview - Show on Content step (step 2) for WhatsApp/SMS */}
+                {currentStep === 2 && (formData.type === "Whatsapp" || formData.type === "SMS") && (
+                  <Card className="pt-5 pb-0 gap-5 flex flex-col" style={{ height: '580px' }}>
+                    <CardHeader>
+                      <div className="flex items-center gap-2">
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle>Preview</CardTitle>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="px-4 overflow-hidden" style={{ height: '580px' }}>
+                      {/* Mobile Device Mockup - Show only 60% (cropped at bottom) */}
+                      <div className="relative flex justify-center items-end overflow-hidden w-full h-full">
+                        <div className="relative w-full h-full flex justify-center items-start" style={{ 
+                        
+                        }}>
+                          <div className="w-full h-full flex justify-center items-start">
+                            <IPhoneMockup 
+                              screenWidth={320}
+                              screenType="notch"
+                              frameColor="#1f2937"
+                              hideStatusBar={false}
+                            >
+                            <div className={`w-full h-full relative ${
+                              formData.type === "Whatsapp" 
+                                ? "bg-[#efeae2]" 
+                                : "bg-white dark:bg-gray-900"
+                            }`}>
+                              {/* WhatsApp Background Pattern */}
+                              {formData.type === "Whatsapp" && (
+                                <div 
+                                  className="absolute inset-0 opacity-[0.12]"
+                                  style={{
+                                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='whatsapp-pattern' x='0' y='0' width='100' height='100' patternUnits='userSpaceOnUse'%3E%3Ccircle cx='15' cy='15' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='45' cy='20' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='75' cy='25' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='25' cy='40' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='55' cy='45' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='85' cy='50' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='35' cy='65' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='65' cy='70' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='20' cy='85' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='50' cy='90' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3Ccircle cx='80' cy='95' r='1.2' fill='%23a4a4a4' opacity='0.4'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100' height='100' fill='url(%23whatsapp-pattern)'/%3E%3C/svg%3E")`,
+                                    backgroundSize: '100px 100px',
+                                    backgroundRepeat: 'repeat',
+                                  }}
+                                />
+                              )}
+                              <div className="relative z-10 flex flex-col h-full px-4 pt-3 pb-4">
+                                {/* Sender Info (for WhatsApp) - Show name from Sender ID */}
+                                {formData.type === "Whatsapp" && (
+                                  <div className="mb-3 pb-3 border-b border-gray-300/50">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-sm">
+                                        <span className="text-white text-sm font-semibold">
+                                          {selectedSender?.label ? selectedSender.label.charAt(0).toUpperCase() : "C"}
+                                        </span>
+                                      </div>
+                                      <div>
+                                        <div className="flex items-center gap-1.5">
+                                          <p className="text-sm font-semibold text-gray-900">
+                                            {selectedSender?.label || formData.senderId || "Contact"}
+                                          </p>
+                                          {selectedSender?.status === "verified" && getVerificationIcon(selectedSender.status, selectedSender.id)}
+                                        </div>
+                                        <p className="text-xs text-gray-600">online</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Message Bubble - Moved to top */}
+                                <div className="mt-0">
+                                  <div className="flex justify-end mb-1">
+                                    <div className="relative max-w-[85%] flex items-end">
+                                      {/* WhatsApp message bubble with tail */}
+                                      {formData.type === "Whatsapp" ? (
+                                        <>
+                                          <div className="bg-[#dcf8c6] rounded-lg px-3 py-2 shadow-sm">
+                                            <p className="text-sm whitespace-pre-wrap text-gray-900 leading-relaxed">
+                                              {previewMessage || "Your message will appear here..."}
+                                            </p>
+                                          </div>
+                                          {/* Tail */}
+                                          <svg 
+                                            className="flex-shrink-0 -ml-1 mb-0.5" 
+                                            width="8" 
+                                            height="12" 
+                                            viewBox="0 0 8 13"
+                                          >
+                                            <path 
+                                              d="M5.188 1H0v11.193l6.467-11.188C5.243.874 5.163.965 5.188 1z" 
+                                              fill="#dcf8c6"
+                                            />
+                                          </svg>
+                                        </>
+                                      ) : (
+                                        <div className="bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-2 shadow-sm">
+                                          <p className="text-sm whitespace-pre-wrap text-gray-900 dark:text-gray-100 leading-relaxed">
+                                            {previewMessage || "Your message will appear here..."}
+                                          </p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                  {formData.type === "Whatsapp" && (
+                                    <div className="flex items-center justify-end gap-1 mt-0.5 pr-1">
+                                      <span className="text-[10px] text-gray-600">9:41</span>
+                                      <svg className="w-3.5 h-3.5 text-gray-600" viewBox="0 0 16 15" fill="none">
+                                        <path d="M15.01 3.316l-.478-.372a.365.365 0 0 0-.51.063L8.666 9.879a.32.32 0 0 1-.484.033l-.358-.325a.319.319 0 0 0-.484.032l-.378.483a.418.418 0 0 0 .036.541l1.32 1.266c.143.14.361.125.484-.033l6.272-8.048a.366.366 0 0 0-.063-.51zm-4.1 0l-.478-.372a.365.365 0 0 0-.51.063L4.566 9.879a.32.32 0 0 1-.484.033L1.891 7.769a.366.366 0 0 0-.515.006l-.423.433a.364.364 0 0 0 .006.514l3.258 3.185c.143.14.361.125.484-.033l6.272-8.048a.365.365 0 0 0-.063-.51z" fill="currentColor"/>
+                                      </svg>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            </IPhoneMockup>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </div>
           </motion.div>

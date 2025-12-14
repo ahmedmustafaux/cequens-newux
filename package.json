@@ -59,6 +59,7 @@
     "react": "^19.0.0",
     "react-circle-flags": "^0.0.23",
     "react-day-picker": "^9.9.0",
+    "react-device-mockup": "^1.0.0",
     "react-dom": "^19.0.0",
     "react-grab": "^0.0.20",
     "react-hook-form": "^7.56.4",
