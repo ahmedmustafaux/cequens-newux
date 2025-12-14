@@ -894,8 +894,8 @@ export function CreateSegmentDialog({
         : options
       
       return (
-        <div className="flex flex-col flex-1 min-h-0">
-          <div className="flex-shrink-0">
+        <div className="flex flex-col h-full" style={{ height: '400px', maxHeight: '400px' }}>
+          <div className="flex-shrink-0 p-2 border-b">
             <FilterSearchInput
               placeholder="Search..."
               value={valueSearchQuery}
@@ -905,7 +905,7 @@ export function CreateSegmentDialog({
           </div>
           
           {filteredOptions.length > 0 ? (
-            <div className="overflow-y-auto p-1" style={{ maxHeight: 'calc(400px - 60px)', height: 'calc(400px - 60px)' }}>
+            <div className="overflow-y-auto overflow-x-hidden p-1 flex-1" style={{ minHeight: 0, WebkitOverflowScrolling: 'touch' }}>
               {filteredOptions.map((option) => {
                 const isSelected = displayValues.includes(option.value)
                 return (
@@ -1408,7 +1408,7 @@ export function CreateSegmentDialog({
                                       </PopoverTrigger>
                                       <PopoverContent className="w-auto min-w-[200px] max-w-[300px] p-0 bg-card border border-border shadow-lg flex flex-col" style={{ maxHeight: '400px' }} align="start">
                                         {selectedCategory ? (
-                                          <div className="flex flex-col h-full" style={{ maxHeight: '400px' }}>
+                                          <div className="flex flex-col h-full" style={{ maxHeight: '400px', height: '400px' }}>
                                             <div className="p-2 border-b border-border flex-shrink-0">
                                               <Button
                                                 variant="ghost"
@@ -1427,7 +1427,7 @@ export function CreateSegmentDialog({
                                                 autoFocus={false}
                                               />
                                             </div>
-                                            <div className="overflow-y-auto p-1" style={{ maxHeight: 'calc(400px - 120px)' }}>
+                                            <div className="overflow-y-auto overflow-x-hidden p-1 flex-1" style={{ minHeight: 0, WebkitOverflowScrolling: 'touch' }}>
                                               {FILTER_CATEGORIES.find(c => c.id === selectedCategory)?.fields
                                                 .filter(field => {
                                                   const matchesSearch = field.label.toLowerCase().includes(fieldSearchQuery.toLowerCase())
@@ -1451,7 +1451,7 @@ export function CreateSegmentDialog({
                                             </div>
                                           </div>
                                         ) : (
-                                          <div className="flex flex-col bg-card" style={{ maxHeight: '400px' }}>
+                                          <div className="flex flex-col bg-card h-full" style={{ maxHeight: '400px', height: '400px' }}>
                                             <div className="flex-shrink-0">
                                               <FilterSearchInput
                                                 placeholder="Search categories..."
@@ -1460,7 +1460,7 @@ export function CreateSegmentDialog({
                                                 autoFocus={false}
                                               />
                                             </div>
-                                            <div className="overflow-y-auto p-1" style={{ maxHeight: 'calc(400px - 60px)' }}>
+                                            <div className="overflow-y-auto overflow-x-hidden p-1 flex-1" style={{ minHeight: 0, WebkitOverflowScrolling: 'touch' }}>
                                               {FILTER_CATEGORIES.filter(category => 
                                                 category.label.toLowerCase().includes(fieldSearchQuery.toLowerCase())
                                               ).map((category) => (
@@ -1514,7 +1514,7 @@ export function CreateSegmentDialog({
                                         </Button>
                                       </PopoverTrigger>
                                       <PopoverContent className="w-auto min-w-[180px] p-0 bg-card border border-border shadow-lg flex flex-col" style={{ maxHeight: '400px' }} align="start">
-                                        <div className="overflow-y-auto p-1" style={{ maxHeight: '400px', height: '400px' }}>
+                                        <div className="overflow-y-auto overflow-x-hidden p-1" style={{ maxHeight: '400px', height: '400px', WebkitOverflowScrolling: 'touch' }}>
                                           {(() => {
                                             const fieldInfo = getFieldInfo(filterItem.filter.field)
                                             const availableOperators = fieldInfo?.field.operators || []
@@ -1644,7 +1644,7 @@ export function CreateSegmentDialog({
                                             align="start"
                                             onOpenAutoFocus={(e) => e.preventDefault()}
                                           >
-                                            <div className="flex flex-col" style={{ maxHeight: '400px' }}>
+                                            <div className="flex flex-col h-full" style={{ maxHeight: '400px', height: '400px' }}>
                                               {editingFilterId === groupItem.id && renderValueInput(filterItem.filter, groupItem.id)}
                                             </div>
                                           </PopoverContent>
@@ -1767,7 +1767,7 @@ export function CreateSegmentDialog({
                                         autoFocus={false}
                                       />
                                     </div>
-                                    <div className="overflow-y-auto p-1" style={{ maxHeight: 'calc(400px - 60px)', height: 'calc(400px - 60px)' }}>
+                                    <div className="overflow-y-auto overflow-x-hidden p-1 flex-1" style={{ minHeight: 0, WebkitOverflowScrolling: 'touch' }}>
                                       {selectedCategory ? (
                                         FILTER_CATEGORIES.find(c => c.id === selectedCategory)?.fields
                                           .filter(field => {
@@ -1859,7 +1859,7 @@ export function CreateSegmentDialog({
                                       autoFocus={false}
                                     />
                                   </div>
-                                  <div className="overflow-y-auto p-1" style={{ maxHeight: 'calc(400px - 120px)', height: 'calc(400px - 120px)' }}>
+                                  <div className="overflow-y-auto overflow-x-hidden p-1 flex-1" style={{ minHeight: 0, WebkitOverflowScrolling: 'touch' }}>
                                     {FILTER_CATEGORIES.find(c => c.id === selectedCategory)?.fields
                                       .filter(field => {
                                         const matchesSearch = field.label.toLowerCase().includes(fieldSearchQuery.toLowerCase())
@@ -1883,7 +1883,7 @@ export function CreateSegmentDialog({
                                   </div>
                                 </div>
                               ) : (
-                                <div className="flex flex-col bg-card" style={{ maxHeight: '400px' }}>
+                                <div className="flex flex-col bg-card h-full" style={{ maxHeight: '400px', height: '400px' }}>
                                   <div className="flex-shrink-0">
                                     <FilterSearchInput
                                       placeholder="Search categories..."
@@ -1892,7 +1892,7 @@ export function CreateSegmentDialog({
                                       autoFocus={false}
                                     />
                                   </div>
-                                  <div className="overflow-y-auto p-1" style={{ maxHeight: 'calc(400px - 60px)', height: 'calc(400px - 60px)' }}>
+                                  <div className="overflow-y-auto overflow-x-hidden p-1 flex-1" style={{ minHeight: 0, WebkitOverflowScrolling: 'touch' }}>
                                     {FILTER_CATEGORIES.filter(category => 
                                       category.label.toLowerCase().includes(fieldSearchQuery.toLowerCase())
                                     ).map((category) => (
@@ -1946,7 +1946,7 @@ export function CreateSegmentDialog({
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto min-w-[180px] p-0 bg-card border border-border shadow-lg flex flex-col" style={{ maxHeight: '400px' }} align="start">
-                              <div className="overflow-y-auto p-1" style={{ maxHeight: '400px', height: '400px' }}>
+                              <div className="overflow-y-auto overflow-x-hidden p-1" style={{ maxHeight: '400px', height: '400px', WebkitOverflowScrolling: 'touch' }}>
                                 {(() => {
                                   const fieldInfo = getFieldInfo(badge.filter.field)
                                   const availableOperators = fieldInfo?.field.operators || []
@@ -2191,19 +2191,19 @@ export function CreateSegmentDialog({
                         if (!lastItem || !('filter' in lastItem)) return null
                         return renderValueInput(lastItem.filter, lastItem.id)
                       })()
-                    ) : (
-                      <div className="flex flex-col flex-1 min-h-0">
-                        <div className="flex-shrink-0">
-                          <FilterSearchInput
-                            placeholder="Search..."
-                            value={fieldSearchQuery}
-                            onChange={setFieldSearchQuery}
-                            autoFocus={false}
-                          />
-                        </div>
-                        <div className="overflow-y-auto p-1" style={{ maxHeight: 'calc(400px - 60px)', height: 'calc(400px - 60px)' }}>
-                          {selectedCategory ? (
-                            FILTER_CATEGORIES.find(c => c.id === selectedCategory)?.fields
+                                ) : (
+                                  <div className="flex flex-col h-full" style={{ maxHeight: '400px', height: '400px' }}>
+                                    <div className="flex-shrink-0">
+                                      <FilterSearchInput
+                                        placeholder="Search..."
+                                        value={fieldSearchQuery}
+                                        onChange={setFieldSearchQuery}
+                                        autoFocus={false}
+                                      />
+                                    </div>
+                                    <div className="overflow-y-auto overflow-x-hidden p-1 flex-1" style={{ minHeight: 0, WebkitOverflowScrolling: 'touch' }}>
+                                      {selectedCategory ? (
+                                        FILTER_CATEGORIES.find(c => c.id === selectedCategory)?.fields
                               .filter(field => {
                                 const matchesSearch = field.label.toLowerCase().includes(fieldSearchQuery.toLowerCase())
                                 const isAlreadyApplied = appliedFilterFields.has(field.value)

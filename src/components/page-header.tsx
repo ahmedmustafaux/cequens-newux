@@ -234,7 +234,7 @@ export function PageHeader({
       <Button
         key={key}
         variant={action.variant || "default"}
-        size={action.size || "default"}
+        size="sm"
         onClick={action.onClick}
         disabled={action.disabled}
       >
