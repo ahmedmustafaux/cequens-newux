@@ -14,7 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PageHeaderWithActions } from "@/components/page-header"
 import { CardSkeleton } from "@/components/ui/card"
-import { Save, X, Users, Clock, Eye, Send, Calendar } from "lucide-react"
+import { Save, X, Users, Clock, Eye, Send, Calendar, ChevronLeft, ChevronRight, Check } from "lucide-react"
 import { EnvelopeSimple, ChatText } from "phosphor-react"
 import { toast } from "sonner"
 import { motion } from "framer-motion"
@@ -26,10 +26,10 @@ import { useSegments } from "@/hooks/use-segments"
 import { useContacts } from "@/hooks/use-contacts"
 import type { Campaign } from "@/lib/supabase/types"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip"
 
 interface CampaignFormData {
   name: string
@@ -55,7 +55,13 @@ export default function CampaignsCreatePage() {
   const [isDirty, setIsDirty] = React.useState(false)
   const [isInitialLoading, setIsInitialLoading] = React.useState(true)
   const [formErrors, setFormErrors] = React.useState<Record<string, string>>({})
-  const [activeTab, setActiveTab] = React.useState("details")
+  const [currentStep, setCurrentStep] = React.useState(0)
+  
+  const steps = [
+    { id: 0, label: "Details", description: "Campaign information" },
+    { id: 1, label: "Content", description: "Message content" },
+    { id: 2, label: "Schedule", description: "Send timing" }
+  ]
   
   usePageTitle("Create Campaign")
 
@@ -194,10 +200,74 @@ export default function CampaignsCreatePage() {
     return Object.keys(errors).length === 0
   }
 
+  const validateStep = (step: number): boolean => {
+    const errors: Record<string, string> = {}
+
+    if (step === 0) {
+      // Validate Details step
+      if (!formData.name.trim()) {
+        errors.name = "Campaign name is required"
+      }
+      if (!formData.type) {
+        errors.type = "Campaign type is required"
+      }
+      if (formData.selectedSegmentId && formData.selectedSegmentId !== "all-contacts" && formData.recipients === 0) {
+        errors.selectedSegmentId = "Selected segment has no contacts"
+      }
+      if (formData.selectedSegmentId === "all-contacts" && allContacts.length === 0) {
+        errors.selectedSegmentId = "No contacts available"
+      }
+    } else if (step === 1) {
+      // Validate Content step
+      if (formData.type === "Email" && !formData.subject.trim()) {
+        errors.subject = "Subject line is required for email campaigns"
+      }
+      if (!formData.message.trim()) {
+        errors.message = "Message content is required"
+      } else if (isOverLimit) {
+        errors.message = `Message exceeds ${characterLimit} character limit`
+      }
+    } else if (step === 2) {
+      // Validate Schedule step
+      if (formData.scheduleType === "scheduled") {
+        const scheduledDateTime = new Date(`${formData.scheduledDate}T${formData.scheduledTime}`)
+        if (scheduledDateTime < now) {
+          errors.scheduledDate = "Scheduled date must be in the future"
+        }
+      }
+    }
+
+    setFormErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const handleNext = () => {
+    if (validateStep(currentStep)) {
+      if (currentStep < steps.length - 1) {
+        setCurrentStep(currentStep + 1)
+      }
+    } else {
+      toast.error("Please fix the errors before continuing")
+    }
+  }
+
+  const handlePrevious = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1)
+    }
+  }
+
   const handleSave = async () => {
     if (!validateForm()) {
       toast.error("Please fix the errors in the form")
-      setActiveTab("details") // Switch to first tab with errors
+      // Go to first step with errors
+      if (!formData.name.trim() || !formData.type) {
+        setCurrentStep(0)
+      } else if (formData.type === "Email" && !formData.subject.trim() || !formData.message.trim()) {
+        setCurrentStep(1)
+      } else {
+        setCurrentStep(2)
+      }
       return
     }
 
@@ -270,29 +340,15 @@ export default function CampaignsCreatePage() {
         description="Set up and schedule your marketing campaign"
         isLoading={isInitialLoading}
         actions={
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDiscard}
-              disabled={createCampaignMutation.isPending || isInitialLoading}
-            >
-              <X className="h-4 w-4" />
-              Cancel
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleSave}
-              disabled={!canSave || isInitialLoading}
-            >
-              <Save className="h-4 w-4" />
-              {createCampaignMutation.isPending 
-                ? "Creating..." 
-                : formData.scheduleType === "scheduled" 
-                  ? "Schedule Campaign" 
-                  : "Send Now"}
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDiscard}
+            disabled={createCampaignMutation.isPending || isInitialLoading}
+          >
+            <X className="h-4 w-4" />
+            Cancel
+          </Button>
         }
       />
 
@@ -318,15 +374,78 @@ export default function CampaignsCreatePage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
               {/* Main Content */}
               <div className="lg:col-span-2 grid grid-cols-1 gap-4 items-start">
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="details">Details</TabsTrigger>
-                    <TabsTrigger value="content">Content</TabsTrigger>
-                    <TabsTrigger value="schedule">Schedule</TabsTrigger>
-                  </TabsList>
+                {/* Step Indicator */}
+                <div className="relative py-4 px-4 sm:px-6">
+                  {/* Steps container */}
+                  <div className="relative flex items-start justify-between">
+                    {/* Progress line background - from center of first to center of last circle */}
+                    <div 
+                      className="absolute top-4 h-0.5 bg-muted"
+                      style={{
+                        left: '1.25rem', // Half of w-10 (2.5rem)
+                        right: '1.25rem', // Half of w-10 (2.5rem)
+                      }}
+                    />
+                    
+                    {/* Progress fill - calculate based on completed segments */}
+                    {currentStep > 0 && (
+                      <div 
+                        className="absolute top-4 h-0.5 bg-primary transition-all duration-300"
+                        style={{
+                          left: '1.25rem',
+                          width: `calc(${(currentStep / (steps.length - 1)) * 100}% - 1.25rem)`
+                        }}
+                      />
+                    )}
+                    
+                    {/* Steps */}
+                    {steps.map((step, index) => {
+                      const isActive = currentStep === step.id
+                      const isCompleted = currentStep > step.id
+                      
+                      return (
+                        <div key={step.id} className="flex flex-col items-start flex-1 relative z-10">
+                          <div className="flex flex-col items-start gap-2 w-full">
+                            {/* Step circle */}
+                            <div
+                              className={`flex items-center justify-center w-8 h-8 rounded-full border-2 transition-colors flex-shrink-0 bg-background ${
+                                isActive || isCompleted
+                                  ? "border-primary bg-primary text-primary-foreground"
+                                  : "border-muted-foreground/30 text-muted-foreground"
+                              }`}
+                            >
+                              {isCompleted ? (
+                                <Check className="h-4 w-4" />
+                              ) : (
+                                <span className="text-xs font-semibold">{step.id + 1}</span>
+                              )}
+                            </div>
+                            {/* Step labels */}
+                            <div className="flex flex-col items-start min-w-0 mt-1">
+                              <span
+                                className={`text-sm font-medium text-left ${
+                                  isActive || isCompleted
+                                    ? "text-foreground"
+                                    : "text-muted-foreground"
+                                }`}
+                              >
+                                {step.label}
+                              </span>
+                              <span className="text-xs text-muted-foreground text-left mt-0.5">
+                                {step.description}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
 
-                  {/* Details Tab */}
-                  <TabsContent value="details" className="space-y-4 mt-4">
+                {/* Step Content */}
+                <div className="space-y-4">
+                  {/* Step 1: Details */}
+                  {currentStep === 0 && (
                     <Card className="py-5 gap-5">
                       <CardHeader>
                         <CardTitle>Campaign Details</CardTitle>
@@ -353,31 +472,32 @@ export default function CampaignsCreatePage() {
                             <div className="grid grid-cols-3 gap-4">
                               <Card
                                 className={`cursor-pointer shadow-none ${
-                                  formData.type === "Email" 
+                                  formData.type === "Whatsapp" 
                                     ? "border-primary border-2" 
                                     : formErrors.type 
                                       ? "border-destructive border-2" 
                                       : ""
                                 }`}
                                 onClick={() => {
-                                  handleInputChange("type", "Email")
+                                  handleInputChange("type", "Whatsapp")
                                   // Reset message when type changes
                                   if (formData.message) {
                                     handleInputChange("message", "")
                                   }
                                 }}
                               >
-                                <CardContent className="p-4 flex flex-col items-center gap-4 text-center">
-                                  <EnvelopeSimple 
-                                    className="h-6 w-6 text-blue-600 dark:text-blue-400" 
-                                    weight="fill" 
+                                <CardContent className="p-4 flex flex-col items-left gap-4 text-left">
+                                  <img 
+                                    src="/icons/WhatsApp.svg" 
+                                    alt="WhatsApp" 
+                                    className="h-6 w-6" 
                                   />
-                                  <div className="flex flex-col items-center gap-1">
+                                  <div className="flex flex-col items-left gap-1">
                                     <span className="text-sm font-semibold text-foreground">
-                                      Email
+                                      WhatsApp
                                     </span>
                                     <span className="text-xs text-muted-foreground">
-                                      Rich content
+                                      Interactive
                                     </span>
                                   </div>
                                 </CardContent>
@@ -398,12 +518,12 @@ export default function CampaignsCreatePage() {
                                   }
                                 }}
                               >
-                                <CardContent className="p-4 flex flex-col items-center gap-4 text-center">
+                                <CardContent className="p-4 flex flex-col items-left gap-4 text-left">
                                   <ChatText 
                                     className="h-6 w-6 text-primary" 
                                     weight="fill" 
                                   />
-                                  <div className="flex flex-col items-center gap-1">
+                                  <div className="flex flex-col items-left gap-1">
                                     <span className="text-sm font-semibold text-foreground">
                                       SMS
                                     </span>
@@ -413,57 +533,61 @@ export default function CampaignsCreatePage() {
                                   </div>
                                 </CardContent>
                               </Card>
-                              <Card
-                                className={`cursor-pointer shadow-none ${
-                                  formData.type === "Whatsapp" 
-                                    ? "border-primary border-2" 
-                                    : formErrors.type 
-                                      ? "border-destructive border-2" 
-                                      : ""
-                                }`}
-                                onClick={() => {
-                                  handleInputChange("type", "Whatsapp")
-                                  // Reset message when type changes
-                                  if (formData.message) {
-                                    handleInputChange("message", "")
-                                  }
-                                }}
-                              >
-                                <CardContent className="p-4 flex flex-col items-center gap-4 text-center">
-                                  <img 
-                                    src="/icons/WhatsApp.svg" 
-                                    alt="WhatsApp" 
-                                    className="h-6 w-6" 
-                                  />
-                                  <div className="flex flex-col items-center gap-1">
-                                    <span className="text-sm font-semibold text-foreground">
-                                      WhatsApp
-                                    </span>
-                                    <span className="text-xs text-muted-foreground">
-                                      Interactive
-                                    </span>
-                                  </div>
-                                </CardContent>
-                              </Card>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div>
+                                      <Card
+                                        className={`shadow-none cursor-not-allowed ${
+                                          formErrors.type 
+                                            ? "border-destructive border-2" 
+                                            : ""
+                                        }`}
+                                      >
+                                        <CardContent className="p-4 flex flex-col items-left gap-4 text-left">
+                                          <EnvelopeSimple 
+                                            className="h-6 w-6 text-blue-600 dark:text-blue-400 opacity-50" 
+                                            weight="fill" 
+                                          />
+                                          <div className="flex flex-col items-left gap-1">
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-sm font-semibold text-foreground opacity-50">
+                                                Email
+                                              </span>
+                                              <Badge variant="secondary" className="text-xs">
+                                                Not configured
+                                              </Badge>
+                                            </div>
+                                            <span className="text-xs text-muted-foreground opacity-50">
+                                              Rich content
+                                            </span>
+                                          </div>
+                                        </CardContent>
+                                      </Card>
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="p-3">
+                                    <div className="flex items-center gap-2">
+                                      <p className="text-sm">Email channel needs to be configured</p>
+                                      <Button
+                                        variant="link"
+                                        size="sm"
+                                        className="h-auto p-0 text-primary underline"
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          navigate("/campaigns/settings")
+                                        }}
+                                      >
+                                        Configure
+                                      </Button>
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             </div>
                           </FieldContent>
                           {formErrors.type && <FieldError>{formErrors.type}</FieldError>}
                         </Field>
-
-                        <Field>
-                          <FieldLabel>Description</FieldLabel>
-                          <FieldContent>
-                            <Textarea
-                              id="description"
-                              value={formData.description}
-                              onChange={(e) => handleInputChange("description", e.target.value)}
-                              placeholder="Internal notes about this campaign (optional)"
-                              className="min-h-[80px]"
-                            />
-                          </FieldContent>
-                        </Field>
-
-                        <Separator />
 
                         <Field>
                           <FieldLabel>Select Audience *</FieldLabel>
@@ -528,10 +652,10 @@ export default function CampaignsCreatePage() {
                         </Field>
                       </CardContent>
                     </Card>
-                  </TabsContent>
+                  )}
 
-                  {/* Content Tab */}
-                  <TabsContent value="content" className="space-y-4 mt-4">
+                  {/* Step 2: Content */}
+                  {currentStep === 1 && (
                     <Card className="py-5 gap-5">
                       <CardHeader>
                         <CardTitle>Message Content</CardTitle>
@@ -623,10 +747,10 @@ export default function CampaignsCreatePage() {
                         )}
                       </CardContent>
                     </Card>
-                  </TabsContent>
+                  )}
 
-                  {/* Schedule Tab */}
-                  <TabsContent value="schedule" className="space-y-4 mt-4">
+                  {/* Step 3: Schedule */}
+                  {currentStep === 2 && (
                     <Card className="py-5 gap-5">
                       <CardHeader>
                         <CardTitle>Schedule Campaign</CardTitle>
@@ -714,8 +838,55 @@ export default function CampaignsCreatePage() {
                         )}
                       </CardContent>
                     </Card>
-                  </TabsContent>
-                </Tabs>
+                  )}
+
+                  {/* Navigation Buttons */}
+                  <Card className="py-4">
+                    <CardContent className="px-4 sm:px-6">
+                      <div className="flex items-center justify-between gap-4">
+                        <Button
+                          variant="outline"
+                          onClick={handlePrevious}
+                          disabled={currentStep === 0}
+                          className="flex-shrink-0"
+                        >
+                          <ChevronLeft className="h-4 w-4 mr-2" />
+                          <span className="hidden sm:inline">Previous</span>
+                        </Button>
+                        <div className="text-sm text-muted-foreground text-center hidden sm:block">
+                          Step {currentStep + 1} of {steps.length}
+                        </div>
+                        <div className="text-xs text-muted-foreground text-center sm:hidden">
+                          {currentStep + 1}/{steps.length}
+                        </div>
+                        {currentStep < steps.length - 1 ? (
+                          <Button onClick={handleNext} className="flex-shrink-0">
+                            <span className="hidden sm:inline">Next</span>
+                            <ChevronRight className="h-4 w-4 sm:ml-2" />
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={handleSave}
+                            disabled={!canSave || isInitialLoading}
+                            className="flex-shrink-0"
+                          >
+                            <Save className="h-4 w-4 mr-2" />
+                            <span className="hidden sm:inline">
+                              {createCampaignMutation.isPending 
+                                ? "Creating..." 
+                                : formData.scheduleType === "scheduled" 
+                                  ? "Schedule Campaign" 
+                                  : "Send Now"}
+                            </span>
+                            <span className="sm:hidden">
+                              {createCampaignMutation.isPending ? "Creating..." : "Save"}
+                            </span>
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
 
               {/* Sidebar */}
@@ -755,22 +926,6 @@ export default function CampaignsCreatePage() {
                           </p>
                         </div>
                       )}
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground">Send Timing</label>
-                        <p className="text-sm mt-1">
-                          {formData.scheduleType === "now" ? (
-                            <span className="flex items-center gap-2">
-                              <Send className="h-4 w-4" />
-                              Send Now
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-2">
-                              <Calendar className="h-4 w-4" />
-                              {new Date(`${formData.scheduledDate}T${formData.scheduledTime}`).toLocaleString()}
-                            </span>
-                          )}
-                        </p>
-                      </div>
                     </div>
                   </CardContent>
                 </Card>
