@@ -79,7 +79,7 @@ export type AppContact = {
   avatar: string;
   avatarColor: string;
   tags: string[];
-  channel: string;
+  channel: string | null;
   conversationStatus: string;
   assignee: string | null;
   lastMessage: string;

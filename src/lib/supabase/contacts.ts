@@ -16,7 +16,7 @@ function dbContactToAppContact(dbContact: Contact): AppContact {
     avatar: dbContact.avatar || dbContact.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
     avatarColor: dbContact.avatar_color || 'bg-blue-500',
     tags: dbContact.tags || [],
-    channel: dbContact.channel || 'whatsapp',
+    channel: dbContact.channel || '',
     conversationStatus: dbContact.conversation_status || 'unassigned',
     assignee: dbContact.assignee,
     lastMessage: dbContact.last_message || '',
@@ -58,13 +58,27 @@ function appContactToDbContact(appContact: Partial<AppContact>): Partial<Contact
 }
 
 /**
- * Fetch all contacts
+ * Fetch all contacts with optional search
  */
-export async function fetchContacts(): Promise<AppContact[]> {
-  const { data, error } = await supabase
+export async function fetchContacts(searchQuery?: string): Promise<AppContact[]> {
+  let query = supabase
     .from('contacts')
     .select('*')
-    .order('created_at', { ascending: false })
+
+  // If search query is provided, search in name, phone, and last_message columns
+  if (searchQuery && searchQuery.trim()) {
+    const searchTerm = searchQuery.trim()
+    // Escape special characters for SQL LIKE patterns
+    const escapedTerm = searchTerm.replace(/%/g, '\\%').replace(/_/g, '\\_')
+    const searchPattern = `%${escapedTerm}%`
+    // Use Supabase's or() filter with ilike for case-insensitive search
+    // Format: column.ilike.value,column2.ilike.value (comma-separated, no spaces)
+    query = query.or(`name.ilike.${searchPattern},phone.ilike.${searchPattern},last_message.ilike.${searchPattern},first_name.ilike.${searchPattern},last_name.ilike.${searchPattern},email_address.ilike.${searchPattern}`)
+  }
+
+  query = query.order('created_at', { ascending: false })
+
+  const { data, error } = await query
 
   if (error) {
     console.error('Error fetching contacts:', error)

@@ -12,12 +12,16 @@ export const contactKeys = {
 }
 
 /**
- * Fetch all contacts
+ * Fetch all contacts with optional search
+ * Uses placeholderData to keep previous results visible during loading for smooth transitions
  */
-export function useContacts() {
+export function useContacts(searchQuery?: string) {
   return useQuery({
-    queryKey: contactKeys.lists(),
-    queryFn: fetchContacts,
+    queryKey: contactKeys.list({ search: searchQuery }),
+    queryFn: () => fetchContacts(searchQuery),
+    placeholderData: (previousData) => previousData, // Keep previous data while loading for smooth transitions
+    staleTime: 0, // Always consider data stale to ensure fresh search results
+    refetchOnWindowFocus: false, // Don't refetch on window focus for smoother UX
   })
 }
 

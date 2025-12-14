@@ -15,7 +15,7 @@ import { Kbd, KbdGroup } from '@/components/ui/kbd'
 import { Search, ArrowUp, ArrowDown, Command, X, Users, MessageSquare, BarChart3, Settings, Plus, FileText, Calendar, Bell, Mail, Phone, Globe, Zap } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { mockContacts } from '@/data/mock-data'
+import { useContacts } from '@/hooks/use-contacts'
 import { cn } from '@/lib/utils'
 interface SearchItem {
   id: string
@@ -52,6 +52,20 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
     originalItem?: any
   }>>([])
   const navigate = useNavigate()
+  
+  // Minimal debounce (100ms) for real-time feel
+  const [debouncedQuery, setDebouncedQuery] = useState("")
+  
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(query)
+    }, 100) // 100ms debounce for real-time feel
+    return () => clearTimeout(timer)
+  }, [query])
+  
+  // Fetch contacts from database with search
+  // placeholderData keeps previous results visible during loading for smooth transitions
+  const { data: contacts = [] } = useContacts(debouncedQuery || undefined)
   
   const quickActions: ActionItem[] = [
     {
@@ -136,19 +150,8 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
                action.category.toLowerCase().includes(searchTerm)
       })
     : allActions
-  // Audience search (top 5)
-  const filteredContacts = query.trim()
-    ? mockContacts
-        .filter(contact => {
-          const searchTerm = query.toLowerCase()
-          const displayName = `${contact.firstName || ''} ${contact.lastName || ''}`.trim().toLowerCase()
-          return displayName.includes(searchTerm) ||
-                 contact.phone.toLowerCase().includes(searchTerm)
-        })
-        .slice(0, 5)
-    : []
-  // Hide contacts before searching
-  const displayedContacts = query.trim() ? filteredContacts : []
+  // Audience search (top 5) - contacts are already filtered by database
+  const displayedContacts = query.trim() ? contacts.slice(0, 5) : []
   // Removed auto-focus behavior
   useEffect(() => {
     setSelectedIndex(-1)

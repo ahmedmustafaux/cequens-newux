@@ -37,6 +37,7 @@ import {
 import { cn } from "@/lib/utils"
 import { useCreateContact } from "@/hooks/use-contacts"
 import type { AppContact } from "@/lib/supabase/types"
+import { detectCountryFromPhoneNumber, checkWhatsAppAvailability, getCountryISOFromCallingCode } from "@/lib/phone-utils"
 
 interface ContactFormData {
   // Essential fields only
@@ -55,9 +56,12 @@ export default function ContactsCreatePage() {
   const [isDirty, setIsDirty] = React.useState(false)
   const [isInitialLoading, setIsInitialLoading] = React.useState(true)
   const [countryCode, setCountryCode] = React.useState("+966") // Default to Saudi Arabia
+  const [countryISO, setCountryISO] = React.useState<string>("SA")
   const [searchQuery, setSearchQuery] = React.useState("")
   const [isCountryPopoverOpen, setIsCountryPopoverOpen] = React.useState(false)
   const [phoneError, setPhoneError] = React.useState<string>("")
+  const [isCheckingWhatsApp, setIsCheckingWhatsApp] = React.useState(false)
+  const [hasWhatsApp, setHasWhatsApp] = React.useState<boolean | null>(null)
   
   usePageTitle("Create Contact")
 
@@ -130,32 +134,39 @@ export default function ContactsCreatePage() {
     setIsDirty(true)
   }
 
-  const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhoneNumberChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     // Only allow digits
     const value = e.target.value.replace(/\D/g, '')
     handleInputChange("phone", value)
     setPhoneError("")
     
-    // Auto-detect country based on phone number input
-    // Detect Egyptian numbers (starting with 010, 011, 012, 015)
-    if (value.match(/^0(10|11|12|15)/) && value.length >= 4) {
-      setCountryCode('+20') // Egypt
+    // Reset WhatsApp status when number changes (debounce check)
+    if (hasWhatsApp !== null) {
+      setHasWhatsApp(null)
     }
-    // Detect Saudi numbers (starting with 05)
-    else if (value.match(/^05/) && value.length >= 3 && countryCode !== '+20') {
-      setCountryCode('+966') // Saudi Arabia
-    }
-    // Detect UAE numbers (starting with 05)
-    else if (value.match(/^05/) && value.length >= 3 && countryCode !== '+966' && countryCode !== '+20') {
-      setCountryCode('+971') // UAE
-    }
-    // Detect UK numbers (starting with 07)
-    else if (value.match(/^07/) && value.length >= 3) {
-      setCountryCode('+44') // UK
-    }
-    // Detect US/Canada numbers (starting with 1 and area code)
-    else if (value.match(/^1[2-9]/) && value.length >= 2) {
-      setCountryCode('+1') // US/Canada
+    
+    // Auto-detect country from phone number using phone package
+    // This detects country from operator numbers automatically
+    if (value.length >= 3) {
+      try {
+        // Don't combine with current country code - let the package detect from operator
+        // The phone package can detect country from operator prefixes like 010, 05, etc.
+        const detection = detectCountryFromPhoneNumber(value)
+        
+        // Update country code if detected and different
+        if (detection.countryCode && detection.countryCode !== countryCode) {
+          console.log('Auto-detected country code:', detection.countryCode, 'from operator number:', value)
+          setCountryCode(detection.countryCode)
+        }
+        
+        // Update country ISO if detected and different
+        if (detection.countryISO && detection.countryISO !== countryISO) {
+          console.log('Auto-detected country ISO:', detection.countryISO, 'from operator number:', value)
+          setCountryISO(detection.countryISO)
+        }
+      } catch (error) {
+        console.error('Error in country detection:', error)
+      }
     }
   }
 
@@ -168,11 +179,62 @@ export default function ContactsCreatePage() {
       setPhoneError("")
     }
   }
+  
+  // Separate effect for WhatsApp checking with debounce
+  React.useEffect(() => {
+    const phoneValue = formData.phone
+    // Only check if we have at least 7 digits and a country code
+    if (phoneValue.length >= 7 && countryCode) {
+      const timeoutId = setTimeout(async () => {
+        // Double-check the phone value hasn't changed
+        if (formData.phone === phoneValue && countryCode) {
+          console.log('Checking WhatsApp for:', { phone: phoneValue, countryCode })
+          setIsCheckingWhatsApp(true)
+          
+          try {
+            // Combine country code with phone number for WhatsApp check
+            const fullNumber = countryCode + phoneValue
+            // The checkWhatsAppAvailability function uses whatsapp-number-verify package
+            const result = await checkWhatsAppAvailability(fullNumber)
+            
+            // Only update if we still have the same number
+            if (formData.phone === phoneValue) {
+              setHasWhatsApp(result.hasWhatsApp)
+            }
+          } catch (error) {
+            console.error('Error checking WhatsApp:', error)
+            if (formData.phone === phoneValue) {
+              setHasWhatsApp(null)
+            }
+          } finally {
+            if (formData.phone === phoneValue) {
+              setIsCheckingWhatsApp(false)
+            }
+          }
+        }
+      }, 800) // 800ms debounce
+      
+      return () => clearTimeout(timeoutId)
+    } else {
+      setIsCheckingWhatsApp(false)
+      setHasWhatsApp(null)
+    }
+  }, [formData.phone, countryCode])
 
   const handleCountryCodeChange = (value: string) => {
     setCountryCode(value)
     setIsCountryPopoverOpen(false)
     setIsDirty(true)
+    // Update country ISO when country code changes manually
+    const country = countryCodes.find(c => c.dialCode === value)
+    if (country) {
+      setCountryISO(country.code.toUpperCase())
+    } else {
+      const iso = getCountryISOFromCallingCode(value)
+      if (iso) {
+        setCountryISO(iso)
+      }
+    }
   }
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -201,6 +263,10 @@ export default function ContactsCreatePage() {
 
   // Helper to get country ISO from dial code
   const getCountryISOFromDialCode = (dialCode: string): string => {
+    // Use the detected country ISO if available, otherwise fallback to countryCodes list
+    if (countryISO) {
+      return countryISO
+    }
     const country = countryCodes.find(c => c.dialCode === dialCode)
     return country?.code.toUpperCase() || "SA" // Default to SA if not found
   }
@@ -228,7 +294,7 @@ export default function ContactsCreatePage() {
       emailAddress: formData.email || undefined,
       countryISO: getCountryISOFromDialCode(countryCode),
       tags: formData.tags,
-      channel: "whatsapp", // Default channel
+      channel: null, // Channel can be null - will be set later or can be edited
       conversationStatus: "unassigned", // Default status
       assignee: null,
       lastMessage: "",
@@ -365,7 +431,6 @@ export default function ContactsCreatePage() {
 
                   <Field>
                     <FieldLabel htmlFor="phone">Phone Number *</FieldLabel>
-                    <FieldDescription>Required - include country code</FieldDescription>
                     <FieldContent>
                       <div className="flex">
                         <Popover open={isCountryPopoverOpen} onOpenChange={setIsCountryPopoverOpen}>
@@ -468,6 +533,27 @@ export default function ContactsCreatePage() {
                           )}
                           required
                         />
+                      </div>
+                      <div className="flex items-center justify-between mt-1">
+                        <FieldDescription>Required - include country code</FieldDescription>
+                        {formData.phone.length >= 7 && (
+                          <div className="flex items-center gap-2">
+                            {isCheckingWhatsApp ? (
+                              <Badge variant="outline" className="text-xs">
+                                <div className="h-3 w-3 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent mr-1" />
+                                Checking WhatsApp...
+                              </Badge>
+                            ) : hasWhatsApp === true ? (
+                              <Badge variant="default" className="text-xs bg-green-500">
+                                ✓ Has WhatsApp
+                              </Badge>
+                            ) : hasWhatsApp === false ? (
+                              <Badge variant="outline" className="text-xs">
+                                No WhatsApp
+                              </Badge>
+                            ) : null}
+                          </div>
+                        )}
                       </div>
                       {phoneError && <FieldError>{phoneError}</FieldError>}
                     </FieldContent>

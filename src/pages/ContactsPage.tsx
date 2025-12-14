@@ -109,8 +109,23 @@ const ContactsPageContent = (): React.JSX.Element => {
   // Dynamic page title
   usePageTitle("Audience")
   
-  // Fetch contacts from Supabase
-  const { data: contacts = [], isLoading: isDataLoading, error } = useContacts()
+  // Debounced search query for database search (minimal debounce for real-time feel)
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = React.useState("")
+  
+  // Minimal debounce (100ms) to avoid excessive queries while keeping real-time feel
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(globalFilter)
+    }, 100) // 100ms debounce for real-time feel
+
+    return () => clearTimeout(timer)
+  }, [globalFilter])
+
+  // Fetch contacts from Supabase with search query
+  // keepPreviousData ensures smooth transitions without flickering
+  const { data: contacts = [], isLoading: isDataLoading, error } = useContacts(
+    debouncedSearchQuery || undefined
+  )
   
   // Column definitions for the contacts table
   const columns: ColumnDef<Contact>[] = [
@@ -202,13 +217,27 @@ const ContactsPageContent = (): React.JSX.Element => {
         if (!filterValue || filterValue.length === 0) {
           return true; // No filter applied, show all rows
         }
-        const rowChannel = row.getValue(columnId) as string;
+        const rowChannel = row.getValue(columnId) as string | null;
+        // If channel is null/empty, don't show it in filtered results unless explicitly filtering for "null"
+        if (!rowChannel || rowChannel.trim() === '') {
+          return false; // Hide rows with undefined channels when filtering
+        }
         return filterValue.includes(rowChannel);
       },
       cell: ({ row }) => {
-        const channel = row.getValue("channel") as string;
+        const channel = row.getValue("channel") as string | null;
+        
+        // If channel is null or empty, show badge
+        if (!channel || channel.trim() === '') {
+          return (
+            <Badge variant="outline" className="text-xs">
+              Not defined yet
+            </Badge>
+          );
+        }
+        
         const getChannelIconPath = (channel: string) => {
-          switch (channel) {
+          switch (channel.toLowerCase()) {
             case 'whatsapp':
               return '/icons/WhatsApp.svg'
             case 'instagram':
@@ -357,16 +386,10 @@ const ContactsPageContent = (): React.JSX.Element => {
     onRowSelectionChange: setRowSelection,
     onPaginationChange: setPagination,
     onGlobalFilterChange: setGlobalFilter,
-    // Custom global filter that only searches within specified columns
-    globalFilterFn: (row, columnId, value) => {
-      const searchColumns = ['name', 'phone', 'lastMessage']
-      const searchValue = value.toLowerCase()
-      
-      return searchColumns.some(columnId => {
-        const cellValue = row.getValue(columnId)
-        return cellValue && cellValue.toString().toLowerCase().includes(searchValue)
-      })
-    },
+    // No client-side filtering needed - search is done in database
+    // Keep this for backward compatibility but it will always return true
+    // since filtering is done at the database level
+    globalFilterFn: () => true,
     state: {
       sorting,
       columnFilters,
