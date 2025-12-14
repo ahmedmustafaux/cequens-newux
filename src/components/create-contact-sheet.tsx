@@ -133,6 +133,12 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
   const selectedCountry = countryCodes.find(c => c.dialCode === countryCode) || countryCodes[0]
 
   const handleInputChange = (field: keyof ContactFormData, value: string) => {
+    // Capitalize first letter for firstName and lastName
+    if (field === 'firstName' || field === 'lastName') {
+      if (value.length > 0) {
+        value = value.charAt(0).toUpperCase() + value.slice(1).toLowerCase()
+      }
+    }
     setFormData(prev => ({
       ...prev,
       [field]: value

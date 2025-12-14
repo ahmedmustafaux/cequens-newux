@@ -216,6 +216,12 @@ export default function ContactsEditPage() {
   }, [contact, isInitialLoading, navigate])
 
   const handleInputChange = (field: keyof ContactFormData, value: string) => {
+    // Capitalize first letter for firstName and lastName
+    if (field === 'firstName' || field === 'lastName') {
+      if (value.length > 0) {
+        value = value.charAt(0).toUpperCase() + value.slice(1).toLowerCase()
+      }
+    }
     setFormData(prev => ({
       ...prev,
       [field]: value

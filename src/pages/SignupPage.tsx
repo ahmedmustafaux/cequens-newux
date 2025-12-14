@@ -159,11 +159,18 @@ export default function SignupPage() {
   
 
   const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    // Capitalize first letter for firstName and lastName
+    if ((field === 'firstName' || field === 'lastName') && typeof value === 'string') {
+      if (value.length > 0) {
+        value = value.charAt(0).toUpperCase() + value.slice(1).toLowerCase()
+      }
+    }
     
+    setFormData(prev => ({ ...prev, [field]: value }))
+
     // Mark field as touched
     setTouched(prev => ({ ...prev, [field]: true }))
-    
+
     // Clear error for this field when user starts typing
     if (errors[field]) {
       setErrors(prev => {

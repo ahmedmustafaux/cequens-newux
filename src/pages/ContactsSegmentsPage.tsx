@@ -47,14 +47,75 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Separator } from "@/components/ui/separator"
 import { MoreHorizontal, Edit, Trash2 } from "lucide-react"
-import {
-  type SegmentFilter,
-} from "@/data/mock-data"
 import { useSegments, useCreateSegment, useUpdateSegment, useDeleteSegment, useUpdateSegmentContacts } from "@/hooks/use-segments"
 import { useContacts } from "@/hooks/use-contacts"
-import type { Segment } from "@/lib/supabase/types"
+import type { Segment, SegmentFilter } from "@/lib/supabase/types"
 import type { AppContact } from "@/lib/supabase/types"
+import type { Segment as MockSegment, SegmentFilter as MockSegmentFilter } from "@/data/mock-data"
 import { CreateSegmentDialog, type CreateSegmentDialogProps } from "@/components/create-segment-dialog"
+
+// Conversion functions between database and mock-data types
+const convertSegmentFilterToMock = (filter: SegmentFilter): MockSegmentFilter => {
+  // Convert date string values to Date objects
+  let value: MockSegmentFilter["value"]
+  if (typeof filter.value === 'object' && filter.value !== null && 'from' in filter.value) {
+    const dateRange = filter.value as { from: string; to: string }
+    value = {
+      from: new Date(dateRange.from),
+      to: new Date(dateRange.to)
+    }
+  } else {
+    value = filter.value as MockSegmentFilter["value"]
+  }
+  
+  return {
+    field: filter.field as MockSegmentFilter["field"],
+    operator: filter.operator as MockSegmentFilter["operator"],
+    value
+  }
+}
+
+const convertSegmentFilterFromMock = (filter: MockSegmentFilter): SegmentFilter => {
+  // Convert Date values to strings
+  let value: SegmentFilter["value"]
+  if (filter.value instanceof Date) {
+    value = filter.value.toISOString()
+  } else if (typeof filter.value === 'object' && filter.value !== null && 'from' in filter.value) {
+    const dateRange = filter.value as { from: Date; to: Date }
+    value = {
+      from: dateRange.from.toISOString(),
+      to: dateRange.to.toISOString()
+    }
+  } else {
+    value = filter.value as SegmentFilter["value"]
+  }
+  
+  return {
+    field: filter.field,
+    operator: filter.operator,
+    value
+  }
+}
+
+const convertSegmentToMock = (segment: Segment): MockSegment => {
+  return {
+    id: segment.id,
+    name: segment.name,
+    description: segment.description || undefined,
+    filters: segment.filters.map(convertSegmentFilterToMock),
+    contactIds: segment.contact_ids,
+    createdAt: new Date(segment.created_at),
+    updatedAt: new Date(segment.updated_at)
+  }
+}
+
+const convertSegmentFromMock = (segment: Omit<MockSegment, "id" | "contactIds" | "createdAt" | "updatedAt">): Omit<Segment, "id" | "user_id" | "contact_ids" | "created_at" | "updated_at"> => {
+  return {
+    name: segment.name,
+    description: segment.description || null,
+    filters: segment.filters.map(convertSegmentFilterFromMock)
+  }
+}
 import { SearchProvider } from "@/contexts/search-context"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Highlight } from "@/components/ui/highlight"
@@ -530,7 +591,7 @@ const getContactsForSegment = (contacts: AppContact[], segment: Segment): AppCon
 }
 
 // Helper to get field info from FILTER_CATEGORIES
-const getFieldInfo = (field: SegmentFilter["field"]): { category: FilterCategory; field: FilterCategory["fields"][0] } | null => {
+const getFieldInfo = (field: string): { category: FilterCategory; field: FilterCategory["fields"][0] } | null => {
   for (const category of FILTER_CATEGORIES) {
     const fieldDef = category.fields.find(f => f.value === field)
     if (fieldDef) {
@@ -544,7 +605,7 @@ const getFieldInfo = (field: SegmentFilter["field"]): { category: FilterCategory
 const formatFilterBadge = (filter: SegmentFilter): { label: string; value: string } => {
   const fieldInfo = getFieldInfo(filter.field)
   const fieldLabel = fieldInfo?.field.label || filter.field
-  const operatorLabel = OPERATOR_LABELS[filter.operator] || filter.operator
+  const operatorLabel = OPERATOR_LABELS[filter.operator as keyof typeof OPERATOR_LABELS] || filter.operator
 
   // Format value based on field type
   let valueLabel = ""
@@ -567,11 +628,14 @@ const formatFilterBadge = (filter: SegmentFilter): { label: string; value: strin
         valueLabel = `${values[0]} - ${values[1]} seconds ago`
       }
     } else if (typeof filter.value === 'object' && filter.value && 'from' in filter.value) {
-      const dateValue = filter.value as { from: Date; to: Date }
+      const dateValue = filter.value as { from: string; to: string }
+      // Convert string dates to Date objects for formatting
+      const fromDate = new Date(dateValue.from)
+      const toDate = new Date(dateValue.to)
       if (filter.operator === 'isTimestampBetween') {
-        valueLabel = `${format(dateValue.from, 'MMM dd, yyyy')} - ${format(dateValue.to, 'MMM dd, yyyy')}`
+        valueLabel = `${format(fromDate, 'MMM dd, yyyy')} - ${format(toDate, 'MMM dd, yyyy')}`
       } else {
-        valueLabel = format(dateValue.from, 'MMM dd, yyyy')
+        valueLabel = format(fromDate, 'MMM dd, yyyy')
       }
     }
   } else if (fieldInfo?.field.valueType === 'string' && typeof filter.value === 'string') {
@@ -861,7 +925,7 @@ function ContactsSegmentsPageContent() {
   
   const [selectedSegmentId, setSelectedSegmentId] = React.useState<string | null>(null)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false)
-  const [editingSegment, setEditingSegment] = React.useState<Segment | null>(null)
+  const [editingSegment, setEditingSegment] = React.useState<MockSegment | null>(null)
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
@@ -879,7 +943,7 @@ function ContactsSegmentsPageContent() {
   const [editingFilterIndex, setEditingFilterIndex] = React.useState<number | null>(null)
   const [fieldSearchQuery, setFieldSearchQuery] = React.useState("")
   const [valueSearchQuery, setValueSearchQuery] = React.useState("")
-  const [selectedFieldForValueSelection, setSelectedFieldForValueSelection] = React.useState<SegmentFilter["field"] | null>(null)
+  const [selectedFieldForValueSelection, setSelectedFieldForValueSelection] = React.useState<string | null>(null)
   const [selectedFieldElement, setSelectedFieldElement] = React.useState<HTMLElement | null>(null)
   const [isSegmentMenuOpen, setIsSegmentMenuOpen] = React.useState(false)
   const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null)
@@ -895,10 +959,12 @@ function ContactsSegmentsPageContent() {
   }, [segments, selectedSegmentId])
 
   const handleCreateSegment = async (
-    segmentData: Omit<Segment, "id" | "user_id" | "contact_ids" | "created_at" | "updated_at">
+    segmentData: Omit<MockSegment, "id" | "contactIds" | "createdAt" | "updatedAt">
   ) => {
     try {
-      await createSegmentMutation.mutateAsync(segmentData)
+      // Convert from mock-data type to database type
+      const dbSegmentData = convertSegmentFromMock(segmentData)
+      await createSegmentMutation.mutateAsync(dbSegmentData)
       await refetchSegments()
       setIsCreateDialogOpen(false)
     } catch (error) {
@@ -907,17 +973,21 @@ function ContactsSegmentsPageContent() {
   }
 
   const handleEditSegment = React.useCallback((segment: Segment) => {
-    setEditingSegment(segment)
+    // Convert to mock type for the dialog
+    const mockSegment = convertSegmentToMock(segment)
+    setEditingSegment(mockSegment)
     setIsCreateDialogOpen(true)
   }, [])
 
   const handleUpdateSegment = React.useCallback(
     async (
       segmentId: string,
-      segmentData: Omit<Segment, "id" | "user_id" | "contact_ids" | "created_at" | "updated_at">
+      segmentData: Omit<MockSegment, "id" | "contactIds" | "createdAt" | "updatedAt">
     ) => {
       try {
-        await updateSegmentMutation.mutateAsync({ id: segmentId, segment: segmentData })
+        // Convert from mock-data type to database type
+        const dbSegmentData = convertSegmentFromMock(segmentData)
+        await updateSegmentMutation.mutateAsync({ id: segmentId, segment: dbSegmentData })
         await refetchSegments()
         setEditingSegment(null)
         setIsCreateDialogOpen(false)
@@ -1025,7 +1095,7 @@ function ContactsSegmentsPageContent() {
   }, [selectedSegment, pendingFilters, originalFilters])
 
   // Get filter value options based on field
-  const getFilterValueOptions = React.useCallback((field: SegmentFilter["field"]) => {
+  const getFilterValueOptions = React.useCallback((field: string) => {
     switch (field) {
       case "countryISO":
         return getAllCountries(contacts).map((c) => ({ value: c.code, label: c.name }))
@@ -1078,7 +1148,7 @@ function ContactsSegmentsPageContent() {
     }
   }, [])
 
-  const handleFieldSelected = React.useCallback((field: SegmentFilter["field"], event?: React.MouseEvent<HTMLElement>) => {
+  const handleFieldSelected = React.useCallback((field: string, event?: React.MouseEvent<HTMLElement>) => {
     if (!selectedSegment) return
     
     try {
@@ -1093,7 +1163,9 @@ function ContactsSegmentsPageContent() {
       // Get default value based on valueType
       let defaultValue: SegmentFilter["value"]
       if (fieldInfo.field.valueType === 'date') {
-        defaultValue = { from: new Date(), to: new Date() }
+        // Convert Date to string for database type
+        const now = new Date().toISOString()
+        defaultValue = { from: now, to: now }
       } else if (fieldInfo.field.valueType === 'number') {
         defaultValue = 0
       } else if (fieldInfo.field.valueType === 'array') {
@@ -1138,9 +1210,24 @@ function ContactsSegmentsPageContent() {
     const currentFilters = pendingFilters !== null ? pendingFilters : selectedSegment.filters
     const updatedFilters = [...currentFilters]
     
+    // Convert Date values to strings for database type
+    let convertedValue: SegmentFilter["value"]
+    if (newValues instanceof Date) {
+      convertedValue = newValues.toISOString()
+    } else if (typeof newValues === 'object' && newValues !== null && 'from' in newValues && 'to' in newValues) {
+      // Convert Date objects to ISO strings
+      const dateRange = newValues as { from: Date; to: Date }
+      convertedValue = {
+        from: dateRange.from.toISOString(),
+        to: dateRange.to.toISOString()
+      }
+    } else {
+      convertedValue = newValues as SegmentFilter["value"]
+    }
+    
     updatedFilters[filterIndex] = {
       ...updatedFilters[filterIndex],
-      value: newValues,
+      value: convertedValue,
     }
     
     setPendingFilters(updatedFilters)
@@ -1172,7 +1259,9 @@ function ContactsSegmentsPageContent() {
     // Reset value based on field type and operator
     let resetValue: SegmentFilter["value"]
     if (fieldInfo?.field.valueType === 'date') {
-      resetValue = { from: new Date(), to: new Date() }
+      // Convert Date to string for database type
+      const now = new Date().toISOString()
+      resetValue = { from: now, to: now }
     } else if (fieldInfo?.field.valueType === 'number') {
       resetValue = 0
     } else if (fieldInfo?.field.valueType === 'array') {
@@ -1334,8 +1423,12 @@ function ContactsSegmentsPageContent() {
       // Timestamp operators (isTimestampAfter, isTimestampBefore, isTimestampBetween) use calendar picker
       const getDateRange = (): DateRange | undefined => {
         if (typeof filter.value === 'object' && filter.value && 'from' in filter.value) {
-          const dateValue = filter.value as { from: Date; to: Date }
-          return { from: dateValue.from, to: dateValue.to }
+          const dateValue = filter.value as { from: string; to: string }
+          // Convert string dates to Date objects for Calendar component
+          return { 
+            from: new Date(dateValue.from), 
+            to: new Date(dateValue.to) 
+          }
         }
         return undefined
       }
@@ -1537,10 +1630,12 @@ function ContactsSegmentsPageContent() {
     if (!selectedSegment || pendingFilters === null) return
     
     try {
+      // Convert database filters to mock filters for the dialog
+      const mockFilters = pendingFilters.map(convertSegmentFilterToMock)
       await handleUpdateSegment(selectedSegment.id, {
         name: selectedSegment.name,
-        description: selectedSegment.description || null,
-        filters: pendingFilters,
+        description: selectedSegment.description || undefined,
+        filters: mockFilters,
       })
       
       // Update segment contacts after filters are saved
