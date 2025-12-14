@@ -1290,3 +1290,525 @@ export function updateSegmentContacts(segment: Segment, contacts: Contact[]): Se
     updatedAt: new Date()
   };
 }
+
+// ============================================================================
+// WHATSAPP TEMPLATES DATA
+// ============================================================================
+
+export type WhatsAppTemplateCategory = "MARKETING" | "UTILITY" | "AUTHENTICATION";
+
+export type WhatsAppTemplateComponentType = "HEADER" | "BODY" | "FOOTER" | "BUTTONS";
+
+export type WhatsAppButtonType = "QUICK_REPLY" | "URL" | "PHONE_NUMBER";
+
+export type WhatsAppMediaType = "IMAGE" | "VIDEO" | "DOCUMENT";
+
+export interface WhatsAppTemplateVariable {
+  name: string;
+  example: string;
+  required: boolean;
+}
+
+export interface WhatsAppTemplateButton {
+  type: WhatsAppButtonType;
+  text: string;
+  url?: string;
+  phoneNumber?: string;
+}
+
+export interface WhatsAppTemplateComponent {
+  type: WhatsAppTemplateComponentType;
+  format?: WhatsAppMediaType;
+  text?: string;
+  example?: {
+    header_handle?: string[];
+    body_text?: string[][];
+  };
+  buttons?: WhatsAppTemplateButton[];
+  variables?: WhatsAppTemplateVariable[];
+}
+
+export interface WhatsAppTemplate {
+  id: string;
+  name: string;
+  category: WhatsAppTemplateCategory;
+  language: string;
+  status: "APPROVED" | "PENDING" | "REJECTED";
+  components: WhatsAppTemplateComponent[];
+  description?: string;
+  createdAt: Date;
+}
+
+export const mockWhatsAppTemplates: WhatsAppTemplate[] = [
+  // TEXT Templates
+  {
+    id: "template-text-1",
+    name: "welcome_message",
+    category: "UTILITY",
+    language: "en",
+    status: "APPROVED",
+    description: "Welcome new users to your service",
+    components: [
+      {
+        type: "BODY",
+        text: "Hello {{1}}, welcome to {{2}}! We're excited to have you on board.",
+        example: {
+          body_text: [["John", "Acme Corp"]]
+        },
+        variables: [
+          { name: "1", example: "John", required: true },
+          { name: "2", example: "Acme Corp", required: true }
+        ]
+      },
+      {
+        type: "FOOTER",
+        text: "Thank you for choosing us!"
+      }
+    ],
+    createdAt: new Date("2024-01-15")
+  },
+  {
+    id: "template-text-2",
+    name: "order_confirmation",
+    category: "UTILITY",
+    language: "en",
+    status: "APPROVED",
+    description: "Confirm order placement",
+    components: [
+      {
+        type: "BODY",
+        text: "Hi {{1}}, your order #{{2}} has been confirmed! Total: {{3}}. Expected delivery: {{4}}.",
+        example: {
+          body_text: [["Sarah", "ORD-12345", "$99.99", "Jan 25, 2024"]]
+        },
+        variables: [
+          { name: "1", example: "Sarah", required: true },
+          { name: "2", example: "ORD-12345", required: true },
+          { name: "3", example: "$99.99", required: true },
+          { name: "4", example: "Jan 25, 2024", required: true }
+        ]
+      }
+    ],
+    createdAt: new Date("2024-01-20")
+  },
+  {
+    id: "template-text-3",
+    name: "appointment_reminder",
+    category: "UTILITY",
+    language: "en",
+    status: "APPROVED",
+    description: "Remind customers about appointments",
+    components: [
+      {
+        type: "BODY",
+        text: "Reminder: You have an appointment with {{1}} on {{2}} at {{3}}. Please arrive 10 minutes early.",
+        example: {
+          body_text: [["Dr. Smith", "Jan 30, 2024", "2:00 PM"]]
+        },
+        variables: [
+          { name: "1", example: "Dr. Smith", required: true },
+          { name: "2", example: "Jan 30, 2024", required: true },
+          { name: "3", example: "2:00 PM", required: true }
+        ]
+      }
+    ],
+    createdAt: new Date("2024-02-01")
+  },
+  
+  // MEDIA Templates (Image)
+  {
+    id: "template-media-1",
+    name: "product_announcement",
+    category: "MARKETING",
+    language: "en",
+    status: "APPROVED",
+    description: "Announce new products with image",
+    components: [
+      {
+        type: "HEADER",
+        format: "IMAGE",
+        example: {
+          header_handle: ["image_url_here"]
+        }
+      },
+      {
+        type: "BODY",
+        text: "🎉 Introducing {{1}}! Get {{2}} off your first purchase. Use code: {{3}}",
+        example: {
+          body_text: [["New Collection", "20%", "NEW20"]]
+        },
+        variables: [
+          { name: "1", example: "New Collection", required: true },
+          { name: "2", example: "20%", required: true },
+          { name: "3", example: "NEW20", required: true }
+        ]
+      },
+      {
+        type: "FOOTER",
+        text: "Shop now and save!"
+      },
+      {
+        type: "BUTTONS",
+        buttons: [
+          {
+            type: "URL",
+            text: "View Products",
+            url: "https://example.com/products"
+          },
+          {
+            type: "QUICK_REPLY",
+            text: "Get Help"
+          }
+        ]
+      }
+    ],
+    createdAt: new Date("2024-02-10")
+  },
+  {
+    id: "template-media-2",
+    name: "shipping_update",
+    category: "UTILITY",
+    language: "en",
+    status: "APPROVED",
+    description: "Update customers on shipping status with tracking image",
+    components: [
+      {
+        type: "HEADER",
+        format: "IMAGE",
+        example: {
+          header_handle: ["tracking_qr_code_url"]
+        }
+      },
+      {
+        type: "BODY",
+        text: "Your order #{{1}} is on the way! Track your package: {{2}}",
+        example: {
+          body_text: [["ORD-12345", "TRACK-789"]]
+        },
+        variables: [
+          { name: "1", example: "ORD-12345", required: true },
+          { name: "2", example: "TRACK-789", required: true }
+        ]
+      },
+      {
+        type: "BUTTONS",
+        buttons: [
+          {
+            type: "URL",
+            text: "Track Package",
+            url: "https://example.com/track/{{1}}"
+          }
+        ]
+      }
+    ],
+    createdAt: new Date("2024-02-15")
+  },
+  
+  // MEDIA Templates (Video)
+  {
+    id: "template-media-3",
+    name: "tutorial_video",
+    category: "UTILITY",
+    language: "en",
+    status: "APPROVED",
+    description: "Share tutorial videos with customers",
+    components: [
+      {
+        type: "HEADER",
+        format: "VIDEO",
+        example: {
+          header_handle: ["video_url_here"]
+        }
+      },
+      {
+        type: "BODY",
+        text: "Check out this tutorial on {{1}}. Learn how to {{2}} in just {{3}} minutes!",
+        example: {
+          body_text: [["Using Our App", "get started", "5"]]
+        },
+        variables: [
+          { name: "1", example: "Using Our App", required: true },
+          { name: "2", example: "get started", required: true },
+          { name: "3", example: "5", required: true }
+        ]
+      },
+      {
+        type: "BUTTONS",
+        buttons: [
+          {
+            type: "URL",
+            text: "Watch Tutorial",
+            url: "https://example.com/tutorials"
+          }
+        ]
+      }
+    ],
+    createdAt: new Date("2024-02-20")
+  },
+  
+  // MEDIA Templates (Document)
+  {
+    id: "template-media-4",
+    name: "invoice_delivery",
+    category: "UTILITY",
+    language: "en",
+    status: "APPROVED",
+    description: "Send invoices as documents",
+    components: [
+      {
+        type: "HEADER",
+        format: "DOCUMENT",
+        example: {
+          header_handle: ["invoice_pdf_url"]
+        }
+      },
+      {
+        type: "BODY",
+        text: "Your invoice for order #{{1}} is ready. Amount: {{2}}. Due date: {{3}}.",
+        example: {
+          body_text: [["ORD-12345", "$199.99", "Feb 15, 2024"]]
+        },
+        variables: [
+          { name: "1", example: "ORD-12345", required: true },
+          { name: "2", example: "$199.99", required: true },
+          { name: "3", example: "Feb 15, 2024", required: true }
+        ]
+      },
+      {
+        type: "BUTTONS",
+        buttons: [
+          {
+            type: "URL",
+            text: "Pay Now",
+            url: "https://example.com/pay/{{1}}"
+          }
+        ]
+      }
+    ],
+    createdAt: new Date("2024-02-25")
+  },
+  
+  // INTERACTIVE Templates with Buttons
+  {
+    id: "template-interactive-1",
+    name: "promotional_offer",
+    category: "MARKETING",
+    language: "en",
+    status: "APPROVED",
+    description: "Promotional offers with interactive buttons",
+    components: [
+      {
+        type: "BODY",
+        text: "🎁 Special offer for {{1}}! Get {{2}} off on all items. Valid until {{3}}.",
+        example: {
+          body_text: [["Valued Customer", "30%", "Feb 29, 2024"]]
+        },
+        variables: [
+          { name: "1", example: "Valued Customer", required: true },
+          { name: "2", example: "30%", required: true },
+          { name: "3", example: "Feb 29, 2024", required: true }
+        ]
+      },
+      {
+        type: "FOOTER",
+        text: "Use code: SAVE30"
+      },
+      {
+        type: "BUTTONS",
+        buttons: [
+          {
+            type: "URL",
+            text: "Shop Now",
+            url: "https://example.com/sale"
+          },
+          {
+            type: "QUICK_REPLY",
+            text: "View Catalog"
+          },
+          {
+            type: "QUICK_REPLY",
+            text: "Contact Support"
+          }
+        ]
+      }
+    ],
+    createdAt: new Date("2024-03-01")
+  },
+  {
+    id: "template-interactive-2",
+    name: "event_invitation",
+    category: "MARKETING",
+    language: "en",
+    status: "APPROVED",
+    description: "Invite customers to events",
+    components: [
+      {
+        type: "BODY",
+        text: "You're invited! Join us for {{1}} on {{2}} at {{3}}. We'd love to see you there!",
+        example: {
+          body_text: [["Product Launch Event", "March 15, 2024", "6:00 PM"]]
+        },
+        variables: [
+          { name: "1", example: "Product Launch Event", required: true },
+          { name: "2", example: "March 15, 2024", required: true },
+          { name: "3", example: "6:00 PM", required: true }
+        ]
+      },
+      {
+        type: "BUTTONS",
+        buttons: [
+          {
+            type: "URL",
+            text: "RSVP Now",
+            url: "https://example.com/rsvp"
+          },
+          {
+            type: "PHONE_NUMBER",
+            text: "Call Us",
+            phoneNumber: "+1234567890"
+          }
+        ]
+      }
+    ],
+    createdAt: new Date("2024-03-05")
+  },
+  
+  // AUTHENTICATION Templates
+  {
+    id: "template-auth-1",
+    name: "otp_verification",
+    category: "AUTHENTICATION",
+    language: "en",
+    status: "APPROVED",
+    description: "Send OTP codes for verification",
+    components: [
+      {
+        type: "BODY",
+        text: "Your verification code is {{1}}. Valid for {{2}} minutes. Do not share this code with anyone.",
+        example: {
+          body_text: [["123456", "10"]]
+        },
+        variables: [
+          { name: "1", example: "123456", required: true },
+          { name: "2", example: "10", required: true }
+        ]
+      },
+      {
+        type: "FOOTER",
+        text: "This is an automated message."
+      }
+    ],
+    createdAt: new Date("2024-03-10")
+  },
+  {
+    id: "template-auth-2",
+    name: "password_reset",
+    category: "AUTHENTICATION",
+    language: "en",
+    status: "APPROVED",
+    description: "Password reset confirmation",
+    components: [
+      {
+        type: "BODY",
+        text: "Hi {{1}}, we received a request to reset your password. Click the link below to reset. If you didn't request this, please ignore this message.",
+        example: {
+          body_text: [["John"]]
+        },
+        variables: [
+          { name: "1", example: "John", required: true }
+        ]
+      },
+      {
+        type: "BUTTONS",
+        buttons: [
+          {
+            type: "URL",
+            text: "Reset Password",
+            url: "https://example.com/reset/{{1}}"
+          }
+        ]
+      }
+    ],
+    createdAt: new Date("2024-03-12")
+  },
+  
+  // Complex Templates with Multiple Components
+  {
+    id: "template-complex-1",
+    name: "newsletter_announcement",
+    category: "MARKETING",
+    language: "en",
+    status: "APPROVED",
+    description: "Newsletter with image and multiple buttons",
+    components: [
+      {
+        type: "HEADER",
+        format: "IMAGE",
+        example: {
+          header_handle: ["newsletter_image_url"]
+        }
+      },
+      {
+        type: "BODY",
+        text: "📰 {{1}} Newsletter - {{2}}\n\n{{3}}\n\nRead the full article to learn more!",
+        example: {
+          body_text: [["Monthly", "March 2024", "This month's highlights include new features and exciting updates."]]
+        },
+        variables: [
+          { name: "1", example: "Monthly", required: true },
+          { name: "2", example: "March 2024", required: true },
+          { name: "3", example: "This month's highlights include new features and exciting updates.", required: true }
+        ]
+      },
+      {
+        type: "FOOTER",
+        text: "Stay connected with us!"
+      },
+      {
+        type: "BUTTONS",
+        buttons: [
+          {
+            type: "URL",
+            text: "Read Article",
+            url: "https://example.com/newsletter/{{2}}"
+          },
+          {
+            type: "URL",
+            text: "Subscribe",
+            url: "https://example.com/subscribe"
+          },
+          {
+            type: "QUICK_REPLY",
+            text: "Unsubscribe"
+          }
+        ]
+      }
+    ],
+    createdAt: new Date("2024-03-15")
+  },
+  
+  // Simple Text Only
+  {
+    id: "template-simple-1",
+    name: "simple_notification",
+    category: "UTILITY",
+    language: "en",
+    status: "APPROVED",
+    description: "Simple text notification",
+    components: [
+      {
+        type: "BODY",
+        text: "Hello {{1}}, this is a notification from {{2}}. {{3}}",
+        example: {
+          body_text: [["Customer", "Acme Corp", "Your request has been processed."]]
+        },
+        variables: [
+          { name: "1", example: "Customer", required: true },
+          { name: "2", example: "Acme Corp", required: true },
+          { name: "3", example: "Your request has been processed.", required: true }
+        ]
+      }
+    ],
+    createdAt: new Date("2024-03-20")
+  }
+];

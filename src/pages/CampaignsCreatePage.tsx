@@ -45,6 +45,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { IPhoneMockup } from "react-device-mockup"
+import { mockWhatsAppTemplates, type WhatsAppTemplate, type WhatsAppTemplateVariable, type WhatsAppTemplateCategory } from "@/data/mock-data"
+import { FileText, Image, Video, File, Link2, Phone as PhoneIcon, MessageSquare as MessageSquareIcon, X as XIcon, CheckCircle2 as CheckCircle2Icon, Search, Filter } from "lucide-react"
 
 interface CampaignFormData {
   name: string
@@ -59,6 +61,8 @@ interface CampaignFormData {
   scheduleType: "now" | "scheduled"
   scheduledDate: string
   scheduledTime: string
+  selectedTemplateId: string
+  templateVariables: Record<string, string>
 }
 
 export default function CampaignsCreatePage() {
@@ -78,6 +82,9 @@ export default function CampaignsCreatePage() {
   const [showDiscardDialog, setShowDiscardDialog] = React.useState(false)
   const [pendingNavigation, setPendingNavigation] = React.useState<string | null>(null)
   const [shouldBlockNavigation, setShouldBlockNavigation] = React.useState(false)
+  const [templateSearchQuery, setTemplateSearchQuery] = React.useState("")
+  const [selectedTemplateCategory, setSelectedTemplateCategory] = React.useState<WhatsAppTemplateCategory | "ALL">("ALL")
+  const [hoveredTemplateId, setHoveredTemplateId] = React.useState<string | null>(null)
   
   const steps = [
     { id: 0, label: "Details", description: "Campaign information" },
@@ -162,7 +169,9 @@ export default function CampaignsCreatePage() {
     message: "",
     scheduleType: "now",
     scheduledDate: defaultDate,
-    scheduledTime: defaultTime
+    scheduledTime: defaultTime,
+    selectedTemplateId: "",
+    templateVariables: {}
   })
 
   // Get selected segment to calculate recipients
@@ -463,10 +472,25 @@ export default function CampaignsCreatePage() {
       errors.subject = "Subject line is required for email campaigns"
     }
 
-    if (!formData.message.trim()) {
-      errors.message = "Message content is required"
-    } else if (isOverLimit) {
-      errors.message = `Message exceeds ${characterLimit} character limit`
+    // WhatsApp template validation
+    if (formData.type === "Whatsapp") {
+      if (!formData.selectedTemplateId) {
+        errors.selectedTemplateId = "Please select a template"
+      } else if (selectedTemplate) {
+        // Validate template variables
+        templateVariables.forEach(variable => {
+          if (variable.required && !formData.templateVariables[variable.name]?.trim()) {
+            errors[`templateVar_${variable.name}`] = `${variable.name} is required`
+          }
+        })
+      }
+    } else {
+      // Message validation for non-WhatsApp campaigns
+      if (!formData.message.trim()) {
+        errors.message = "Message content is required"
+      } else if (isOverLimit) {
+        errors.message = `Message exceeds ${characterLimit} character limit`
+      }
     }
 
     if (formData.scheduleType === "scheduled") {
@@ -510,10 +534,26 @@ export default function CampaignsCreatePage() {
       if (formData.type === "Email" && !formData.subject.trim()) {
         errors.subject = "Subject line is required for email campaigns"
       }
-      if (!formData.message.trim()) {
-        errors.message = "Message content is required"
-      } else if (isOverLimit) {
-        errors.message = `Message exceeds ${characterLimit} character limit`
+      
+      // WhatsApp template validation
+      if (formData.type === "Whatsapp") {
+        if (!formData.selectedTemplateId) {
+          errors.selectedTemplateId = "Please select a template"
+        } else if (selectedTemplate) {
+          // Validate template variables
+          templateVariables.forEach(variable => {
+            if (variable.required && !formData.templateVariables[variable.name]?.trim()) {
+              errors[`templateVar_${variable.name}`] = `${variable.name} is required`
+            }
+          })
+        }
+      } else {
+        // Message validation for non-WhatsApp campaigns
+        if (!formData.message.trim()) {
+          errors.message = "Message content is required"
+        } else if (isOverLimit) {
+          errors.message = `Message exceeds ${characterLimit} character limit`
+        }
       }
     } else if (step === 3) {
       // Validate Schedule step
@@ -631,7 +671,18 @@ export default function CampaignsCreatePage() {
     }
   }
 
-  const canSave = formData.name.trim() !== "" && formData.type !== "" && formData.senderId.trim() !== "" && formData.message.trim() !== "" && !isOverLimit && !createCampaignMutation.isPending
+  // Get selected template
+  const selectedTemplate = React.useMemo(() => {
+    if (!formData.selectedTemplateId) return null
+    return mockWhatsAppTemplates.find(t => t.id === formData.selectedTemplateId) || null
+  }, [formData.selectedTemplateId])
+
+  // Get all variables from selected template
+  const templateVariables = React.useMemo(() => {
+    if (!selectedTemplate) return []
+    const bodyComponent = selectedTemplate.components.find(c => c.type === "BODY")
+    return bodyComponent?.variables || []
+  }, [selectedTemplate])
 
   // Check if current step is valid (for disabling Next button) - without setting errors
   const isCurrentStepValid = React.useMemo(() => {
@@ -655,6 +706,21 @@ export default function CampaignsCreatePage() {
     } else if (currentStep === 2) {
       // Validate Content step
       const hasSubject = formData.type !== "Email" || formData.subject.trim() !== ""
+      
+      // WhatsApp template validation
+      if (formData.type === "Whatsapp") {
+        if (!formData.selectedTemplateId) return false
+        if (selectedTemplate && templateVariables.length > 0) {
+          // Check if all required variables are filled
+          const allRequiredFilled = templateVariables.every(variable => 
+            !variable.required || formData.templateVariables[variable.name]?.trim()
+          )
+          return allRequiredFilled
+        }
+        return true
+      }
+      
+      // Message validation for non-WhatsApp
       const hasMessage = formData.message.trim() !== "" && !isOverLimit
       return hasSubject && hasMessage
     } else if (currentStep === 3) {
@@ -666,13 +732,163 @@ export default function CampaignsCreatePage() {
       return true
     }
     return true
-  }, [currentStep, formData, availableSenderIds, allContacts, segments, isOverLimit, now])
+  }, [currentStep, formData, availableSenderIds, allContacts, segments, isOverLimit, now, selectedTemplate, templateVariables])
+
+  // Generate message from template
+  const generateMessageFromTemplate = React.useCallback((template: WhatsAppTemplate | null, variables: Record<string, string>): string => {
+    if (!template) return ""
+    
+    let message = ""
+    const bodyComponent = template.components.find(c => c.type === "BODY")
+    const footerComponent = template.components.find(c => c.type === "FOOTER")
+    
+    if (bodyComponent?.text) {
+      message = bodyComponent.text
+      // Replace variables {{1}}, {{2}}, etc. with actual values
+      Object.keys(variables).forEach(key => {
+        const value = variables[key] || `{{${key}}}`
+        message = message.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value)
+      })
+    }
+    
+    if (footerComponent?.text) {
+      message += `\n\n${footerComponent.text}`
+    }
+    
+    return message
+  }, [])
+
+  // Filter templates based on search and category
+  const filteredTemplates = React.useMemo(() => {
+    let filtered = mockWhatsAppTemplates.filter(t => t.status === "APPROVED")
+    
+    // Filter by category
+    if (selectedTemplateCategory !== "ALL") {
+      filtered = filtered.filter(t => t.category === selectedTemplateCategory)
+    }
+    
+    // Filter by search query
+    if (templateSearchQuery.trim()) {
+      const query = templateSearchQuery.toLowerCase()
+      filtered = filtered.filter(t => 
+        t.name.toLowerCase().includes(query) ||
+        t.description?.toLowerCase().includes(query) ||
+        t.components.some(c => c.text?.toLowerCase().includes(query))
+      )
+    }
+    
+    return filtered
+  }, [selectedTemplateCategory, templateSearchQuery])
+
+  // Reset template selection when switching away from WhatsApp
+  React.useEffect(() => {
+    if (formData.type !== "Whatsapp") {
+      setFormData(prev => ({
+        ...prev,
+        selectedTemplateId: "",
+        templateVariables: {}
+      }))
+    }
+  }, [formData.type])
+
+  // Generate preview message for hover
+  const getHoverPreview = React.useCallback((template: WhatsAppTemplate): string => {
+    const bodyComponent = template.components.find(c => c.type === "BODY")
+    if (!bodyComponent?.text) return ""
+    
+    let preview = bodyComponent.text
+    // Replace variables with example values or placeholders
+    if (bodyComponent.variables) {
+      bodyComponent.variables.forEach((variable, index) => {
+        preview = preview.replace(
+          new RegExp(`\\{\\{${variable.name}\\}\\}`, 'g'),
+          variable.example || `{{${variable.name}}}`
+        )
+      })
+    }
+    
+    const footerComponent = template.components.find(c => c.type === "FOOTER")
+    if (footerComponent?.text) {
+      preview += `\n\n${footerComponent.text}`
+    }
+    
+    return preview
+  }, [])
+
+  // Update message when template or variables change
+  React.useEffect(() => {
+    if (formData.type === "Whatsapp" && selectedTemplate) {
+      const generatedMessage = generateMessageFromTemplate(selectedTemplate, formData.templateVariables)
+      if (generatedMessage !== formData.message) {
+        setFormData(prev => ({ ...prev, message: generatedMessage }))
+      }
+    }
+  }, [selectedTemplate, formData.templateVariables, formData.type, generateMessageFromTemplate, formData.message])
 
   // Preview message
   const previewMessage = React.useMemo(() => {
+    if (formData.type === "Whatsapp" && selectedTemplate) {
+      return generateMessageFromTemplate(selectedTemplate, formData.templateVariables)
+    }
     if (!formData.message) return ""
     return formData.message
-  }, [formData.message])
+  }, [formData.message, formData.type, selectedTemplate, formData.templateVariables, generateMessageFromTemplate])
+
+  const canSave = React.useMemo(() => {
+    const hasBasicFields = formData.name.trim() !== "" && formData.type !== "" && formData.senderId.trim() !== ""
+    
+    if (formData.type === "Whatsapp") {
+      const hasTemplate = formData.selectedTemplateId !== ""
+      const allRequiredVarsFilled = templateVariables.every(v => 
+        !v.required || formData.templateVariables[v.name]?.trim()
+      )
+      return hasBasicFields && hasTemplate && allRequiredVarsFilled && !createCampaignMutation.isPending
+    }
+    
+    return hasBasicFields && formData.message.trim() !== "" && !isOverLimit && !createCampaignMutation.isPending
+  }, [formData, templateVariables, isOverLimit, createCampaignMutation.isPending])
+
+  // Get template category badge color
+  const getCategoryBadgeColor = (category: string) => {
+    switch (category) {
+      case "MARKETING":
+        return "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
+      case "UTILITY":
+        return "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+      case "AUTHENTICATION":
+        return "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+      default:
+        return "bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300"
+    }
+  }
+
+  // Get template status badge color
+  const getStatusBadgeColor = (status: string) => {
+    switch (status) {
+      case "APPROVED":
+        return "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+      case "PENDING":
+        return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"
+      case "REJECTED":
+        return "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
+      default:
+        return "bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300"
+    }
+  }
+
+  // Get component icon
+  const getComponentIcon = (format?: string) => {
+    switch (format) {
+      case "IMAGE":
+        return <Image className="h-4 w-4" />
+      case "VIDEO":
+        return <Video className="h-4 w-4" />
+      case "DOCUMENT":
+        return <File className="h-4 w-4" />
+      default:
+        return <FileText className="h-4 w-4" />
+    }
+  }
 
   return (
     <PageWrapper isLoading={isInitialLoading}>
@@ -1240,7 +1456,11 @@ export default function CampaignsCreatePage() {
                     <Card className="py-5 gap-5">
                       <CardHeader>
                         <CardTitle>Message Content</CardTitle>
-                        <CardDescription>Write your campaign message</CardDescription>
+                        <CardDescription>
+                          {formData.type === "Whatsapp" 
+                            ? "Choose a template from your library"
+                            : "Write your campaign message"}
+                        </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-4">
                         {formData.type === "Email" && (
@@ -1263,43 +1483,380 @@ export default function CampaignsCreatePage() {
                           </Field>
                         )}
 
-                        <Field>
-                          <FieldLabel>
-                            Message Content *
-                            {formData.type && (
-                              <span className="ml-2 text-xs text-muted-foreground font-normal">
-                                (Max {characterLimit.toLocaleString()} characters)
-                              </span>
+                        {/* WhatsApp Template Selection */}
+                        {formData.type === "Whatsapp" && (
+                          <div className="space-y-4">
+                          <Field>
+                            <FieldLabel>Select Template *</FieldLabel>
+                            <FieldContent>
+                              <Select
+                                value={formData.selectedTemplateId}
+                                onValueChange={(value) => {
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    selectedTemplateId: value,
+                                    templateVariables: {}
+                                  }))
+                                  setIsDirty(true)
+                                }}
+                              >
+                                <SelectTrigger className={formErrors.selectedTemplateId ? "border-destructive" : ""}>
+                                  <SelectValue placeholder="Select a template">
+                                    {selectedTemplate ? (
+                                      <div className="flex items-center gap-2">
+                                        <span>{selectedTemplate.name}</span>
+                                        <Badge className={getCategoryBadgeColor(selectedTemplate.category)}>
+                                          {selectedTemplate.category}
+                                        </Badge>
+                                      </div>
+                                    ) : (
+                                      "Select a template"
+                                    )}
+                                  </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent className="max-h-[500px] min-w-[500px] w-[max(500px,var(--radix-select-trigger-width))]">
+                                  {/* Search Input inside dropdown */}
+                                  <div className="p-2 border-b sticky top-0 bg-background z-10">
+                                    <div className="relative">
+                                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                      <Input
+                                        placeholder="Search templates..."
+                                        value={templateSearchQuery}
+                                        onChange={(e) => {
+                                          e.stopPropagation()
+                                          setTemplateSearchQuery(e.target.value)
+                                        }}
+                                        onClick={(e) => e.stopPropagation()}
+                                        onKeyDown={(e) => e.stopPropagation()}
+                                        className="pl-9 pr-8 h-9"
+                                      />
+                                      {templateSearchQuery && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                                          onClick={(e) => {
+                                            e.preventDefault()
+                                            e.stopPropagation()
+                                            setTemplateSearchQuery("")
+                                          }}
+                                        >
+                                          <XIcon className="h-3 w-3" />
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Category Filter inside dropdown */}
+                                  <div className="p-2 border-b bg-muted/30">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <Filter className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                                      <span className="text-xs font-medium text-muted-foreground mr-1">Category:</span>
+                                      {(["ALL", "MARKETING", "UTILITY", "AUTHENTICATION"] as const).map((category) => (
+                                        <Button
+                                          key={category}
+                                          variant={selectedTemplateCategory === category ? "default" : "outline"}
+                                          size="sm"
+                                          onClick={(e) => {
+                                            e.preventDefault()
+                                            e.stopPropagation()
+                                            setSelectedTemplateCategory(category)
+                                          }}
+                                          className="flex items-center gap-1.5 h-7 text-xs px-2"
+                                        >
+                                       
+                                          {category === "ALL" ? "All" : category}
+                                        </Button>
+                                      ))}
+                                    </div>
+                                  </div>
+
+                                  {/* Show active filters info */}
+                                  {(templateSearchQuery || selectedTemplateCategory !== "ALL") && filteredTemplates.length > 0 && (
+                                    <div className="px-3 py-2 border-b bg-muted/20">
+                                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                        <span>
+                                          {filteredTemplates.length} template{filteredTemplates.length !== 1 ? 's' : ''} found
+                                        </span>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-5 px-2 text-xs"
+                                          onClick={(e) => {
+                                            e.preventDefault()
+                                            e.stopPropagation()
+                                            setTemplateSearchQuery("")
+                                            setSelectedTemplateCategory("ALL")
+                                          }}
+                                        >
+                                          Clear
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {/* Template List */}
+                                  <div className="max-h-[300px] overflow-y-auto">
+                                    {filteredTemplates.length === 0 ? (
+                                      <div className="px-3 py-6 text-center text-sm text-muted-foreground space-y-2">
+                                        <p>No templates found.</p>
+                                        {(templateSearchQuery || selectedTemplateCategory !== "ALL") && (
+                                          <Button
+                                            variant="link"
+                                            size="sm"
+                                            className="h-auto p-0 text-xs"
+                                            onClick={(e) => {
+                                              e.preventDefault()
+                                              e.stopPropagation()
+                                              setTemplateSearchQuery("")
+                                              setSelectedTemplateCategory("ALL")
+                                            }}
+                                          >
+                                            Clear filters
+                                          </Button>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      filteredTemplates.map((template) => {
+                                        const headerComponent = template.components.find(c => c.type === "HEADER")
+                                        const bodyComponent = template.components.find(c => c.type === "BODY")
+                                        const hasButtons = template.components.some(c => c.type === "BUTTONS")
+                                        const hoverPreview = getHoverPreview(template)
+                                        
+                                        return (
+                                          <TooltipProvider key={template.id}>
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <div>
+                                                  <SelectItem 
+                                                    value={template.id}
+                                                    onMouseEnter={() => setHoveredTemplateId(template.id)}
+                                                    onMouseLeave={() => setHoveredTemplateId(null)}
+                                                    className="cursor-pointer"
+                                                  >
+                                                    <div className="flex-1 items-center justify-between w-full">
+                                                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                        <div className="flex-1 min-w-0">
+                                                          <div className="flex items-center gap-2 mb-1">
+                                                            <span className=" font-medium text-sm truncate">{template.name}</span>
+                                                            <Badge className={getCategoryBadgeColor(template.category)}>
+                                                              {template.category}
+                                                            </Badge>
+                                                          </div>
+                                                          {template.description && (
+                                                            <p className="text-xs text-muted-foreground truncate">
+                                                              {template.description}
+                                                            </p>
+                                                          )}
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                  </SelectItem>
+                                                </div>
+                                              </TooltipTrigger>
+                                              <TooltipContent 
+                                                side="right" 
+                                                className="max-w-sm p-4"
+                                                onMouseEnter={() => setHoveredTemplateId(template.id)}
+                                                onMouseLeave={() => setHoveredTemplateId(null)}
+                                              >
+                                                <div className="space-y-2">
+                                                  <div className="flex items-center gap-2 mb-2">
+                                                    <span className="font-semibold text-sm">{template.name}</span>
+                                                    <Badge className={getCategoryBadgeColor(template.category)}>
+                                                      {template.category}
+                                                    </Badge>
+                                                  </div>
+                                                  {template.description && (
+                                                    <p className="text-xs text-muted-foreground mb-2">
+                                                      {template.description}
+                                                    </p>
+                                                  )}
+                                                  {headerComponent && (
+                                                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                                                      {getComponentIcon(headerComponent.format)}
+                                                      <span className="capitalize">
+                                                        {headerComponent.format || "Header"} Media
+                                                      </span>
+                                                    </div>
+                                                  )}
+                                                  {hoverPreview && (
+                                                    <div className="mt-2 pt-2 border-t">
+                                                      <p className="text-xs font-medium mb-1">Preview:</p>
+                                                      <p className="text-xs whitespace-pre-wrap text-muted-foreground line-clamp-6">
+                                                        {hoverPreview}
+                                                      </p>
+                                                    </div>
+                                                  )}
+                                                  {hasButtons && (
+                                                    <div className="flex items-center gap-1 text-xs text-muted-foreground mt-2">
+                                                      <Link2 className="h-3 w-3" />
+                                                      <span>Interactive buttons</span>
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          </TooltipProvider>
+                                        )
+                                      })
+                                    )}
+                                  </div>
+                                </SelectContent>
+                              </Select>
+                            </FieldContent>
+                            {formErrors.selectedTemplateId && (
+                              <FieldError>{formErrors.selectedTemplateId}</FieldError>
                             )}
-                          </FieldLabel>
-                          <FieldContent>
-                            <Textarea
-                              id="message"
-                              value={formData.message}
-                              onChange={(e) => handleInputChange("message", e.target.value)}
-                              placeholder={
-                                formData.type === "Email" 
-                                  ? "Write your email message here..."
-                                  : formData.type === "SMS"
-                                  ? "Write your SMS message here (160 characters recommended)..."
-                                  : "Write your WhatsApp message here..."
-                              }
-                              className={`min-h-[200px] ${formErrors.message ? "border-destructive" : ""} ${isOverLimit ? "border-destructive" : ""}`}
-                              maxLength={characterLimit + 100} // Allow typing over limit to show error
-                            />
-                          </FieldContent>
-                          {formErrors.message && <FieldError>{formErrors.message}</FieldError>}
-                          <FieldDescription>
-                            <span className={isOverLimit ? "text-destructive" : ""}>
-                              {getMessageLength.toLocaleString()}/{characterLimit.toLocaleString()} characters
-                              {formData.type === "SMS" && getMessageLength > 160 && (
-                                <span className="ml-2 text-muted-foreground">
-                                  ({Math.ceil(getMessageLength / 160)} SMS)
+                            <FieldDescription>
+                              Click to open template library. Search and filter templates inside the dropdown. Hover over templates to preview.
+                            </FieldDescription>
+                          </Field>
+
+                          {/* Template Variables Input */}
+                          {selectedTemplate && templateVariables.length > 0 && (
+                              <>
+                                <Separator />
+                                <div className="space-y-3">
+                                  <FieldLabel>Template Variables</FieldLabel>
+                                  <div className="space-y-3">
+                                    {templateVariables.map((variable) => (
+                                      <Field key={variable.name}>
+                                        <FieldLabel>
+                                          {variable.name}
+                                          {variable.required && <span className="text-destructive ml-1">*</span>}
+                                          <span className="ml-2 text-xs text-muted-foreground font-normal">
+                                            (e.g., {variable.example})
+                                          </span>
+                                        </FieldLabel>
+                                        <FieldContent>
+                                          <Input
+                                            value={formData.templateVariables[variable.name] || ""}
+                                            onChange={(e) => {
+                                              setFormData(prev => ({
+                                                ...prev,
+                                                templateVariables: {
+                                                  ...prev.templateVariables,
+                                                  [variable.name]: e.target.value
+                                                }
+                                              }))
+                                              setIsDirty(true)
+                                            }}
+                                            placeholder={`Enter ${variable.name}...`}
+                                            className={formErrors[`templateVar_${variable.name}`] ? "border-destructive" : ""}
+                                          />
+                                        </FieldContent>
+                                        {formErrors[`templateVar_${variable.name}`] && (
+                                          <FieldError>{formErrors[`templateVar_${variable.name}`]}</FieldError>
+                                        )}
+                                      </Field>
+                                    ))}
+                                  </div>
+                                </div>
+                              </>
+                            )}
+
+                            {/* Template Preview */}
+                            {selectedTemplate && (
+                              <>
+                                <Separator />
+                                <div>
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Eye className="h-4 w-4 text-muted-foreground" />
+                                    <FieldLabel>Template Preview</FieldLabel>
+                                  </div>
+                                  <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+                                    {/* Header Preview */}
+                                    {selectedTemplate.components.find(c => c.type === "HEADER") && (
+                                      <div>
+                                        <p className="text-xs text-muted-foreground mb-1">Header:</p>
+                                        <div className="flex items-center gap-2">
+                                          {getComponentIcon(selectedTemplate.components.find(c => c.type === "HEADER")?.format)}
+                                          <span className="text-sm">
+                                            {selectedTemplate.components.find(c => c.type === "HEADER")?.format || "Header"} Media
+                                          </span>
+                                        </div>
+                                      </div>
+                                    )}
+                                    
+                                    {/* Body Preview */}
+                                    {previewMessage && (
+                                      <div>
+                                        <p className="text-xs text-muted-foreground mb-1">Message:</p>
+                                        <p className="text-sm whitespace-pre-wrap">{previewMessage}</p>
+                                      </div>
+                                    )}
+                                    
+                                    {/* Footer Preview */}
+                                    {selectedTemplate.components.find(c => c.type === "FOOTER")?.text && (
+                                      <div>
+                                        <p className="text-xs text-muted-foreground mb-1">Footer:</p>
+                                        <p className="text-sm">{selectedTemplate.components.find(c => c.type === "FOOTER")?.text}</p>
+                                      </div>
+                                    )}
+                                    
+                                    {/* Buttons Preview */}
+                                    {selectedTemplate.components.find(c => c.type === "BUTTONS")?.buttons && (
+                                      <div>
+                                        <p className="text-xs text-muted-foreground mb-2">Buttons:</p>
+                                        <div className="flex flex-wrap gap-2">
+                                          {selectedTemplate.components.find(c => c.type === "BUTTONS")?.buttons?.map((button, idx) => (
+                                            <Badge key={idx} variant="outline" className="flex items-center gap-1">
+                                              {button.type === "URL" && <Link2 className="h-3 w-3" />}
+                                              {button.type === "PHONE_NUMBER" && <PhoneIcon className="h-3 w-3" />}
+                                              {button.type === "QUICK_REPLY" && <MessageSquareIcon className="h-3 w-3" />}
+                                              <span className="text-xs">{button.text}</span>
+                                            </Badge>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Non-WhatsApp Message Input */}
+                        {formData.type !== "Whatsapp" && (
+                          <Field>
+                            <FieldLabel>
+                              Message Content *
+                              {formData.type && (
+                                <span className="ml-2 text-xs text-muted-foreground font-normal">
+                                  (Max {characterLimit.toLocaleString()} characters)
                                 </span>
                               )}
-                            </span>
-                          </FieldDescription>
-                        </Field>
+                            </FieldLabel>
+                            <FieldContent>
+                              <Textarea
+                                id="message"
+                                value={formData.message}
+                                onChange={(e) => handleInputChange("message", e.target.value)}
+                                placeholder={
+                                  formData.type === "Email" 
+                                    ? "Write your email message here..."
+                                    : formData.type === "SMS"
+                                    ? "Write your SMS message here (160 characters recommended)..."
+                                    : "Write your message here..."
+                                }
+                                className={`min-h-[200px] ${formErrors.message ? "border-destructive" : ""} ${isOverLimit ? "border-destructive" : ""}`}
+                                maxLength={characterLimit + 100}
+                              />
+                            </FieldContent>
+                            {formErrors.message && <FieldError>{formErrors.message}</FieldError>}
+                            <FieldDescription>
+                              <span className={isOverLimit ? "text-destructive" : ""}>
+                                {getMessageLength.toLocaleString()}/{characterLimit.toLocaleString()} characters
+                                {formData.type === "SMS" && getMessageLength > 160 && (
+                                  <span className="ml-2 text-muted-foreground">
+                                    ({Math.ceil(getMessageLength / 160)} SMS)
+                                  </span>
+                                )}
+                              </span>
+                            </FieldDescription>
+                          </Field>
+                        )}
 
                         {/* Email Preview (keep existing for Email type) */}
                         {formData.type === "Email" && formData.message && (
