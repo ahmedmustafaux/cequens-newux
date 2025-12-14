@@ -26,7 +26,6 @@ import CampaignsTemplatesPage from '@/pages/CampaignsTemplatesPage'
 import CampaignsAiBotsPage from '@/pages/CampaignsAiBotsPage'
 import CampaignsAutomationPage from '@/pages/CampaignsAutomationPage'
 import ContactsPage from '@/pages/ContactsPage'
-import ContactsCreatePage from '@/pages/ContactsCreatePage'
 import ContactsEditPage from '@/pages/ContactsEditPage'
 import ContactDetailPage from '@/pages/ContactDetailPage'
 import ContactsSegmentsPage from '@/pages/ContactsSegmentsPage'
@@ -199,15 +198,6 @@ function App() {
             <RootLayout>
               <DashboardLayout>
                 <ContactsPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/contacts/create" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <ContactsCreatePage />
               </DashboardLayout>
             </RootLayout>
           </ProtectedRoute>
