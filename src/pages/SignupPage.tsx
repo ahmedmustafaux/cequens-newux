@@ -24,7 +24,7 @@ import { validateSignupForm, validateEmail, validateName, validatePassword, vali
 import { ErrorMessage } from "@/components/ui/error-message"
 import { PasswordStrength } from "@/components/ui/password-strength"
 import { motion, AnimatePresence } from "framer-motion"
-import { getLogoAltText, getWelcomeMessage, getJoinMessage, getDemoCredentials, getAppName } from "@/lib/config"
+import { getLogoAltText, getWelcomeMessage, getJoinMessage, getAppName } from "@/lib/config"
 import { smoothTransition, fadeVariants, pageVariants, directionalTabVariants } from "@/lib/transitions"
 
 // No StoryIndicator component needed anymore
@@ -301,22 +301,6 @@ export default function SignupPage() {
   }
   
 
-  const fillDemoData = () => {
-    const demoCredentials = getDemoCredentials()
-    setFormData({
-      firstName: "John",
-      lastName: "Doe",
-      companyName: "Acme Corporation",
-      email: demoCredentials.email,
-      password: demoCredentials.password,
-      confirmPassword: demoCredentials.password,
-      agreeToTerms: true
-    })
-    toast.info("Demo data filled! 🚀", {
-      description: "Form has been populated with demo information. You can now test the signup process.",
-      duration: 3000,
-    })
-  }
 
   return (
     <div className="bg-card rounded-2xl shadow-none overflow-hidden w-full max-w-6xl mx-auto h-full max-h-[calc(100vh-2rem)] border border-border">

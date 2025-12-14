@@ -318,7 +318,7 @@ export default function LoginPage() {
       // Update verification contact based on method
       switch (method) {
         case 'email':
-          setVerificationContact(maskEmail(getDemoEmail()))
+          setVerificationContact(email ? maskEmail(email) : "your email")
           break
         case 'sms':
         case 'whatsapp':
@@ -689,7 +689,7 @@ export default function LoginPage() {
               </div>
               <div className="text-left">
                 <div className="font-medium text-sm text-foreground">Email</div>
-                <div className="text-xs text-muted-foreground">{maskEmail(getDemoEmail())}</div>
+                <div className="text-xs text-muted-foreground">{email ? maskEmail(email) : "your email"}</div>
               </div>
             </Button>
 
