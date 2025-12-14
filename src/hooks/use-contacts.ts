@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchContacts, fetchContactById, createContact, updateContact, deleteContact, fetchContactsByStatus } from '@/lib/supabase/contacts'
 import type { AppContact } from '@/lib/supabase/types'
+import { useAuth } from '@/hooks/use-auth'
 
 // Query keys
 export const contactKeys = {
@@ -16,9 +17,15 @@ export const contactKeys = {
  * Uses placeholderData to keep previous results visible during loading for smooth transitions
  */
 export function useContacts(searchQuery?: string) {
+  const { user } = useAuth()
+  
   return useQuery({
-    queryKey: contactKeys.list({ search: searchQuery }),
-    queryFn: () => fetchContacts(searchQuery),
+    queryKey: contactKeys.list({ search: searchQuery, userId: user?.id }),
+    queryFn: () => {
+      if (!user?.id) throw new Error('User not authenticated')
+      return fetchContacts(user.id, searchQuery)
+    },
+    enabled: !!user?.id,
     placeholderData: (previousData) => previousData, // Keep previous data while loading for smooth transitions
     staleTime: 0, // Always consider data stale to ensure fresh search results
     refetchOnWindowFocus: false, // Don't refetch on window focus for smoother UX
@@ -29,10 +36,15 @@ export function useContacts(searchQuery?: string) {
  * Fetch a single contact by ID
  */
 export function useContact(id: string | undefined) {
+  const { user } = useAuth()
+  
   return useQuery({
     queryKey: contactKeys.detail(id || ''),
-    queryFn: () => fetchContactById(id!),
-    enabled: !!id,
+    queryFn: () => {
+      if (!user?.id) throw new Error('User not authenticated')
+      return fetchContactById(user.id, id!)
+    },
+    enabled: !!id && !!user?.id,
   })
 }
 
@@ -40,9 +52,15 @@ export function useContact(id: string | undefined) {
  * Fetch contacts by status
  */
 export function useContactsByStatus(status: string) {
+  const { user } = useAuth()
+  
   return useQuery({
-    queryKey: [...contactKeys.lists(), 'status', status],
-    queryFn: () => fetchContactsByStatus(status),
+    queryKey: [...contactKeys.lists(), 'status', status, 'userId', user?.id],
+    queryFn: () => {
+      if (!user?.id) throw new Error('User not authenticated')
+      return fetchContactsByStatus(user.id, status)
+    },
+    enabled: !!user?.id,
   })
 }
 
@@ -51,9 +69,13 @@ export function useContactsByStatus(status: string) {
  */
 export function useCreateContact() {
   const queryClient = useQueryClient()
+  const { user } = useAuth()
 
   return useMutation({
-    mutationFn: createContact,
+    mutationFn: (contact: Partial<AppContact>) => {
+      if (!user?.id) throw new Error('User not authenticated')
+      return createContact(user.id, contact)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: contactKeys.lists() })
     },
@@ -65,10 +87,13 @@ export function useCreateContact() {
  */
 export function useUpdateContact() {
   const queryClient = useQueryClient()
+  const { user } = useAuth()
 
   return useMutation({
-    mutationFn: ({ id, contact }: { id: string; contact: Partial<AppContact> }) =>
-      updateContact(id, contact),
+    mutationFn: ({ id, contact }: { id: string; contact: Partial<AppContact> }) => {
+      if (!user?.id) throw new Error('User not authenticated')
+      return updateContact(user.id, id, contact)
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: contactKeys.lists() })
       queryClient.invalidateQueries({ queryKey: contactKeys.detail(data.id) })
@@ -81,9 +106,13 @@ export function useUpdateContact() {
  */
 export function useDeleteContact() {
   const queryClient = useQueryClient()
+  const { user } = useAuth()
 
   return useMutation({
-    mutationFn: deleteContact,
+    mutationFn: (id: string) => {
+      if (!user?.id) throw new Error('User not authenticated')
+      return deleteContact(user.id, id)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: contactKeys.lists() })
     },

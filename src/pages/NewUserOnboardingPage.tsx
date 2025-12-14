@@ -356,10 +356,8 @@ export default function NewUserOnboardingPage() {
               await new Promise(resolve => setTimeout(resolve, 100))
               
               setIsLoading(false)
-              // Redirect after completion
-              // Special handling: ahmed@cequens should go to guide page, others go to dashboard
-              const isAhmedUser = user?.email?.toLowerCase().includes("ahmed@cequens")
-              navigate(isAhmedUser ? "/getting-started" : "/")
+              // Redirect after completion - all users go to guide page
+              navigate("/getting-started")
             } catch (error: any) {
               console.error("Error completing onboarding:", error)
               const errorMessage = error?.message || "An unknown error occurred"

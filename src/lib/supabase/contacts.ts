@@ -34,7 +34,7 @@ function dbContactToAppContact(dbContact: Contact): AppContact {
 /**
  * Converts app Contact to database Contact format
  */
-function appContactToDbContact(appContact: Partial<AppContact>): Partial<Contact> {
+function appContactToDbContact(appContact: Partial<AppContact>): Partial<Contact> & { user_id?: string } {
   return {
     name: appContact.name,
     first_name: appContact.firstName || null,
@@ -59,11 +59,18 @@ function appContactToDbContact(appContact: Partial<AppContact>): Partial<Contact
 
 /**
  * Fetch all contacts with optional search
+ * @param userId - The ID of the user whose contacts to fetch
+ * @param searchQuery - Optional search query to filter contacts
  */
-export async function fetchContacts(searchQuery?: string): Promise<AppContact[]> {
+export async function fetchContacts(userId: string, searchQuery?: string): Promise<AppContact[]> {
+  if (!userId) {
+    throw new Error('userId is required to fetch contacts')
+  }
+
   let query = supabase
     .from('contacts')
     .select('*')
+    .eq('user_id', userId)
 
   // If search query is provided, search in name, phone, and last_message columns
   if (searchQuery && searchQuery.trim()) {
@@ -90,12 +97,19 @@ export async function fetchContacts(searchQuery?: string): Promise<AppContact[]>
 
 /**
  * Fetch a single contact by ID
+ * @param userId - The ID of the user who owns the contact
+ * @param id - The contact ID
  */
-export async function fetchContactById(id: string): Promise<AppContact | null> {
+export async function fetchContactById(userId: string, id: string): Promise<AppContact | null> {
+  if (!userId) {
+    throw new Error('userId is required to fetch contact')
+  }
+
   const { data, error } = await supabase
     .from('contacts')
     .select('*')
     .eq('id', id)
+    .eq('user_id', userId)
     .single()
 
   if (error) {
@@ -111,9 +125,16 @@ export async function fetchContactById(id: string): Promise<AppContact | null> {
 
 /**
  * Create a new contact
+ * @param userId - The ID of the user creating the contact
+ * @param contact - The contact data to create
  */
-export async function createContact(contact: Partial<AppContact>): Promise<AppContact> {
+export async function createContact(userId: string, contact: Partial<AppContact>): Promise<AppContact> {
+  if (!userId) {
+    throw new Error('userId is required to create contact')
+  }
+
   const dbContact = appContactToDbContact(contact)
+  dbContact.user_id = userId
 
   const { data, error } = await supabase
     .from('contacts')
@@ -131,14 +152,24 @@ export async function createContact(contact: Partial<AppContact>): Promise<AppCo
 
 /**
  * Update an existing contact
+ * @param userId - The ID of the user who owns the contact
+ * @param id - The contact ID
+ * @param contact - The contact data to update
  */
-export async function updateContact(id: string, contact: Partial<AppContact>): Promise<AppContact> {
+export async function updateContact(userId: string, id: string, contact: Partial<AppContact>): Promise<AppContact> {
+  if (!userId) {
+    throw new Error('userId is required to update contact')
+  }
+
   const dbContact = appContactToDbContact(contact)
+  // Remove user_id from update data to prevent changing ownership
+  delete dbContact.user_id
 
   const { data, error } = await supabase
     .from('contacts')
     .update(dbContact)
     .eq('id', id)
+    .eq('user_id', userId)
     .select()
     .single()
 
@@ -152,12 +183,19 @@ export async function updateContact(id: string, contact: Partial<AppContact>): P
 
 /**
  * Delete a contact
+ * @param userId - The ID of the user who owns the contact
+ * @param id - The contact ID
  */
-export async function deleteContact(id: string): Promise<void> {
+export async function deleteContact(userId: string, id: string): Promise<void> {
+  if (!userId) {
+    throw new Error('userId is required to delete contact')
+  }
+
   const { error } = await supabase
     .from('contacts')
     .delete()
     .eq('id', id)
+    .eq('user_id', userId)
 
   if (error) {
     console.error('Error deleting contact:', error)
@@ -167,11 +205,18 @@ export async function deleteContact(id: string): Promise<void> {
 
 /**
  * Filter contacts by conversation status
+ * @param userId - The ID of the user whose contacts to fetch
+ * @param status - The conversation status to filter by
  */
-export async function fetchContactsByStatus(status: string): Promise<AppContact[]> {
+export async function fetchContactsByStatus(userId: string, status: string): Promise<AppContact[]> {
+  if (!userId) {
+    throw new Error('userId is required to fetch contacts by status')
+  }
+
   const { data, error } = await supabase
     .from('contacts')
     .select('*')
+    .eq('user_id', userId)
     .eq('conversation_status', status)
     .order('created_at', { ascending: false })
 

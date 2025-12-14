@@ -30,6 +30,7 @@ CREATE INDEX IF NOT EXISTS idx_users_created_at ON users(created_at);
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS contacts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
   first_name TEXT,
   last_name TEXT,
@@ -53,6 +54,7 @@ CREATE TABLE IF NOT EXISTS contacts (
 );
 
 -- Indexes for contacts
+CREATE INDEX IF NOT EXISTS idx_contacts_user_id ON contacts(user_id);
 CREATE INDEX IF NOT EXISTS idx_contacts_country_iso ON contacts(country_iso);
 CREATE INDEX IF NOT EXISTS idx_contacts_conversation_status ON contacts(conversation_status);
 CREATE INDEX IF NOT EXISTS idx_contacts_channel ON contacts(channel);
@@ -66,6 +68,7 @@ CREATE INDEX IF NOT EXISTS idx_contacts_tags ON contacts USING GIN(tags);
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS segments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
   description TEXT,
   filters JSONB NOT NULL DEFAULT '[]',
@@ -75,6 +78,7 @@ CREATE TABLE IF NOT EXISTS segments (
 );
 
 -- Index for segments
+CREATE INDEX IF NOT EXISTS idx_segments_user_id ON segments(user_id);
 CREATE INDEX IF NOT EXISTS idx_segments_created_at ON segments(created_at);
 
 -- ============================================================================
@@ -82,6 +86,7 @@ CREATE INDEX IF NOT EXISTS idx_segments_created_at ON segments(created_at);
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS campaigns (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'Draft',
   type TEXT NOT NULL,
@@ -94,6 +99,7 @@ CREATE TABLE IF NOT EXISTS campaigns (
 );
 
 -- Index for campaigns
+CREATE INDEX IF NOT EXISTS idx_campaigns_user_id ON campaigns(user_id);
 CREATE INDEX IF NOT EXISTS idx_campaigns_status ON campaigns(status);
 CREATE INDEX IF NOT EXISTS idx_campaigns_type ON campaigns(type);
 CREATE INDEX IF NOT EXISTS idx_campaigns_created_at ON campaigns(created_at);
@@ -103,6 +109,7 @@ CREATE INDEX IF NOT EXISTS idx_campaigns_created_at ON campaigns(created_at);
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS notifications (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
   title TEXT NOT NULL,
   message TEXT NOT NULL,
   type TEXT NOT NULL,
@@ -115,6 +122,7 @@ CREATE TABLE IF NOT EXISTS notifications (
 );
 
 -- Index for notifications
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read);
 CREATE INDEX IF NOT EXISTS idx_notifications_timestamp ON notifications(timestamp);
 CREATE INDEX IF NOT EXISTS idx_notifications_archived ON notifications(archived);

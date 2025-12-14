@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/input-otp"
 import { motion } from "framer-motion"
 import { smoothTransition } from "@/lib/transitions"
-import { getLogoAltText, getAccountText, getDemoCredentials } from "@/lib/config"
+import { getLogoAltText, getAccountText } from "@/lib/config"
 
 // Helper function to mask email addresses
 const maskEmail = (email: string) => {

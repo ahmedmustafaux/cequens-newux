@@ -3,11 +3,17 @@ import type { Notification } from './types'
 
 /**
  * Fetch all notifications
+ * @param userId - The ID of the user whose notifications to fetch
  */
-export async function fetchNotifications(): Promise<Notification[]> {
+export async function fetchNotifications(userId: string): Promise<Notification[]> {
+  if (!userId) {
+    throw new Error('userId is required to fetch notifications')
+  }
+
   const { data, error } = await supabase
     .from('notifications')
     .select('*')
+    .eq('user_id', userId)
     .order('timestamp', { ascending: false })
 
   if (error) {
@@ -20,11 +26,17 @@ export async function fetchNotifications(): Promise<Notification[]> {
 
 /**
  * Fetch unread notifications
+ * @param userId - The ID of the user whose notifications to fetch
  */
-export async function fetchUnreadNotifications(): Promise<Notification[]> {
+export async function fetchUnreadNotifications(userId: string): Promise<Notification[]> {
+  if (!userId) {
+    throw new Error('userId is required to fetch unread notifications')
+  }
+
   const { data, error } = await supabase
     .from('notifications')
     .select('*')
+    .eq('user_id', userId)
     .eq('read', false)
     .order('timestamp', { ascending: false })
 
@@ -38,11 +50,20 @@ export async function fetchUnreadNotifications(): Promise<Notification[]> {
 
 /**
  * Create a new notification
+ * @param userId - The ID of the user creating the notification
+ * @param notification - The notification data to create
  */
-export async function createNotification(notification: Omit<Notification, 'id' | 'created_at'>): Promise<Notification> {
+export async function createNotification(userId: string, notification: Omit<Notification, 'id' | 'user_id' | 'created_at'>): Promise<Notification> {
+  if (!userId) {
+    throw new Error('userId is required to create notification')
+  }
+
   const { data, error } = await supabase
     .from('notifications')
-    .insert(notification)
+    .insert({
+      ...notification,
+      user_id: userId,
+    })
     .select()
     .single()
 
@@ -56,12 +77,19 @@ export async function createNotification(notification: Omit<Notification, 'id' |
 
 /**
  * Mark a notification as read
+ * @param userId - The ID of the user who owns the notification
+ * @param id - The notification ID
  */
-export async function markNotificationAsRead(id: string): Promise<Notification> {
+export async function markNotificationAsRead(userId: string, id: string): Promise<Notification> {
+  if (!userId) {
+    throw new Error('userId is required to mark notification as read')
+  }
+
   const { data, error } = await supabase
     .from('notifications')
     .update({ read: true })
     .eq('id', id)
+    .eq('user_id', userId)
     .select()
     .single()
 
@@ -75,11 +103,17 @@ export async function markNotificationAsRead(id: string): Promise<Notification> 
 
 /**
  * Mark all notifications as read
+ * @param userId - The ID of the user whose notifications to mark as read
  */
-export async function markAllNotificationsAsRead(): Promise<void> {
+export async function markAllNotificationsAsRead(userId: string): Promise<void> {
+  if (!userId) {
+    throw new Error('userId is required to mark all notifications as read')
+  }
+
   const { error } = await supabase
     .from('notifications')
     .update({ read: true })
+    .eq('user_id', userId)
     .eq('read', false)
 
   if (error) {
@@ -90,12 +124,19 @@ export async function markAllNotificationsAsRead(): Promise<void> {
 
 /**
  * Delete a notification
+ * @param userId - The ID of the user who owns the notification
+ * @param id - The notification ID
  */
-export async function deleteNotification(id: string): Promise<void> {
+export async function deleteNotification(userId: string, id: string): Promise<void> {
+  if (!userId) {
+    throw new Error('userId is required to delete notification')
+  }
+
   const { error } = await supabase
     .from('notifications')
     .delete()
     .eq('id', id)
+    .eq('user_id', userId)
 
   if (error) {
     console.error('Error deleting notification:', error)

@@ -3,6 +3,7 @@
 
 export type Contact = {
   id: string;
+  user_id: string;
   name: string;
   first_name: string | null;
   last_name: string | null;
@@ -27,6 +28,7 @@ export type Contact = {
 
 export type Segment = {
   id: string;
+  user_id: string;
   name: string;
   description: string | null;
   filters: SegmentFilter[];
@@ -43,6 +45,7 @@ export type SegmentFilter = {
 
 export type Campaign = {
   id: string;
+  user_id: string;
   name: string;
   status: "Active" | "Draft" | "Completed";
   type: "Email" | "SMS" | "Whatsapp";
@@ -56,6 +59,7 @@ export type Campaign = {
 
 export type Notification = {
   id: string;
+  user_id: string;
   title: string;
   message: string;
   type: 'info' | 'success' | 'warning' | 'error';

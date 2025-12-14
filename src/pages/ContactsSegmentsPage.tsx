@@ -48,14 +48,12 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { MoreHorizontal, Edit, Trash2 } from "lucide-react"
 import {
-  type Segment,
   type SegmentFilter,
-  type Contact,
-  mockContacts,
-  mockSegments,
-  updateSegmentContacts,
-  getContactsForSegment,
 } from "@/data/mock-data"
+import { useSegments, useCreateSegment, useUpdateSegment, useDeleteSegment, useUpdateSegmentContacts } from "@/hooks/use-segments"
+import { useContacts } from "@/hooks/use-contacts"
+import type { Segment } from "@/lib/supabase/types"
+import type { AppContact } from "@/lib/supabase/types"
 import { CreateSegmentDialog, type CreateSegmentDialogProps } from "@/components/create-segment-dialog"
 import { SearchProvider } from "@/contexts/search-context"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -82,10 +80,10 @@ import { format } from "date-fns"
 import { type DateRange } from "react-day-picker"
 import { Label } from "@/components/ui/label"
 
-// Helper functions to get filter options
-const getAllTags = (): string[] => {
+// Helper function to get all tags from contacts
+const getAllTags = (contacts: AppContact[]): string[] => {
   const tags = new Set<string>()
-  mockContacts.forEach((contact) => {
+  contacts.forEach((contact) => {
     contact.tags.forEach((tag) => tags.add(tag))
   })
   return Array.from(tags).sort()
@@ -121,9 +119,9 @@ const getChannelIcon = (channel: string): React.ReactNode => {
   }
 }
 
-const getAllCountries = (): Array<{ code: string; name: string }> => {
+const getAllCountries = (contacts: AppContact[]): Array<{ code: string; name: string }> => {
   const countries = new Map<string, string>()
-  mockContacts.forEach((contact) => {
+  contacts.forEach((contact) => {
     if (!countries.has(contact.countryISO)) {
       const countryNames: Record<string, string> = {
         SA: "Saudi Arabia",
@@ -141,12 +139,394 @@ const getAllCountries = (): Array<{ code: string; name: string }> => {
     .sort((a, b) => a.name.localeCompare(b.name))
 }
 
-const getAllConversationStatuses = (): string[] => {
+const getAllConversationStatuses = (contacts: AppContact[]): string[] => {
   const statuses = new Set<string>()
-  mockContacts.forEach((contact) => {
+  contacts.forEach((contact) => {
     statuses.add(contact.conversationStatus)
   })
   return Array.from(statuses).sort()
+}
+
+// Helper function to check if a contact matches a filter (matches logic from segments.ts)
+const contactMatchesFilter = (contact: AppContact, filter: SegmentFilter): boolean => {
+  const { field, operator, value } = filter
+
+  switch (field) {
+    case 'countryISO':
+      if (operator === 'equals' && typeof value === 'string') {
+        return contact.countryISO === value
+      }
+      if (operator === 'notEquals' && typeof value === 'string') {
+        return contact.countryISO !== value
+      }
+      if (operator === 'in' && Array.isArray(value)) {
+        return value.some(v => typeof v === 'string' && v === contact.countryISO)
+      }
+      if (operator === 'notIn' && Array.isArray(value)) {
+        return !value.some(v => typeof v === 'string' && v === contact.countryISO)
+      }
+      if (operator === 'hasAnyOf' && Array.isArray(value)) {
+        return value.some(v => typeof v === 'string' && v === contact.countryISO)
+      }
+      return false
+
+    case 'tags':
+      if (operator === 'isEmpty') {
+        return contact.tags.length === 0
+      }
+      if (operator === 'isNotEmpty') {
+        return contact.tags.length > 0
+      }
+      if (operator === 'hasAnyOf' && Array.isArray(value)) {
+        return value.some(tag => typeof tag === 'string' && contact.tags.includes(tag))
+      }
+      if (operator === 'hasAllOf' && Array.isArray(value)) {
+        return value.every(tag => typeof tag === 'string' && contact.tags.includes(tag))
+      }
+      if (operator === 'hasNoneOf' && Array.isArray(value)) {
+        return !value.some(tag => typeof tag === 'string' && contact.tags.includes(tag))
+      }
+      if (operator === 'equals' && typeof value === 'string') {
+        return contact.tags.includes(value)
+      }
+      return false
+
+    case 'channel':
+      if (operator === 'equals' && typeof value === 'string') {
+        return contact.channel === value
+      }
+      if (operator === 'notEquals' && typeof value === 'string') {
+        return contact.channel !== value
+      }
+      if (operator === 'exists') {
+        return contact.channel !== null && contact.channel !== undefined && contact.channel !== ''
+      }
+      if (operator === 'doesNotExist') {
+        return contact.channel === null || contact.channel === undefined || contact.channel === ''
+      }
+      if (operator === 'hasAnyOf' && Array.isArray(value)) {
+        return value.some(v => typeof v === 'string' && v === contact.channel)
+      }
+      if (operator === 'hasAllOf' && Array.isArray(value)) {
+        return Array.isArray(value) && value.length > 0 && value.every(v => typeof v === 'string' && v === contact.channel)
+      }
+      if (operator === 'hasNoneOf' && Array.isArray(value)) {
+        return !value.some(v => typeof v === 'string' && v === contact.channel)
+      }
+      return false
+
+    case 'conversationStatus':
+      if (operator === 'equals' && typeof value === 'string') {
+        return contact.conversationStatus === value
+      }
+      if (operator === 'notEquals' && typeof value === 'string') {
+        return contact.conversationStatus !== value
+      }
+      if (operator === 'in' && Array.isArray(value)) {
+        return value.some(v => typeof v === 'string' && v === contact.conversationStatus)
+      }
+      if (operator === 'notIn' && Array.isArray(value)) {
+        return !value.some(v => typeof v === 'string' && v === contact.conversationStatus)
+      }
+      if (operator === 'hasAnyOf' && Array.isArray(value)) {
+        return value.some(v => typeof v === 'string' && v === contact.conversationStatus)
+      }
+      return false
+
+    case 'firstName':
+      const firstName = contact.firstName || ''
+      if (operator === 'equals' && typeof value === 'string') {
+        return firstName === value
+      }
+      if (operator === 'notEquals' && typeof value === 'string') {
+        return firstName !== value
+      }
+      if (operator === 'contains' && typeof value === 'string') {
+        return firstName.toLowerCase().includes(value.toLowerCase())
+      }
+      if (operator === 'notContains' && typeof value === 'string') {
+        return !firstName.toLowerCase().includes(value.toLowerCase())
+      }
+      if (operator === 'startsWith' && typeof value === 'string') {
+        return firstName.toLowerCase().startsWith(value.toLowerCase())
+      }
+      if (operator === 'endsWith' && typeof value === 'string') {
+        return firstName.toLowerCase().endsWith(value.toLowerCase())
+      }
+      if (operator === 'isEmpty') {
+        return firstName === ''
+      }
+      if (operator === 'isNotEmpty') {
+        return firstName !== ''
+      }
+      return false
+
+    case 'lastName':
+      const lastName = contact.lastName || ''
+      if (operator === 'equals' && typeof value === 'string') {
+        return lastName === value
+      }
+      if (operator === 'notEquals' && typeof value === 'string') {
+        return lastName !== value
+      }
+      if (operator === 'contains' && typeof value === 'string') {
+        return lastName.toLowerCase().includes(value.toLowerCase())
+      }
+      if (operator === 'notContains' && typeof value === 'string') {
+        return !lastName.toLowerCase().includes(value.toLowerCase())
+      }
+      if (operator === 'startsWith' && typeof value === 'string') {
+        return lastName.toLowerCase().startsWith(value.toLowerCase())
+      }
+      if (operator === 'endsWith' && typeof value === 'string') {
+        return lastName.toLowerCase().endsWith(value.toLowerCase())
+      }
+      if (operator === 'isEmpty') {
+        return lastName === ''
+      }
+      if (operator === 'isNotEmpty') {
+        return lastName !== ''
+      }
+      return false
+
+    case 'phoneNumber':
+      const phone = contact.phone || ''
+      if (operator === 'equals' && typeof value === 'string') {
+        return phone === value
+      }
+      if (operator === 'notEquals' && typeof value === 'string') {
+        return phone !== value
+      }
+      if (operator === 'contains' && typeof value === 'string') {
+        return phone.includes(value)
+      }
+      if (operator === 'startsWith' && typeof value === 'string') {
+        return phone.startsWith(value)
+      }
+      if (operator === 'endsWith' && typeof value === 'string') {
+        return phone.endsWith(value)
+      }
+      if (operator === 'exists') {
+        return phone !== null && phone !== undefined && phone !== ''
+      }
+      if (operator === 'doesNotExist') {
+        return phone === null || phone === undefined || phone === ''
+      }
+      return false
+
+    case 'emailAddress':
+      const email = contact.emailAddress || ''
+      if (operator === 'equals' && typeof value === 'string') {
+        return email === value
+      }
+      if (operator === 'notEquals' && typeof value === 'string') {
+        return email !== value
+      }
+      if (operator === 'contains' && typeof value === 'string') {
+        return email.toLowerCase().includes(value.toLowerCase())
+      }
+      if (operator === 'startsWith' && typeof value === 'string') {
+        return email.toLowerCase().startsWith(value.toLowerCase())
+      }
+      if (operator === 'endsWith' && typeof value === 'string') {
+        return email.toLowerCase().endsWith(value.toLowerCase())
+      }
+      if (operator === 'exists') {
+        return email !== null && email !== undefined && email !== ''
+      }
+      if (operator === 'doesNotExist') {
+        return email === null || email === undefined || email === ''
+      }
+      return false
+
+    case 'language':
+      const language = contact.language || ''
+      if (operator === 'equals' && typeof value === 'string') {
+        return language === value
+      }
+      if (operator === 'notEquals' && typeof value === 'string') {
+        return language !== value
+      }
+      if (operator === 'in' && Array.isArray(value)) {
+        return value.some(v => typeof v === 'string' && v === language)
+      }
+      if (operator === 'notIn' && Array.isArray(value)) {
+        return !value.some(v => typeof v === 'string' && v === language)
+      }
+      if (operator === 'hasAnyOf' && Array.isArray(value)) {
+        return value.some(v => typeof v === 'string' && v === language)
+      }
+      return false
+
+    case 'botStatus':
+      const botStatus = contact.botStatus || ''
+      if (operator === 'equals' && typeof value === 'string') {
+        return botStatus === value
+      }
+      if (operator === 'notEquals' && typeof value === 'string') {
+        return botStatus !== value
+      }
+      if (operator === 'in' && Array.isArray(value)) {
+        return value.some(v => typeof v === 'string' && v === botStatus)
+      }
+      if (operator === 'notIn' && Array.isArray(value)) {
+        return !value.some(v => typeof v === 'string' && v === botStatus)
+      }
+      if (operator === 'hasAnyOf' && Array.isArray(value)) {
+        return value.some(v => typeof v === 'string' && v === botStatus)
+      }
+      return false
+
+    case 'assignee':
+      const assignee = contact.assignee || ''
+      if (operator === 'equals' && typeof value === 'string') {
+        return assignee === value
+      }
+      if (operator === 'notEquals' && typeof value === 'string') {
+        return assignee !== value
+      }
+      if (operator === 'in' && Array.isArray(value)) {
+        return value.some(v => typeof v === 'string' && v === assignee)
+      }
+      if (operator === 'notIn' && Array.isArray(value)) {
+        return !value.some(v => typeof v === 'string' && v === assignee)
+      }
+      if (operator === 'hasAnyOf' && Array.isArray(value)) {
+        return value.some(v => typeof v === 'string' && v === assignee)
+      }
+      if (operator === 'isEmpty') {
+        return assignee === null || assignee === undefined || assignee === ''
+      }
+      if (operator === 'isNotEmpty') {
+        return assignee !== null && assignee !== undefined && assignee !== ''
+      }
+      return false
+
+    case 'lastInteractedChannel':
+      const lastInteractedChannel = contact.lastInteractedChannel || ''
+      if (operator === 'equals' && typeof value === 'string') {
+        return lastInteractedChannel === value
+      }
+      if (operator === 'notEquals' && typeof value === 'string') {
+        return lastInteractedChannel !== value
+      }
+      if (operator === 'exists') {
+        return lastInteractedChannel !== null && lastInteractedChannel !== undefined && lastInteractedChannel !== ''
+      }
+      if (operator === 'doesNotExist') {
+        return lastInteractedChannel === null || lastInteractedChannel === undefined || lastInteractedChannel === ''
+      }
+      return false
+
+    case 'createdAt':
+      if (!contact.createdAt) {
+        return operator === 'doesNotExist' || operator === 'isEmpty'
+      }
+      const createdAt = contact.createdAt
+      if (operator === 'exists') {
+        return true
+      }
+      if (operator === 'doesNotExist') {
+        return false
+      }
+      if (operator === 'isLessThanTime' && typeof value === 'number') {
+        const daysSinceCreation = Math.floor((Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24))
+        return daysSinceCreation < value
+      }
+      if (operator === 'isGreaterThanTime' && typeof value === 'number') {
+        const daysSinceCreation = Math.floor((Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24))
+        return daysSinceCreation > value
+      }
+      if (operator === 'isTimestampAfter' && typeof value === 'string') {
+        const filterDate = new Date(value)
+        return createdAt > filterDate
+      }
+      if (operator === 'isTimestampBefore' && typeof value === 'string') {
+        const filterDate = new Date(value)
+        return createdAt < filterDate
+      }
+      if (operator === 'isTimestampBetween' && typeof value === 'object' && value !== null && 'from' in value && 'to' in value) {
+        const fromDate = new Date(value.from)
+        const toDate = new Date(value.to)
+        return createdAt >= fromDate && createdAt <= toDate
+      }
+      return false
+
+    case 'lastInteractionTime':
+    case 'timeSinceLastIncomingMessage':
+      if (!contact.lastInteractionTime) {
+        return operator === 'doesNotExist' || operator === 'isEmpty'
+      }
+      const lastInteractionTime = contact.lastInteractionTime
+      if (operator === 'exists') {
+        return true
+      }
+      if (operator === 'doesNotExist') {
+        return false
+      }
+      if (operator === 'isGreaterThanTime' && typeof value === 'number') {
+        const daysSinceInteraction = Math.floor((Date.now() - lastInteractionTime.getTime()) / (1000 * 60 * 60 * 24))
+        return daysSinceInteraction > value
+      }
+      if (operator === 'isLessThanTime' && typeof value === 'number') {
+        const daysSinceInteraction = Math.floor((Date.now() - lastInteractionTime.getTime()) / (1000 * 60 * 60 * 24))
+        return daysSinceInteraction < value
+      }
+      if (operator === 'isTimestampAfter' && typeof value === 'string') {
+        const filterDate = new Date(value)
+        return lastInteractionTime > filterDate
+      }
+      if (operator === 'isTimestampBefore' && typeof value === 'string') {
+        const filterDate = new Date(value)
+        return lastInteractionTime < filterDate
+      }
+      if (operator === 'isTimestampBetween' && typeof value === 'object' && value !== null && 'from' in value && 'to' in value) {
+        const fromDate = new Date(value.from)
+        const toDate = new Date(value.to)
+        return lastInteractionTime >= fromDate && lastInteractionTime <= toDate
+      }
+      return false
+
+    case 'conversationOpenedTime':
+      if (!contact.conversationOpenedTime) {
+        return operator === 'doesNotExist' || operator === 'isEmpty'
+      }
+      const conversationOpenedTime = contact.conversationOpenedTime
+      if (operator === 'exists') {
+        return true
+      }
+      if (operator === 'doesNotExist') {
+        return false
+      }
+      if (operator === 'isTimestampAfter' && typeof value === 'string') {
+        const filterDate = new Date(value)
+        return conversationOpenedTime > filterDate
+      }
+      if (operator === 'isTimestampBefore' && typeof value === 'string') {
+        const filterDate = new Date(value)
+        return conversationOpenedTime < filterDate
+      }
+      if (operator === 'isTimestampBetween' && typeof value === 'object' && value !== null && 'from' in value && 'to' in value) {
+        const fromDate = new Date(value.from)
+        const toDate = new Date(value.to)
+        return conversationOpenedTime >= fromDate && conversationOpenedTime <= toDate
+      }
+      return false
+
+    default:
+      return false
+  }
+}
+
+// Helper function to get contacts that match a segment's filters
+const getContactsForSegment = (contacts: AppContact[], segment: Segment): AppContact[] => {
+  if (!segment.filters || segment.filters.length === 0) {
+    return contacts
+  }
+
+  return contacts.filter((contact) => {
+    return segment.filters.every((filter) => contactMatchesFilter(contact, filter))
+  })
 }
 
 // Helper to get field info from FILTER_CATEGORIES
@@ -245,7 +625,7 @@ const formatFilterBadge = (filter: SegmentFilter): { label: string; value: strin
 }
 
 // Column definitions for contacts table
-const createContactColumns = (): ColumnDef<Contact>[] => [
+const createContactColumns = (): ColumnDef<AppContact>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -389,8 +769,9 @@ const createContactColumns = (): ColumnDef<Contact>[] => [
     accessorKey: "updatedAt",
     header: "Last Update",
     cell: ({ row }) => {
-      const updatedAt = row.original.updatedAt;
-      const lastInteractionTime = row.original.lastInteractionTime;
+      const contact = row.original as AppContact;
+      const updatedAt = contact.updatedAt;
+      const lastInteractionTime = contact.lastInteractionTime;
       
       // Use lastInteractionTime if available, otherwise use updatedAt
       const displayDate = lastInteractionTime || updatedAt;
@@ -467,62 +848,17 @@ const createContactColumns = (): ColumnDef<Contact>[] => [
   },
 ]
 
-const SEGMENTS_STORAGE_KEY = "cequens-segments"
-
-// Helper to load segments from localStorage
-const loadSegmentsFromStorage = (): Segment[] => {
-  try {
-    const stored = localStorage.getItem(SEGMENTS_STORAGE_KEY)
-    if (stored) {
-      const parsed = JSON.parse(stored)
-      // Convert date strings back to Date objects and ensure default segments exist
-      const loadedSegments = parsed.map((seg: any) => ({
-        ...seg,
-        createdAt: new Date(seg.createdAt),
-        updatedAt: new Date(seg.updatedAt),
-      }))
-      
-      // Check if default segments exist, if not add them
-      const defaultSegmentIds = mockSegments.map((s: Segment) => s.id)
-      const existingDefaultIds = loadedSegments.filter((s: Segment) => defaultSegmentIds.includes(s.id)).map((s: Segment) => s.id)
-      const missingDefaultIds = defaultSegmentIds.filter((id: string) => !existingDefaultIds.includes(id))
-      
-      if (missingDefaultIds.length > 0) {
-        // Add missing default segments
-        const missingSegments = mockSegments
-          .filter(s => missingDefaultIds.includes(s.id))
-          .map(segment => updateSegmentContacts(segment, mockContacts))
-        return [...loadedSegments, ...missingSegments]
-      }
-      
-      return loadedSegments
-    }
-    // If no segments in storage, return default segments with updated contactIds
-    if (mockSegments.length > 0) {
-      return mockSegments.map(segment => updateSegmentContacts(segment, mockContacts))
-    }
-  } catch (error) {
-    console.error("Error loading segments from storage:", error)
-  }
-  // Fallback: return default segments with updated contactIds
-  if (mockSegments.length > 0) {
-    return mockSegments.map(segment => updateSegmentContacts(segment, mockContacts))
-  }
-  return []
-}
-
-// Helper to save segments to localStorage
-const saveSegmentsToStorage = (segments: Segment[]) => {
-  try {
-    localStorage.setItem(SEGMENTS_STORAGE_KEY, JSON.stringify(segments))
-  } catch (error) {
-    console.error("Error saving segments to storage:", error)
-  }
-}
-
 function ContactsSegmentsPageContent() {
   const navigate = useNavigate()
-  const [segments, setSegments] = React.useState<Segment[]>([])
+  
+  // Database hooks
+  const { data: segments = [], isLoading: segmentsLoading, refetch: refetchSegments } = useSegments()
+  const { data: contacts = [], isLoading: contactsLoading } = useContacts()
+  const createSegmentMutation = useCreateSegment()
+  const updateSegmentMutation = useUpdateSegment()
+  const deleteSegmentMutation = useDeleteSegment()
+  const updateSegmentContactsMutation = useUpdateSegmentContacts()
+  
   const [selectedSegmentId, setSelectedSegmentId] = React.useState<string | null>(null)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false)
   const [editingSegment, setEditingSegment] = React.useState<Segment | null>(null)
@@ -534,7 +870,7 @@ function ContactsSegmentsPageContent() {
     pageIndex: 0,
     pageSize: 15,
   })
-  const [isDataLoading, setIsDataLoading] = React.useState(true)
+  const isDataLoading = segmentsLoading || contactsLoading
   // Track pending filter changes for the selected segment
   const [pendingFilters, setPendingFilters] = React.useState<SegmentFilter[] | null>(null)
   const [originalFilters, setOriginalFilters] = React.useState<SegmentFilter[] | null>(null)
@@ -551,23 +887,6 @@ function ContactsSegmentsPageContent() {
 
   usePageTitle("Segments")
 
-  // Load segments from localStorage on mount
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      const loadedSegments = loadSegmentsFromStorage()
-      setSegments(loadedSegments)
-      setIsDataLoading(false)
-    }, 400)
-    return () => clearTimeout(timer)
-  }, [])
-
-  // Save segments to localStorage whenever they change
-  React.useEffect(() => {
-    if (!isDataLoading && segments.length >= 0) {
-      saveSegmentsToStorage(segments)
-    }
-  }, [segments, isDataLoading])
-
   // Auto-select first segment when segments are loaded
   React.useEffect(() => {
     if (segments.length > 0 && !selectedSegmentId) {
@@ -575,24 +894,16 @@ function ContactsSegmentsPageContent() {
     }
   }, [segments, selectedSegmentId])
 
-
-  const handleCreateSegment = (
-    segmentData: Omit<Segment, "id" | "contactIds" | "createdAt" | "updatedAt">
+  const handleCreateSegment = async (
+    segmentData: Omit<Segment, "id" | "user_id" | "contact_ids" | "created_at" | "updated_at">
   ) => {
-    const newSegment: Segment = {
-      id: `segment-${Date.now()}`,
-      ...segmentData,
-      contactIds: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
+    try {
+      await createSegmentMutation.mutateAsync(segmentData)
+      await refetchSegments()
+      setIsCreateDialogOpen(false)
+    } catch (error) {
+      console.error("Error creating segment:", error)
     }
-
-    // Update contacts for the new segment
-    const updatedSegment = updateSegmentContacts(newSegment, mockContacts)
-
-    setSegments((prev) => [...prev, updatedSegment])
-    setSelectedSegmentId(updatedSegment.id)
-    setIsCreateDialogOpen(false)
   }
 
   const handleEditSegment = React.useCallback((segment: Segment) => {
@@ -601,67 +912,67 @@ function ContactsSegmentsPageContent() {
   }, [])
 
   const handleUpdateSegment = React.useCallback(
-    (
+    async (
       segmentId: string,
-      segmentData: Omit<Segment, "id" | "contactIds" | "createdAt" | "updatedAt">
+      segmentData: Omit<Segment, "id" | "user_id" | "contact_ids" | "created_at" | "updated_at">
     ) => {
-      setSegments((prev) =>
-        prev.map((segment) => {
-          if (segment.id === segmentId) {
-            const updated = {
-              ...segment,
-              ...segmentData,
-              updatedAt: new Date(),
-            }
-            // Recalculate contacts based on filters
-            return updateSegmentContacts(updated, mockContacts)
-          }
-          return segment
-        })
-      )
-      setEditingSegment(null)
-      setIsCreateDialogOpen(false)
+      try {
+        await updateSegmentMutation.mutateAsync({ id: segmentId, segment: segmentData })
+        await refetchSegments()
+        setEditingSegment(null)
+        setIsCreateDialogOpen(false)
+      } catch (error) {
+        console.error("Error updating segment:", error)
+      }
     },
-    []
+    [updateSegmentMutation, refetchSegments]
   )
 
-  const handleDeleteSegment = React.useCallback((segmentToDelete: Segment) => {
-    setSegments((prev) => {
-      const updated = prev.filter((s) => s.id !== segmentToDelete.id)
+  const handleDeleteSegment = React.useCallback(async (segmentToDelete: Segment) => {
+    try {
+      await deleteSegmentMutation.mutateAsync(segmentToDelete.id)
+      await refetchSegments()
       // If deleted segment was selected, select first remaining segment or null
       if (selectedSegmentId === segmentToDelete.id) {
-        setSelectedSegmentId(updated.length > 0 ? updated[0].id : null)
+        const remainingSegments = segments.filter(s => s.id !== segmentToDelete.id)
+        setSelectedSegmentId(remainingSegments.length > 0 ? remainingSegments[0].id : null)
       }
-      return updated
-    })
-  }, [selectedSegmentId])
+    } catch (error) {
+      console.error("Error deleting segment:", error)
+    }
+  }, [selectedSegmentId, segments, deleteSegmentMutation, refetchSegments])
 
-  const handleRemoveFromSegment = React.useCallback(() => {
+  const handleRemoveFromSegment = React.useCallback(async () => {
     if (!selectedSegmentId) return
     
     const selectedContactIds = Object.keys(rowSelection)
     if (selectedContactIds.length === 0) return
     
-    // Remove selected contacts from the segment
-    setSegments((prev) =>
-      prev.map((segment) => {
-        if (segment.id === selectedSegmentId) {
-          const updatedContactIds = segment.contactIds.filter(
-            (id) => !selectedContactIds.includes(id)
-          )
-          return {
-            ...segment,
-            contactIds: updatedContactIds,
-            updatedAt: new Date(),
-          }
-        }
-        return segment
-      })
+    const selectedSegment = segments.find(s => s.id === selectedSegmentId)
+    if (!selectedSegment) return
+    
+    // Remove selected contacts from the segment's contact_ids
+    const updatedContactIds = (selectedSegment.contact_ids || []).filter(
+      (id) => !selectedContactIds.includes(id)
     )
     
-    // Clear selection after removal
-    setRowSelection({})
-  }, [rowSelection, selectedSegmentId])
+    try {
+      await updateSegmentMutation.mutateAsync({
+        id: selectedSegmentId,
+        segment: {
+          name: selectedSegment.name,
+          description: selectedSegment.description,
+          filters: selectedSegment.filters,
+          contact_ids: updatedContactIds,
+        }
+      })
+      await refetchSegments()
+      // Clear selection after removal
+      setRowSelection({})
+    } catch (error) {
+      console.error("Error removing contacts from segment:", error)
+    }
+  }, [rowSelection, selectedSegmentId, segments, updateSegmentMutation, refetchSegments])
 
   const handleSendCampaign = React.useCallback(() => {
     const selectedContactIds = Object.keys(rowSelection)
@@ -717,9 +1028,9 @@ function ContactsSegmentsPageContent() {
   const getFilterValueOptions = React.useCallback((field: SegmentFilter["field"]) => {
     switch (field) {
       case "countryISO":
-        return getAllCountries().map((c) => ({ value: c.code, label: c.name }))
+        return getAllCountries(contacts).map((c) => ({ value: c.code, label: c.name }))
       case "tags":
-        return getAllTags().map((tag) => ({ value: tag, label: tag }))
+        return getAllTags(contacts).map((tag) => ({ value: tag, label: tag }))
       case "channel":
         return getAllChannels().map((channel) => {
           // Format channel names for display
@@ -740,17 +1051,17 @@ function ContactsSegmentsPageContent() {
           }
         })
       case "conversationStatus":
-        return getAllConversationStatuses().map((status) => ({ value: status, label: status }))
+        return getAllConversationStatuses(contacts).map((status) => ({ value: status, label: status }))
       case "language":
-        return getAllConversationStatuses().map((status) => ({ value: status, label: status })) // TODO: Get actual languages
+        return getAllConversationStatuses(contacts).map((status) => ({ value: status, label: status })) // TODO: Get actual languages
       case "botStatus":
-        return getAllConversationStatuses().map((status) => ({ value: status, label: status })) // TODO: Get actual bot statuses
+        return getAllConversationStatuses(contacts).map((status) => ({ value: status, label: status })) // TODO: Get actual bot statuses
       case "assignee":
-        return getAllConversationStatuses().map((status) => ({ value: status, label: status })) // TODO: Get actual assignees
+        return getAllConversationStatuses(contacts).map((status) => ({ value: status, label: status })) // TODO: Get actual assignees
       default:
         return []
     }
-  }, [])
+  }, [contacts])
 
 
   const handleCategorySelected = React.useCallback((categoryId: string) => {
@@ -1222,18 +1533,26 @@ function ContactsSegmentsPageContent() {
     return <div className="px-2 py-2 text-sm text-muted-foreground text-center">Unsupported field type</div>
   }, [getFilterValueOptions, handleFilterValueChange, valueSearchQuery, timeUnits])
 
-  const handleSaveFilters = React.useCallback(() => {
+  const handleSaveFilters = React.useCallback(async () => {
     if (!selectedSegment || pendingFilters === null) return
     
-    handleUpdateSegment(selectedSegment.id, {
-      name: selectedSegment.name,
-      description: selectedSegment.description,
-      filters: pendingFilters,
-    })
-    
-    setPendingFilters(null)
-    setOriginalFilters(null)
-  }, [selectedSegment, pendingFilters, handleUpdateSegment])
+    try {
+      await handleUpdateSegment(selectedSegment.id, {
+        name: selectedSegment.name,
+        description: selectedSegment.description || null,
+        filters: pendingFilters,
+      })
+      
+      // Update segment contacts after filters are saved
+      await updateSegmentContactsMutation.mutateAsync(selectedSegment.id)
+      await refetchSegments()
+      
+      setPendingFilters(null)
+      setOriginalFilters(null)
+    } catch (error) {
+      console.error("Error saving filters:", error)
+    }
+  }, [selectedSegment, pendingFilters, handleUpdateSegment, updateSegmentContactsMutation, refetchSegments])
 
   const handleDiscardFilters = React.useCallback(() => {
     if (!selectedSegment || originalFilters === null) return
@@ -1255,9 +1574,28 @@ function ContactsSegmentsPageContent() {
   // Get contacts for selected segment
   const segmentContacts = React.useMemo(() => {
     if (!selectedSegment) return []
-    return getContactsForSegment(mockContacts, selectedSegment)
-  }, [selectedSegment])
+    // Use contact_ids from segment if available, otherwise filter by segment filters
+    if (selectedSegment.contact_ids && selectedSegment.contact_ids.length > 0) {
+      return contacts.filter(contact => selectedSegment.contact_ids.includes(contact.id))
+    }
+    return getContactsForSegment(contacts, selectedSegment)
+  }, [selectedSegment, contacts])
 
+  // Calculate contact count for each segment
+  const getSegmentContactCount = React.useCallback((segment: Segment): number => {
+    if (!segment) return 0
+    // If segment has contact_ids, use that length
+    if (segment.contact_ids && segment.contact_ids.length > 0) {
+      // Filter to only include contacts that actually exist
+      return contacts.filter(contact => segment.contact_ids.includes(contact.id)).length
+    }
+    // Otherwise, calculate from filters
+    if (segment.filters && segment.filters.length > 0) {
+      return getContactsForSegment(contacts, segment).length
+    }
+    // No filters means no contacts
+    return 0
+  }, [contacts])
 
   const columns = React.useMemo(() => createContactColumns(), [])
 
@@ -1324,7 +1662,7 @@ function ContactsSegmentsPageContent() {
               options: segments.map((segment) => ({
                 label: segment.name,
                 value: segment.id,
-                count: segment.contactIds.length,
+                count: getSegmentContactCount(segment),
               })),
               selectedView: selectedSegmentId || "",
               onViewChange: (viewId) => setSelectedSegmentId(viewId),

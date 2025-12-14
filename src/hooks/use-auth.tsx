@@ -10,6 +10,7 @@ interface User {
   name?: string
   userType: UserType
   onboardingCompleted?: boolean
+  onboardingData?: any
 }
 
 interface AuthContextType {
