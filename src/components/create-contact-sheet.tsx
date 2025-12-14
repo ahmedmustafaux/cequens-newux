@@ -188,28 +188,63 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
       const timeoutId = setTimeout(async () => {
         // Double-check the phone value hasn't changed
         if (formData.phone === phoneValue) {
-          console.log('Checking WhatsApp for:', { phone: phoneValue })
+          console.log('Checking WhatsApp for:', { phone: phoneValue, countryCode })
           setIsCheckingWhatsApp(true)
           
           try {
-            // Detect and normalize phone number first
-            const detection = detectCountryFromPhoneNumber(phoneValue)
-            let numberToCheck: string
+            // IMPORTANT: We're checking the CONTACT'S phone number (the number being entered in the form)
+            // NOT the channel configuration or user's number
+            // Prepare the contact's phone number for WhatsApp availability check
+            let contactPhoneNumber: string
             
-            if (detection.isValid && detection.formattedNumber) {
-              // Use normalized E.164 format
-              numberToCheck = detection.formattedNumber
+            if (countryCode && phoneValue) {
+              // Combine country code with the contact's phone number (ensure no double +)
+              const cleanCountryCode = countryCode.startsWith('+') ? countryCode : `+${countryCode}`
+              const cleanPhone = phoneValue.replace(/^0+/, '') // Remove any leading zeros
+              contactPhoneNumber = cleanCountryCode + cleanPhone
+            } else if (phoneValue) {
+              // Use contact's phone value as-is, detection will handle it
+              contactPhoneNumber = phoneValue
             } else {
-              // Fallback: combine with country code
-              numberToCheck = countryCode + phoneValue
+              // No phone value, skip check
+              setIsCheckingWhatsApp(false)
+              setHasWhatsApp(null)
+              return
             }
             
-            // The checkWhatsAppAvailability function uses whatsapp-number-verify package
-            const result = await checkWhatsAppAvailability(numberToCheck)
+            console.log('🔍 Checking WhatsApp availability for CONTACT phone number:', { 
+              enteredPhone: phoneValue, 
+              countryCode, 
+              fullNumber: contactPhoneNumber,
+              note: 'This checks if the entered contact number has WhatsApp, not channel config'
+            })
+            
+            // Check if the CONTACT'S phone number is registered on WhatsApp
+            // This uses the whatsapp-number-verify API to check the specific number entered
+            const result = await checkWhatsAppAvailability(contactPhoneNumber)
             
             // Only update if we still have the same number
             if (formData.phone === phoneValue) {
-              setHasWhatsApp(result.hasWhatsApp)
+              console.log('✅ WhatsApp check result for contact number:', { 
+                contactNumber: contactPhoneNumber,
+                hasWhatsApp: result.hasWhatsApp,
+                error: result.error 
+              })
+              
+              // Only set hasWhatsApp if we got a definitive result (true)
+              // If false with no error, it means we can't check automatically
+              if (result.hasWhatsApp === true) {
+                setHasWhatsApp(true)
+                console.log('✅ Contact number HAS WhatsApp:', contactPhoneNumber)
+              } else if (result.error) {
+                // Only show error if there's an actual error message
+                console.warn('⚠️ WhatsApp check:', result.error)
+                setHasWhatsApp(null) // Set to null to show "unknown" state
+              } else {
+                // Can't check automatically - set to null (unknown)
+                setHasWhatsApp(null)
+                console.log('ℹ️ WhatsApp status unknown - cannot verify automatically')
+              }
             }
           } catch (error) {
             console.error('Error checking WhatsApp:', error)
@@ -514,20 +549,30 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
                     <div className="flex items-center justify-between mt-1">
                       <FieldDescription>Required - include country code</FieldDescription>
                       {formData.phone.length >= 7 && (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                           {isCheckingWhatsApp ? (
-                            <Badge variant="outline" className="text-xs">
-                              <div className="h-3 w-3 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent mr-1" />
-                              Checking WhatsApp...
-                            </Badge>
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                              <div className="h-3 w-3 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+                              <span className="text-muted-foreground">Checking...</span>
+                            </div>
                           ) : hasWhatsApp === true ? (
-                            <Badge variant="default" className="text-xs bg-green-500">
-                              ✓ Has WhatsApp
-                            </Badge>
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                              <img 
+                                src="/icons/WhatsApp.svg" 
+                                alt="WhatsApp" 
+                                className="h-3.5 w-3.5"
+                              />
+                              <span className="text-muted-foreground">Has WhatsApp</span>
+                            </div>
                           ) : hasWhatsApp === false ? (
-                            <Badge variant="outline" className="text-xs">
-                              No WhatsApp
-                            </Badge>
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground opacity-60">
+                              <img 
+                                src="/icons/WhatsApp.svg" 
+                                alt="WhatsApp" 
+                                className="h-3.5 w-3.5"
+                              />
+                              <span className="text-muted-foreground">No WhatsApp</span>
+                            </div>
                           ) : null}
                         </div>
                       )}

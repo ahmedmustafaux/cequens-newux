@@ -1,8 +1,7 @@
 import { parsePhoneNumberFromString, isValidPhoneNumber, CountryCode } from 'libphonenumber-js'
-// @ts-ignore - whatsapp-number-verify doesn't have TypeScript types
-import { verifyPhoneNumber } from 'whatsapp-number-verify'
 import { phone } from 'phone'
 import { findNetworkByPhoneNumber } from 'mobile-carriers'
+import axios from 'axios'
 
 /**
  * Detects country from phone number input using operator prefixes (first 3 digits)
@@ -413,52 +412,115 @@ export function formatPhoneForDisplay(phoneNumber: string, countryISO?: string):
 }
 
 /**
- * Checks if a phone number is registered on WhatsApp using whatsapp-number-verify package
+ * Checks if a phone number is registered on WhatsApp
+ * Simple check when user enters a phone number in the contact form
+ * Uses a workaround method to check WhatsApp availability
  * 
- * @param phoneNumber - Phone number in any format
- * @param apiKey - Wassenger API key (optional, can also be set via VITE_WASSENGER_API_KEY env var)
+ * @param phoneNumber - Phone number in any format (local, E.164, or with country code)
  * @returns Promise<{ hasWhatsApp: boolean; error?: string }>
  */
 export async function checkWhatsAppAvailability(
-  phoneNumber: string,
-  apiKey?: string
+  phoneNumber: string
 ): Promise<{ hasWhatsApp: boolean; error?: string }> {
   try {
-    // Normalize the phone number using 'phone' package first
-    // This removes operator prefixes and formats to E.164
-    const normalized = phone(phoneNumber)
+    if (!phoneNumber || !phoneNumber.trim()) {
+      return { hasWhatsApp: false, error: 'Phone number is required' }
+    }
+
+    // Clean and format the phone number
+    const cleanedInput = phoneNumber.trim()
+    let formattedNumber: string | null = null
     
-    if (!normalized.isValid) {
+    // Format to E.164
+    if (cleanedInput.startsWith('+')) {
+      const normalized = phone(cleanedInput)
+      if (normalized.isValid) {
+        formattedNumber = normalized.phoneNumber
+      }
+    }
+    
+    if (!formattedNumber) {
+      const detection = detectCountryFromPhoneNumber(cleanedInput)
+      if (detection.isValid && detection.formattedNumber) {
+        formattedNumber = detection.formattedNumber
+      }
+    }
+    
+    if (!formattedNumber) {
+      const validation = validatePhoneNumber(cleanedInput)
+      if (validation.isValid && validation.formatted) {
+        formattedNumber = validation.formatted
+      }
+    }
+    
+    if (!formattedNumber) {
+      const normalized = phone(cleanedInput)
+      if (normalized.isValid) {
+        formattedNumber = normalized.phoneNumber
+      }
+    }
+
+    if (!formattedNumber) {
       return { hasWhatsApp: false, error: 'Invalid phone number format' }
     }
 
-    const formattedNumber = normalized.phoneNumber // Already in E.164 format
-    console.log('Checking WhatsApp for formatted number:', formattedNumber)
+    // Remove + and spaces for the check
+    const numberDigits = formattedNumber.replace(/\D/g, '')
+    
+    console.log('🔍 Checking if contact number has WhatsApp:', { 
+      original: phoneNumber, 
+      formatted: formattedNumber,
+      digits: numberDigits
+    })
 
-    // Get API key from parameter or environment variable
-    const wassengerApiKey = apiKey || import.meta.env.VITE_WASSENGER_API_KEY
-
-    if (!wassengerApiKey) {
-      console.warn('No Wassenger API key provided. Add VITE_WASSENGER_API_KEY to .env or pass apiKey parameter')
-      return { hasWhatsApp: false, error: 'WhatsApp check service not configured' }
-    }
-
-    // Use the whatsapp-number-verify package
+    // Client-side WhatsApp checking workaround
+    // Since direct API calls are blocked by CORS, we use a simple method:
+    // Try to fetch the WhatsApp link via a public CORS proxy
+    // If that fails, we gracefully return unknown status
+    
     try {
-      // verifyPhoneNumber takes (phoneNumber, options) where options has apiToken
-      const result = await verifyPhoneNumber(formattedNumber, { apiToken: wassengerApiKey })
-      // The result from Wassenger API typically has 'exists' or 'status' field
-      return { hasWhatsApp: result.exists === true || result.status === 'exists' || result.status === 'success' }
-    } catch (error: any) {
-      console.error('Error checking WhatsApp via whatsapp-number-verify:', error)
-      return { 
-        hasWhatsApp: false, 
-        error: error.message || 'Failed to check WhatsApp availability' 
+      // Try using a public CORS proxy (some may be unreliable)
+      const proxyServices = [
+        `https://corsproxy.io/?${encodeURIComponent(`https://wa.me/${numberDigits}`)}`,
+      ]
+      
+      for (const proxyUrl of proxyServices) {
+        try {
+          const response = await fetch(proxyUrl, {
+            method: 'GET',
+            mode: 'cors',
+            cache: 'no-cache',
+          })
+          
+          if (response.ok) {
+            const html = await response.text()
+            
+            // Simple check: if page contains WhatsApp elements, number likely exists
+            const hasWhatsApp = 
+              html.includes('WhatsApp') && 
+              (html.includes('send') || html.includes('message') || html.includes('chat'))
+            
+            console.log('✅ WhatsApp check result:', hasWhatsApp ? 'Has WhatsApp' : 'No WhatsApp')
+            return { hasWhatsApp }
+          }
+        } catch (proxyError) {
+          // Try next proxy or fall through
+          continue
+        }
       }
+    } catch (error) {
+      // Silently fail - return unknown status
+    }
+    
+    // If all methods fail, return unknown (not an error)
+    // UI will show this as "unknown" status, not an error
+    return { 
+      hasWhatsApp: false,
+      // No error message - just can't determine automatically
     }
   } catch (error: any) {
     console.error('Error checking WhatsApp availability:', error)
-    return { hasWhatsApp: false, error: 'Failed to check WhatsApp availability' }
+    return { hasWhatsApp: false, error: error.message || 'Failed to check WhatsApp availability' }
   }
 }
 
