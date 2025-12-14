@@ -468,12 +468,12 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent 
-                          className="w-[300px] p-0" 
+                          className="w-[300px] p-0 max-h-[400px] flex flex-col" 
                           align="start"
                           onOpenAutoFocus={(e) => e.preventDefault()}
                         >
-                          <div className="flex flex-col">
-                            <div className="flex flex-col">
+                          <div className="flex flex-col flex-1 min-h-0">
+                            <div className="flex flex-col flex-shrink-0">
                               <div>
                                 <Field>
                                   <FieldContent>
@@ -495,8 +495,8 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
                               <div className="border-t border-border" />
                             </div>
                             
-                            <div className="relative">
-                              <div className="max-h-72 overflow-y-auto p-1">
+                            <div className="relative flex-1 min-h-0 overflow-hidden">
+                              <div className="h-full overflow-y-auto p-1" style={{ maxHeight: '300px' }}>
                                 {filteredCountries.length > 0 ? (
                                   filteredCountries.map((country) => (
                                     <div 

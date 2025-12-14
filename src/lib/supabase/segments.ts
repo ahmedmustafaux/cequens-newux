@@ -276,112 +276,133 @@ export function contactMatchesFilter(contact: AppContact, filter: SegmentFilter)
     // Country ISO - case-insensitive comparison
     case 'countryISO':
       // Normalize country ISO values for case-insensitive comparison
-      const contactCountryISO = contact.countryISO ? contact.countryISO.toUpperCase() : null
-      if (operator === 'equals' && typeof value === 'string') {
-        return contactCountryISO === value.toUpperCase()
+      const contactCountryISO = contact.countryISO ? contact.countryISO.toUpperCase().trim() : null
+      if (operator === 'equals') {
+        // Handle both string and array values (for backwards compatibility)
+        const filterValue = typeof value === 'string' 
+          ? value.toUpperCase().trim() 
+          : Array.isArray(value) && value.length > 0 && typeof value[0] === 'string'
+          ? value[0].toUpperCase().trim()
+          : null
+        if (filterValue === null || filterValue === '') return false
+        // Handle null comparison: null === null, null !== 'SA'
+        if (contactCountryISO === null) {
+          return filterValue === 'NULL' || filterValue === 'NONE'
+        }
+        return contactCountryISO === filterValue
       }
-      if (operator === 'notEquals' && typeof value === 'string') {
-        return contactCountryISO !== value.toUpperCase()
+      if (operator === 'notEquals') {
+        // Handle both string and array values (for backwards compatibility)
+        const filterValue = typeof value === 'string' 
+          ? value.toUpperCase().trim() 
+          : Array.isArray(value) && value.length > 0 && typeof value[0] === 'string'
+          ? value[0].toUpperCase().trim()
+          : null
+        if (filterValue === null || filterValue === '') return false
+        if (contactCountryISO === null) {
+          return filterValue !== 'NULL' && filterValue !== 'NONE'
+        }
+        return contactCountryISO !== filterValue
       }
-      if (operator === 'in' && Array.isArray(value)) {
-        return value.some(v => typeof v === 'string' && contactCountryISO === v.toUpperCase())
+      if (operator === 'in' && Array.isArray(value) && value.length > 0) {
+        return value.some(v => typeof v === 'string' && contactCountryISO === v.toUpperCase().trim())
       }
-      if (operator === 'notIn' && Array.isArray(value)) {
-        return !value.some(v => typeof v === 'string' && contactCountryISO === v.toUpperCase())
+      if (operator === 'notIn' && Array.isArray(value) && value.length > 0) {
+        return !value.some(v => typeof v === 'string' && contactCountryISO === v.toUpperCase().trim())
       }
-      if (operator === 'hasAnyOf' && Array.isArray(value)) {
-        return value.some(v => typeof v === 'string' && contactCountryISO === v.toUpperCase())
+      if (operator === 'hasAnyOf' && Array.isArray(value) && value.length > 0) {
+        return value.some(v => typeof v === 'string' && contactCountryISO === v.toUpperCase().trim())
       }
       return false
 
     // Tags
     case 'tags':
+      const contactTags = contact.tags || []
       if (operator === 'isEmpty') {
-        return contact.tags.length === 0
+        return contactTags.length === 0
       }
       if (operator === 'isNotEmpty') {
-        return contact.tags.length > 0
+        return contactTags.length > 0
       }
-      if (operator === 'hasAnyOf' && Array.isArray(value)) {
-        return value.some(tag => typeof tag === 'string' && contact.tags.includes(tag))
+      if (operator === 'hasAnyOf' && Array.isArray(value) && value.length > 0) {
+        return value.some(tag => typeof tag === 'string' && contactTags.includes(tag))
       }
-      if (operator === 'hasAllOf' && Array.isArray(value)) {
-        return value.every(tag => typeof tag === 'string' && contact.tags.includes(tag))
+      if (operator === 'hasAllOf' && Array.isArray(value) && value.length > 0) {
+        // Contact must have ALL tags in the filter value array
+        return value.every(tag => typeof tag === 'string' && contactTags.includes(tag))
       }
-      if (operator === 'hasNoneOf' && Array.isArray(value)) {
-        return !value.some(tag => typeof tag === 'string' && contact.tags.includes(tag))
-      }
-      if (operator === 'equals' && typeof value === 'string') {
-        return contact.tags.includes(value)
+      if (operator === 'hasNoneOf' && Array.isArray(value) && value.length > 0) {
+        // Contact must have NONE of the tags in the filter value array
+        return !value.some(tag => typeof tag === 'string' && contactTags.includes(tag))
       }
       return false
 
     // Channel
     case 'channel':
       // Normalize channel values for case-insensitive comparison
-      const contactChannel = contact.channel ? contact.channel.toLowerCase() : null
-      if (operator === 'equals' && typeof value === 'string') {
-        return contactChannel === value.toLowerCase()
-      }
-      if (operator === 'notEquals' && typeof value === 'string') {
-        return contactChannel !== value.toLowerCase()
-      }
+      const contactChannel = contact.channel ? contact.channel.toLowerCase().trim() : null
       if (operator === 'exists') {
-        return contact.channel !== null && contact.channel !== undefined && contact.channel !== ''
+        return contact.channel !== null && contact.channel !== undefined && contact.channel.trim() !== ''
       }
       if (operator === 'doesNotExist') {
-        return contact.channel === null || contact.channel === undefined || contact.channel === ''
+        return contact.channel === null || contact.channel === undefined || contact.channel.trim() === ''
       }
-      if (operator === 'hasAnyOf' && Array.isArray(value)) {
-        return value.some(v => typeof v === 'string' && contactChannel === v.toLowerCase())
+      if (operator === 'hasAnyOf' && Array.isArray(value) && value.length > 0) {
+        // Contact's channel matches any of the values in the array
+        return value.some(v => typeof v === 'string' && contactChannel === v.toLowerCase().trim())
       }
-      if (operator === 'hasAllOf' && Array.isArray(value)) {
-        return Array.isArray(value) && value.length > 0 && value.every(v => typeof v === 'string' && contactChannel === v.toLowerCase())
+      if (operator === 'hasAllOf' && Array.isArray(value) && value.length > 0) {
+        // For channel (single value), hasAllOf means the contact's channel must match ALL values
+        // This only makes sense if all values are the same, otherwise it will never match
+        // More logically: check if contact channel is in the array (since contact can only have one channel)
+        return value.every(v => typeof v === 'string' && contactChannel === v.toLowerCase().trim())
       }
-      if (operator === 'hasNoneOf' && Array.isArray(value)) {
-        return !value.some(v => typeof v === 'string' && contactChannel === v.toLowerCase())
+      if (operator === 'hasNoneOf' && Array.isArray(value) && value.length > 0) {
+        // Contact's channel must not match any of the values in the array
+        return !value.some(v => typeof v === 'string' && contactChannel === v.toLowerCase().trim())
       }
       return false
 
     // Conversation Status
     case 'conversationStatus':
+      const conversationStatus = (contact.conversationStatus || '').trim()
       if (operator === 'equals' && typeof value === 'string') {
-        return contact.conversationStatus === value
+        return conversationStatus === value.trim()
       }
       if (operator === 'notEquals' && typeof value === 'string') {
-        return contact.conversationStatus !== value
+        return conversationStatus !== value.trim()
       }
-      if (operator === 'in' && Array.isArray(value)) {
-        return value.some(v => typeof v === 'string' && v === contact.conversationStatus)
+      if (operator === 'in' && Array.isArray(value) && value.length > 0) {
+        return value.some(v => typeof v === 'string' && conversationStatus === v.trim())
       }
-      if (operator === 'notIn' && Array.isArray(value)) {
-        return !value.some(v => typeof v === 'string' && v === contact.conversationStatus)
+      if (operator === 'notIn' && Array.isArray(value) && value.length > 0) {
+        return !value.some(v => typeof v === 'string' && conversationStatus === v.trim())
       }
-      if (operator === 'hasAnyOf' && Array.isArray(value)) {
-        return value.some(v => typeof v === 'string' && v === contact.conversationStatus)
+      if (operator === 'hasAnyOf' && Array.isArray(value) && value.length > 0) {
+        return value.some(v => typeof v === 'string' && conversationStatus === v.trim())
       }
       return false
 
     // First Name
     case 'firstName':
-      const firstName = contact.firstName || ''
+      const firstName = (contact.firstName || '').trim()
       if (operator === 'equals' && typeof value === 'string') {
-        return firstName === value
+        return firstName === value.trim()
       }
       if (operator === 'notEquals' && typeof value === 'string') {
-        return firstName !== value
+        return firstName !== value.trim()
       }
       if (operator === 'contains' && typeof value === 'string') {
-        return firstName.toLowerCase().includes(value.toLowerCase())
-      }
-      if (operator === 'notContains' && typeof value === 'string') {
-        return !firstName.toLowerCase().includes(value.toLowerCase())
+        const searchValue = value.trim().toLowerCase()
+        return searchValue === '' ? true : firstName.toLowerCase().includes(searchValue)
       }
       if (operator === 'startsWith' && typeof value === 'string') {
-        return firstName.toLowerCase().startsWith(value.toLowerCase())
+        const searchValue = value.trim().toLowerCase()
+        return searchValue === '' ? true : firstName.toLowerCase().startsWith(searchValue)
       }
       if (operator === 'endsWith' && typeof value === 'string') {
-        return firstName.toLowerCase().endsWith(value.toLowerCase())
+        const searchValue = value.trim().toLowerCase()
+        return searchValue === '' ? true : firstName.toLowerCase().endsWith(searchValue)
       }
       if (operator === 'isEmpty') {
         return firstName === ''
@@ -393,24 +414,24 @@ export function contactMatchesFilter(contact: AppContact, filter: SegmentFilter)
 
     // Last Name
     case 'lastName':
-      const lastName = contact.lastName || ''
+      const lastName = (contact.lastName || '').trim()
       if (operator === 'equals' && typeof value === 'string') {
-        return lastName === value
+        return lastName === value.trim()
       }
       if (operator === 'notEquals' && typeof value === 'string') {
-        return lastName !== value
+        return lastName !== value.trim()
       }
       if (operator === 'contains' && typeof value === 'string') {
-        return lastName.toLowerCase().includes(value.toLowerCase())
-      }
-      if (operator === 'notContains' && typeof value === 'string') {
-        return !lastName.toLowerCase().includes(value.toLowerCase())
+        const searchValue = value.trim().toLowerCase()
+        return searchValue === '' ? true : lastName.toLowerCase().includes(searchValue)
       }
       if (operator === 'startsWith' && typeof value === 'string') {
-        return lastName.toLowerCase().startsWith(value.toLowerCase())
+        const searchValue = value.trim().toLowerCase()
+        return searchValue === '' ? true : lastName.toLowerCase().startsWith(searchValue)
       }
       if (operator === 'endsWith' && typeof value === 'string') {
-        return lastName.toLowerCase().endsWith(value.toLowerCase())
+        const searchValue = value.trim().toLowerCase()
+        return searchValue === '' ? true : lastName.toLowerCase().endsWith(searchValue)
       }
       if (operator === 'isEmpty') {
         return lastName === ''
@@ -422,10 +443,11 @@ export function contactMatchesFilter(contact: AppContact, filter: SegmentFilter)
 
     // Phone Number - contact.phone is stored in E.164 format
     case 'phoneNumber':
-      const contactPhone = contact.phone || '' // E.164 format
+      const contactPhone = (contact.phone || '').trim() // E.164 format
       
       // Normalize filter value to E.164 format for comparison
       const normalizeFilterValue = (val: string): string => {
+        if (!val || val.trim() === '') return ''
         // Try to detect and normalize the filter value
         const detection = detectCountryFromPhoneNumber(val)
         if (detection.isValid && detection.formattedNumber) {
@@ -437,147 +459,215 @@ export function contactMatchesFilter(contact: AppContact, filter: SegmentFilter)
           return validation.formatted
         }
         // Return as-is if normalization fails
-        return val
+        return val.trim()
       }
       
       if (operator === 'equals' && typeof value === 'string') {
+        if (contactPhone === '') return value.trim() === ''
         const normalizedValue = normalizeFilterValue(value)
         return contactPhone === normalizedValue
       }
       if (operator === 'notEquals' && typeof value === 'string') {
+        if (contactPhone === '') return value.trim() !== ''
         const normalizedValue = normalizeFilterValue(value)
         return contactPhone !== normalizedValue
       }
       if (operator === 'contains' && typeof value === 'string') {
+        const searchValue = value.trim()
+        if (searchValue === '') return true // Empty search matches all
+        if (contactPhone === '') return false
         // For contains, check both E.164 format and local format
         const normalizedValue = normalizeFilterValue(value)
-        return contactPhone.includes(normalizedValue) || contactPhone.includes(value)
+        return contactPhone.includes(normalizedValue) || contactPhone.includes(searchValue)
       }
       if (operator === 'startsWith' && typeof value === 'string') {
+        const searchValue = value.trim()
+        if (searchValue === '') return true // Empty search matches all
+        if (contactPhone === '') return false
         // For startsWith, normalize and compare
         const normalizedValue = normalizeFilterValue(value)
-        return contactPhone.startsWith(normalizedValue) || contactPhone.startsWith(value)
+        return contactPhone.startsWith(normalizedValue) || contactPhone.startsWith(searchValue)
       }
       if (operator === 'endsWith' && typeof value === 'string') {
+        const searchValue = value.trim().replace(/\D/g, '')
+        if (searchValue === '') return true // Empty search matches all
+        if (contactPhone === '') return false
         // For endsWith, check the last digits (national number part)
         const contactNational = contactPhone.replace(/^\+\d{1,4}/, '') // Remove country code
-        return contactNational.endsWith(value.replace(/\D/g, ''))
+        return contactNational.endsWith(searchValue)
       }
       if (operator === 'exists') {
-        return contactPhone !== null && contactPhone !== undefined && contactPhone !== ''
+        return contactPhone !== '' && contactPhone !== null && contactPhone !== undefined
       }
       if (operator === 'doesNotExist') {
-        return contactPhone === null || contactPhone === undefined || contactPhone === ''
+        return contactPhone === '' || contactPhone === null || contactPhone === undefined
       }
       return false
 
     // Email Address
     case 'emailAddress':
-      const email = contact.emailAddress || ''
+      const email = (contact.emailAddress || '').trim()
       if (operator === 'equals' && typeof value === 'string') {
-        return email === value
+        return email === value.trim()
       }
       if (operator === 'notEquals' && typeof value === 'string') {
-        return email !== value
+        return email !== value.trim()
       }
       if (operator === 'contains' && typeof value === 'string') {
-        return email.toLowerCase().includes(value.toLowerCase())
+        const searchValue = value.trim().toLowerCase()
+        return searchValue === '' ? true : email.toLowerCase().includes(searchValue)
       }
       if (operator === 'startsWith' && typeof value === 'string') {
-        return email.toLowerCase().startsWith(value.toLowerCase())
+        const searchValue = value.trim().toLowerCase()
+        return searchValue === '' ? true : email.toLowerCase().startsWith(searchValue)
       }
       if (operator === 'endsWith' && typeof value === 'string') {
-        return email.toLowerCase().endsWith(value.toLowerCase())
+        const searchValue = value.trim().toLowerCase()
+        return searchValue === '' ? true : email.toLowerCase().endsWith(searchValue)
       }
       if (operator === 'exists') {
-        return email !== null && email !== undefined && email !== ''
+        return email !== '' && email !== null && email !== undefined
       }
       if (operator === 'doesNotExist') {
-        return email === null || email === undefined || email === ''
+        return email === '' || email === null || email === undefined
       }
       return false
 
     // Language
     case 'language':
-      const language = contact.language || ''
-      if (operator === 'equals' && typeof value === 'string') {
-        return language === value
+      const language = (contact.language || '').trim()
+      if (operator === 'equals') {
+        // Handle both string and array values (for backwards compatibility)
+        const filterValue = typeof value === 'string' 
+          ? value.trim() 
+          : Array.isArray(value) && value.length > 0 && typeof value[0] === 'string'
+          ? value[0].trim()
+          : ''
+        if (filterValue === '') return language === ''
+        return language === filterValue
       }
-      if (operator === 'notEquals' && typeof value === 'string') {
-        return language !== value
+      if (operator === 'notEquals') {
+        // Handle both string and array values (for backwards compatibility)
+        const filterValue = typeof value === 'string' 
+          ? value.trim() 
+          : Array.isArray(value) && value.length > 0 && typeof value[0] === 'string'
+          ? value[0].trim()
+          : ''
+        if (filterValue === '') return language !== ''
+        return language !== filterValue
       }
-      if (operator === 'in' && Array.isArray(value)) {
-        return value.some(v => typeof v === 'string' && v === language)
+      if (operator === 'in' && Array.isArray(value) && value.length > 0) {
+        return value.some(v => typeof v === 'string' && language === v.trim())
       }
-      if (operator === 'notIn' && Array.isArray(value)) {
-        return !value.some(v => typeof v === 'string' && v === language)
+      if (operator === 'notIn' && Array.isArray(value) && value.length > 0) {
+        return !value.some(v => typeof v === 'string' && language === v.trim())
       }
-      if (operator === 'hasAnyOf' && Array.isArray(value)) {
-        return value.some(v => typeof v === 'string' && v === language)
+      if (operator === 'hasAnyOf' && Array.isArray(value) && value.length > 0) {
+        return value.some(v => typeof v === 'string' && language === v.trim())
+      }
+      if (operator === 'isEmpty') {
+        return language === ''
+      }
+      if (operator === 'isNotEmpty') {
+        return language !== ''
       }
       return false
 
     // Bot Status
     case 'botStatus':
-      const botStatus = contact.botStatus || ''
-      if (operator === 'equals' && typeof value === 'string') {
-        return botStatus === value
+      const botStatus = (contact.botStatus || '').trim()
+      if (operator === 'equals') {
+        // Handle both string and array values (for backwards compatibility)
+        const filterValue = typeof value === 'string' 
+          ? value.trim() 
+          : Array.isArray(value) && value.length > 0 && typeof value[0] === 'string'
+          ? value[0].trim()
+          : ''
+        if (filterValue === '') return botStatus === ''
+        return botStatus === filterValue
       }
-      if (operator === 'notEquals' && typeof value === 'string') {
-        return botStatus !== value
+      if (operator === 'notEquals') {
+        // Handle both string and array values (for backwards compatibility)
+        const filterValue = typeof value === 'string' 
+          ? value.trim() 
+          : Array.isArray(value) && value.length > 0 && typeof value[0] === 'string'
+          ? value[0].trim()
+          : ''
+        if (filterValue === '') return botStatus !== ''
+        return botStatus !== filterValue
       }
-      if (operator === 'in' && Array.isArray(value)) {
-        return value.some(v => typeof v === 'string' && v === botStatus)
+      if (operator === 'in' && Array.isArray(value) && value.length > 0) {
+        return value.some(v => typeof v === 'string' && botStatus === v.trim())
       }
-      if (operator === 'notIn' && Array.isArray(value)) {
-        return !value.some(v => typeof v === 'string' && v === botStatus)
+      if (operator === 'notIn' && Array.isArray(value) && value.length > 0) {
+        return !value.some(v => typeof v === 'string' && botStatus === v.trim())
       }
-      if (operator === 'hasAnyOf' && Array.isArray(value)) {
-        return value.some(v => typeof v === 'string' && v === botStatus)
+      if (operator === 'hasAnyOf' && Array.isArray(value) && value.length > 0) {
+        return value.some(v => typeof v === 'string' && botStatus === v.trim())
+      }
+      if (operator === 'isEmpty') {
+        return botStatus === ''
+      }
+      if (operator === 'isNotEmpty') {
+        return botStatus !== ''
       }
       return false
 
     // Assignee
     case 'assignee':
-      const assignee = contact.assignee || ''
-      if (operator === 'equals' && typeof value === 'string') {
-        return assignee === value
+      const assignee = (contact.assignee || '').trim()
+      if (operator === 'equals') {
+        // Handle both string and array values (for backwards compatibility)
+        const filterValue = typeof value === 'string' 
+          ? value.trim() 
+          : Array.isArray(value) && value.length > 0 && typeof value[0] === 'string'
+          ? value[0].trim()
+          : ''
+        if (filterValue === '') return assignee === '' || assignee === null || assignee === undefined
+        return assignee === filterValue
       }
-      if (operator === 'notEquals' && typeof value === 'string') {
-        return assignee !== value
+      if (operator === 'notEquals') {
+        // Handle both string and array values (for backwards compatibility)
+        const filterValue = typeof value === 'string' 
+          ? value.trim() 
+          : Array.isArray(value) && value.length > 0 && typeof value[0] === 'string'
+          ? value[0].trim()
+          : ''
+        if (filterValue === '') return assignee !== '' && assignee !== null && assignee !== undefined
+        return assignee !== filterValue
       }
-      if (operator === 'in' && Array.isArray(value)) {
-        return value.some(v => typeof v === 'string' && v === assignee)
+      if (operator === 'in' && Array.isArray(value) && value.length > 0) {
+        return value.some(v => typeof v === 'string' && assignee === v.trim())
       }
-      if (operator === 'notIn' && Array.isArray(value)) {
-        return !value.some(v => typeof v === 'string' && v === assignee)
+      if (operator === 'notIn' && Array.isArray(value) && value.length > 0) {
+        return !value.some(v => typeof v === 'string' && assignee === v.trim())
       }
-      if (operator === 'hasAnyOf' && Array.isArray(value)) {
-        return value.some(v => typeof v === 'string' && v === assignee)
+      if (operator === 'hasAnyOf' && Array.isArray(value) && value.length > 0) {
+        return value.some(v => typeof v === 'string' && assignee === v.trim())
       }
       if (operator === 'isEmpty') {
-        return assignee === null || assignee === undefined || assignee === ''
+        return assignee === '' || assignee === null || assignee === undefined
       }
       if (operator === 'isNotEmpty') {
-        return assignee !== null && assignee !== undefined && assignee !== ''
+        return assignee !== '' && assignee !== null && assignee !== undefined
       }
       return false
 
     // Last Interacted Channel
     case 'lastInteractedChannel':
       // Normalize channel values for case-insensitive comparison
-      const lastInteractedChannel = contact.lastInteractedChannel ? contact.lastInteractedChannel.toLowerCase() : null
+      const lastInteractedChannel = contact.lastInteractedChannel ? contact.lastInteractedChannel.toLowerCase().trim() : null
       if (operator === 'equals' && typeof value === 'string') {
-        return lastInteractedChannel === value.toLowerCase()
+        return lastInteractedChannel === value.toLowerCase().trim()
       }
       if (operator === 'notEquals' && typeof value === 'string') {
-        return lastInteractedChannel !== value.toLowerCase()
+        return lastInteractedChannel !== value.toLowerCase().trim()
       }
       if (operator === 'exists') {
-        return contact.lastInteractedChannel !== null && contact.lastInteractedChannel !== undefined && contact.lastInteractedChannel !== ''
+        return contact.lastInteractedChannel !== null && contact.lastInteractedChannel !== undefined && contact.lastInteractedChannel.trim() !== ''
       }
       if (operator === 'doesNotExist') {
-        return contact.lastInteractedChannel === null || contact.lastInteractedChannel === undefined || contact.lastInteractedChannel === ''
+        return contact.lastInteractedChannel === null || contact.lastInteractedChannel === undefined || contact.lastInteractedChannel.trim() === ''
       }
       return false
 
@@ -587,31 +677,30 @@ export function contactMatchesFilter(contact: AppContact, filter: SegmentFilter)
         return operator === 'doesNotExist' || operator === 'isEmpty'
       }
       const createdAt = contact.createdAt
+      if (!(createdAt instanceof Date) || isNaN(createdAt.getTime())) {
+        return operator === 'doesNotExist' || operator === 'isEmpty'
+      }
       if (operator === 'exists') {
         return true
       }
       if (operator === 'doesNotExist') {
         return false
       }
-      if (operator === 'isLessThanTime' && typeof value === 'number') {
-        const daysSinceCreation = Math.floor((Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24))
-        return daysSinceCreation < value
-      }
-      if (operator === 'isGreaterThanTime' && typeof value === 'number') {
-        const daysSinceCreation = Math.floor((Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24))
-        return daysSinceCreation > value
-      }
       if (operator === 'isTimestampAfter' && typeof value === 'string') {
         const filterDate = new Date(value)
+        if (isNaN(filterDate.getTime())) return false
         return createdAt > filterDate
       }
       if (operator === 'isTimestampBefore' && typeof value === 'string') {
         const filterDate = new Date(value)
+        if (isNaN(filterDate.getTime())) return false
         return createdAt < filterDate
       }
       if (operator === 'isTimestampBetween' && typeof value === 'object' && value !== null && 'from' in value && 'to' in value) {
         const fromDate = new Date(value.from)
         const toDate = new Date(value.to)
+        if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) return false
+        if (fromDate > toDate) return false // Invalid range
         return createdAt >= fromDate && createdAt <= toDate
       }
       return false
@@ -622,31 +711,30 @@ export function contactMatchesFilter(contact: AppContact, filter: SegmentFilter)
         return operator === 'doesNotExist' || operator === 'isEmpty'
       }
       const lastInteractionTime = contact.lastInteractionTime
+      if (!(lastInteractionTime instanceof Date) || isNaN(lastInteractionTime.getTime())) {
+        return operator === 'doesNotExist' || operator === 'isEmpty'
+      }
       if (operator === 'exists') {
         return true
       }
       if (operator === 'doesNotExist') {
         return false
       }
-      if (operator === 'isGreaterThanTime' && typeof value === 'number') {
-        const daysSinceInteraction = Math.floor((Date.now() - lastInteractionTime.getTime()) / (1000 * 60 * 60 * 24))
-        return daysSinceInteraction > value
-      }
-      if (operator === 'isLessThanTime' && typeof value === 'number') {
-        const daysSinceInteraction = Math.floor((Date.now() - lastInteractionTime.getTime()) / (1000 * 60 * 60 * 24))
-        return daysSinceInteraction < value
-      }
       if (operator === 'isTimestampAfter' && typeof value === 'string') {
         const filterDate = new Date(value)
+        if (isNaN(filterDate.getTime())) return false
         return lastInteractionTime > filterDate
       }
       if (operator === 'isTimestampBefore' && typeof value === 'string') {
         const filterDate = new Date(value)
+        if (isNaN(filterDate.getTime())) return false
         return lastInteractionTime < filterDate
       }
       if (operator === 'isTimestampBetween' && typeof value === 'object' && value !== null && 'from' in value && 'to' in value) {
         const fromDate = new Date(value.from)
         const toDate = new Date(value.to)
+        if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) return false
+        if (fromDate > toDate) return false // Invalid range
         return lastInteractionTime >= fromDate && lastInteractionTime <= toDate
       }
       return false
@@ -657,6 +745,9 @@ export function contactMatchesFilter(contact: AppContact, filter: SegmentFilter)
         return operator === 'doesNotExist' || operator === 'isEmpty'
       }
       const conversationOpenedTime = contact.conversationOpenedTime
+      if (!(conversationOpenedTime instanceof Date) || isNaN(conversationOpenedTime.getTime())) {
+        return operator === 'doesNotExist' || operator === 'isEmpty'
+      }
       if (operator === 'exists') {
         return true
       }
@@ -665,15 +756,19 @@ export function contactMatchesFilter(contact: AppContact, filter: SegmentFilter)
       }
       if (operator === 'isTimestampAfter' && typeof value === 'string') {
         const filterDate = new Date(value)
+        if (isNaN(filterDate.getTime())) return false
         return conversationOpenedTime > filterDate
       }
       if (operator === 'isTimestampBefore' && typeof value === 'string') {
         const filterDate = new Date(value)
+        if (isNaN(filterDate.getTime())) return false
         return conversationOpenedTime < filterDate
       }
       if (operator === 'isTimestampBetween' && typeof value === 'object' && value !== null && 'from' in value && 'to' in value) {
         const fromDate = new Date(value.from)
         const toDate = new Date(value.to)
+        if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) return false
+        if (fromDate > toDate) return false // Invalid range
         return conversationOpenedTime >= fromDate && conversationOpenedTime <= toDate
       }
       return false
@@ -684,31 +779,45 @@ export function contactMatchesFilter(contact: AppContact, filter: SegmentFilter)
         return operator === 'doesNotExist' || operator === 'isEmpty'
       }
       const lastMessageTime = contact.lastInteractionTime
+      if (!(lastMessageTime instanceof Date) || isNaN(lastMessageTime.getTime())) {
+        return operator === 'doesNotExist' || operator === 'isEmpty'
+      }
       if (operator === 'exists') {
         return true
       }
       if (operator === 'doesNotExist') {
         return false
       }
-      if (operator === 'isGreaterThanTime' && typeof value === 'number') {
+      if (operator === 'isGreaterThanTime' && typeof value === 'number' && value >= 0) {
         const daysSince = Math.floor((Date.now() - lastMessageTime.getTime()) / (1000 * 60 * 60 * 24))
         return daysSince > value
       }
-      if (operator === 'isLessThanTime' && typeof value === 'number') {
+      if (operator === 'isLessThanTime' && typeof value === 'number' && value >= 0) {
         const daysSince = Math.floor((Date.now() - lastMessageTime.getTime()) / (1000 * 60 * 60 * 24))
         return daysSince < value
       }
+      if (operator === 'isBetweenTime' && typeof value === 'object' && value !== null && 'from' in value && 'to' in value) {
+        const daysSince = Math.floor((Date.now() - lastMessageTime.getTime()) / (1000 * 60 * 60 * 24))
+        const fromDays = typeof value.from === 'number' ? value.from : 0
+        const toDays = typeof value.to === 'number' ? value.to : 0
+        if (fromDays > toDays) return false // Invalid range
+        return daysSince >= fromDays && daysSince <= toDays
+      }
       if (operator === 'isTimestampAfter' && typeof value === 'string') {
         const filterDate = new Date(value)
+        if (isNaN(filterDate.getTime())) return false
         return lastMessageTime > filterDate
       }
       if (operator === 'isTimestampBefore' && typeof value === 'string') {
         const filterDate = new Date(value)
+        if (isNaN(filterDate.getTime())) return false
         return lastMessageTime < filterDate
       }
       if (operator === 'isTimestampBetween' && typeof value === 'object' && value !== null && 'from' in value && 'to' in value) {
         const fromDate = new Date(value.from)
         const toDate = new Date(value.to)
+        if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) return false
+        if (fromDate > toDate) return false // Invalid range
         return lastMessageTime >= fromDate && lastMessageTime <= toDate
       }
       return false

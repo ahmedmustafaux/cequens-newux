@@ -43,6 +43,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { FILTER_CATEGORIES, OPERATOR_LABELS, type FilterCategory } from "@/data/filter-config"
+import { CircleFlag } from "react-circle-flags"
 
 export interface CreateSegmentDialogProps {
   open: boolean
@@ -904,11 +905,20 @@ export function CreateSegmentDialog({
           </div>
           
           {filteredOptions.length > 0 ? (
-            <div className="overflow-y-auto p-1 flex-1 min-h-0">
+            <div className="overflow-y-auto p-1" style={{ maxHeight: 'calc(400px - 60px)', height: 'calc(400px - 60px)' }}>
               {filteredOptions.map((option) => {
                 const isSelected = displayValues.includes(option.value)
                 return (
-                  <div key={option.value} className="flex items-center space-x-2 p-2 hover:bg-accent rounded-sm">
+                  <div 
+                    key={option.value} 
+                    className="flex items-center space-x-2 p-2 hover:bg-accent rounded-sm cursor-pointer"
+                    onClick={() => {
+                      const newValues = isSelected
+                        ? displayValues.filter((v) => v !== option.value)
+                        : [...displayValues, option.value]
+                      handleFilterValueChange(filterId, newValues)
+                    }}
+                  >
                     <Checkbox
                       id={`filter-${filterId}-${option.value}`}
                       checked={isSelected}
@@ -921,16 +931,24 @@ export function CreateSegmentDialog({
                     />
                     <label
                       htmlFor={`filter-${filterId}-${option.value}`}
-                      className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
+                      className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1 flex items-center gap-2"
                     >
-                      {option.label}
+                      {filter.field === "countryISO" && (
+                        <div className="w-5 h-5 flex-shrink-0 overflow-hidden rounded-full">
+                          <CircleFlag
+                            countryCode={option.value.toLowerCase()}
+                            className="w-full h-full"
+                          />
+                        </div>
+                      )}
+                      <span className="flex-1">{option.label}</span>
                     </label>
                   </div>
                 )
               })}
             </div>
           ) : (
-            <div className="px-2 py-1 text-sm text-muted-foreground text-center">
+            <div className="px-2 py-4 text-sm text-muted-foreground text-center">
               No results found
             </div>
           )}
@@ -1270,8 +1288,8 @@ export function CreateSegmentDialog({
 
       {/* Filter Drawer - Second Step */}
       <Sheet open={isDrawerOpen} onOpenChange={handleDrawerClose}>
-        <SheetContent side="right" className="w-1/4 min-w-[320px] max-w-[480px] bg-popover flex flex-col p-0 gap-0 [&>button.absolute]:hidden">
-          <div className="flex-1 overflow-y-auto">
+        <SheetContent side="right" className="w-1/4 min-w-[320px] max-w-[480px] bg-popover flex flex-col p-0 gap-0 [&>button.absolute]:hidden overflow-hidden">
+          <div className="flex-1 overflow-y-auto min-h-0">
             {/* Header */}
             <div className="px-4 pt-4 pb-3 border-b border-border">
               <div className="flex items-center justify-between mb-2">
@@ -1388,9 +1406,9 @@ export function CreateSegmentDialog({
                                           <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
                                         </Button>
                                       </PopoverTrigger>
-                                      <PopoverContent className="w-auto min-w-[200px] max-w-[300px] p-0 bg-card border border-border shadow-lg max-h-[400px] flex flex-col" align="start">
+                                      <PopoverContent className="w-auto min-w-[200px] max-w-[300px] p-0 bg-card border border-border shadow-lg flex flex-col" style={{ maxHeight: '400px' }} align="start">
                                         {selectedCategory ? (
-                                          <div className="flex flex-col flex-1 min-h-0">
+                                          <div className="flex flex-col h-full" style={{ maxHeight: '400px' }}>
                                             <div className="p-2 border-b border-border flex-shrink-0">
                                               <Button
                                                 variant="ghost"
@@ -1409,7 +1427,7 @@ export function CreateSegmentDialog({
                                                 autoFocus={false}
                                               />
                                             </div>
-                                            <div className="overflow-y-auto p-1 flex-1 min-h-0">
+                                            <div className="overflow-y-auto p-1" style={{ maxHeight: 'calc(400px - 120px)' }}>
                                               {FILTER_CATEGORIES.find(c => c.id === selectedCategory)?.fields
                                                 .filter(field => {
                                                   const matchesSearch = field.label.toLowerCase().includes(fieldSearchQuery.toLowerCase())
@@ -1433,7 +1451,7 @@ export function CreateSegmentDialog({
                                             </div>
                                           </div>
                                         ) : (
-                                          <div className="flex flex-col bg-card flex-1 min-h-0">
+                                          <div className="flex flex-col bg-card" style={{ maxHeight: '400px' }}>
                                             <div className="flex-shrink-0">
                                               <FilterSearchInput
                                                 placeholder="Search categories..."
@@ -1442,7 +1460,7 @@ export function CreateSegmentDialog({
                                                 autoFocus={false}
                                               />
                                             </div>
-                                            <div className="overflow-y-auto p-1 flex-1 min-h-0">
+                                            <div className="overflow-y-auto p-1" style={{ maxHeight: 'calc(400px - 60px)' }}>
                                               {FILTER_CATEGORIES.filter(category => 
                                                 category.label.toLowerCase().includes(fieldSearchQuery.toLowerCase())
                                               ).map((category) => (
@@ -1495,8 +1513,8 @@ export function CreateSegmentDialog({
                                           <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
                                         </Button>
                                       </PopoverTrigger>
-                                      <PopoverContent className="w-auto min-w-[180px] p-0 bg-card border border-border shadow-lg max-h-[400px] flex flex-col" align="start">
-                                        <div className="overflow-y-auto p-1 flex-1 min-h-0">
+                                      <PopoverContent className="w-auto min-w-[180px] p-0 bg-card border border-border shadow-lg flex flex-col" style={{ maxHeight: '400px' }} align="start">
+                                        <div className="overflow-y-auto p-1" style={{ maxHeight: '400px', height: '400px' }}>
                                           {(() => {
                                             const fieldInfo = getFieldInfo(filterItem.filter.field)
                                             const availableOperators = fieldInfo?.field.operators || []
@@ -1621,11 +1639,12 @@ export function CreateSegmentDialog({
                                             </Button>
                                           </PopoverTrigger>
                                           <PopoverContent 
-                                            className="w-auto min-w-[200px] max-w-[300px] p-0 bg-card border border-border shadow-lg max-h-[400px] flex flex-col"
+                                            className="w-auto min-w-[200px] max-w-[300px] p-0 bg-card border border-border shadow-lg flex flex-col"
+                                            style={{ maxHeight: '400px' }}
                                             align="start"
                                             onOpenAutoFocus={(e) => e.preventDefault()}
                                           >
-                                            <div className="flex flex-col flex-1 min-h-0">
+                                            <div className="flex flex-col" style={{ maxHeight: '400px' }}>
                                               {editingFilterId === groupItem.id && renderValueInput(filterItem.filter, groupItem.id)}
                                             </div>
                                           </PopoverContent>
@@ -1725,7 +1744,8 @@ export function CreateSegmentDialog({
                                 </Button>
                               </PopoverTrigger>
                               <PopoverContent 
-                                className="w-auto min-w-[200px] max-w-[300px] p-0 bg-card border border-border shadow-lg max-h-[400px] flex flex-col" 
+                                className="w-auto min-w-[200px] max-w-[300px] p-0 bg-card border border-border shadow-lg flex flex-col" 
+                                style={{ maxHeight: '400px' }}
                                 align="start"
                               >
                                 {selectedFieldForValueSelection ? (
@@ -1738,7 +1758,7 @@ export function CreateSegmentDialog({
                                     return renderValueInput(newFilter.filter, newFilter.id)
                                   })()
                                 ) : (
-                                  <div className="flex flex-col flex-1 min-h-0">
+                                  <div className="flex flex-col" style={{ maxHeight: '400px' }}>
                                     <div className="flex-shrink-0">
                                       <FilterSearchInput
                                         placeholder="Search..."
@@ -1747,7 +1767,7 @@ export function CreateSegmentDialog({
                                         autoFocus={false}
                                       />
                                     </div>
-                                    <div className="overflow-y-auto p-1 flex-1 min-h-0">
+                                    <div className="overflow-y-auto p-1" style={{ maxHeight: 'calc(400px - 60px)', height: 'calc(400px - 60px)' }}>
                                       {selectedCategory ? (
                                         FILTER_CATEGORIES.find(c => c.id === selectedCategory)?.fields
                                           .filter(field => {
@@ -1818,9 +1838,9 @@ export function CreateSegmentDialog({
                                   <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
                                 </Button>
                               </PopoverTrigger>
-                            <PopoverContent className="w-auto min-w-[200px] max-w-[300px] p-0 bg-card border border-border shadow-lg max-h-[400px] flex flex-col" align="start">
+                            <PopoverContent className="w-auto min-w-[200px] max-w-[300px] p-0 bg-card border border-border shadow-lg flex flex-col" style={{ maxHeight: '400px' }} align="start">
                               {selectedCategory ? (
-                                <div className="flex flex-col flex-1 min-h-0">
+                                <div className="flex flex-col" style={{ maxHeight: '400px' }}>
                                   <div className="p-2 border-b border-border flex-shrink-0">
                                     <Button
                                       variant="ghost"
@@ -1839,7 +1859,7 @@ export function CreateSegmentDialog({
                                       autoFocus={false}
                                     />
                                   </div>
-                                  <div className="overflow-y-auto p-1 flex-1 min-h-0">
+                                  <div className="overflow-y-auto p-1" style={{ maxHeight: 'calc(400px - 120px)', height: 'calc(400px - 120px)' }}>
                                     {FILTER_CATEGORIES.find(c => c.id === selectedCategory)?.fields
                                       .filter(field => {
                                         const matchesSearch = field.label.toLowerCase().includes(fieldSearchQuery.toLowerCase())
@@ -1863,7 +1883,7 @@ export function CreateSegmentDialog({
                                   </div>
                                 </div>
                               ) : (
-                                <div className="flex flex-col bg-card flex-1 min-h-0">
+                                <div className="flex flex-col bg-card" style={{ maxHeight: '400px' }}>
                                   <div className="flex-shrink-0">
                                     <FilterSearchInput
                                       placeholder="Search categories..."
@@ -1872,7 +1892,7 @@ export function CreateSegmentDialog({
                                       autoFocus={false}
                                     />
                                   </div>
-                                  <div className="overflow-y-auto p-1 flex-1 min-h-0">
+                                  <div className="overflow-y-auto p-1" style={{ maxHeight: 'calc(400px - 60px)', height: 'calc(400px - 60px)' }}>
                                     {FILTER_CATEGORIES.filter(category => 
                                       category.label.toLowerCase().includes(fieldSearchQuery.toLowerCase())
                                     ).map((category) => (
@@ -1925,8 +1945,8 @@ export function CreateSegmentDialog({
                                 <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto min-w-[180px] p-0 bg-card border border-border shadow-lg max-h-[400px] flex flex-col" align="start">
-                              <div className="overflow-y-auto p-1 flex-1 min-h-0">
+                            <PopoverContent className="w-auto min-w-[180px] p-0 bg-card border border-border shadow-lg flex flex-col" style={{ maxHeight: '400px' }} align="start">
+                              <div className="overflow-y-auto p-1" style={{ maxHeight: '400px', height: '400px' }}>
                                 {(() => {
                                   const fieldInfo = getFieldInfo(badge.filter.field)
                                   const availableOperators = fieldInfo?.field.operators || []
@@ -2181,7 +2201,7 @@ export function CreateSegmentDialog({
                             autoFocus={false}
                           />
                         </div>
-                        <div className="overflow-y-auto p-1 flex-1 min-h-0">
+                        <div className="overflow-y-auto p-1" style={{ maxHeight: 'calc(400px - 60px)', height: 'calc(400px - 60px)' }}>
                           {selectedCategory ? (
                             FILTER_CATEGORIES.find(c => c.id === selectedCategory)?.fields
                               .filter(field => {

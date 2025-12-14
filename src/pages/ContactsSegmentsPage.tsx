@@ -1316,8 +1316,8 @@ function ContactsSegmentsPageContent() {
         : options
       
       return (
-        <div className="flex flex-col flex-1 min-h-0">
-          <div className="flex-shrink-0">
+        <div className="flex flex-col h-full min-h-0">
+          <div className="flex-shrink-0 p-2 border-b">
             <FilterSearchInput
               placeholder="Search..."
               value={valueSearchQuery}
@@ -1327,11 +1327,16 @@ function ContactsSegmentsPageContent() {
           </div>
           
           {filteredOptions.length > 0 ? (
-            <div className="overflow-y-auto p-1 flex-1 min-h-0 max-h-64">
+            <div className="overflow-y-auto flex-1 min-h-0 p-1" style={{ maxHeight: '400px' }}>
               {filteredOptions.map((option) => {
                 const isSelected = displayValues.includes(option.value)
                 return (
-                  <div key={option.value} className="flex items-center space-x-2 p-2 hover:bg-accent rounded-sm">
+                  <div key={option.value} className="flex items-center space-x-2 p-2 hover:bg-accent rounded-sm cursor-pointer" onClick={() => {
+                    const newValues = isSelected
+                      ? displayValues.filter((v) => v !== option.value)
+                      : [...displayValues, option.value]
+                    handleFilterValueChange(filterIndex, newValues)
+                  }}>
                     <Checkbox
                       id={`filter-${filterIndex}-${option.value}`}
                       checked={isSelected}
@@ -1344,9 +1349,17 @@ function ContactsSegmentsPageContent() {
                     />
                     <label
                       htmlFor={`filter-${filterIndex}-${option.value}`}
-                      className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1 flex items-center justify-between"
+                      className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1 flex items-center gap-2"
                     >
-                      <span>{option.label}</span>
+                      {filter.field === "countryISO" && (
+                        <div className="w-5 h-5 flex-shrink-0 overflow-hidden rounded-full">
+                          <CircleFlag
+                            countryCode={option.value.toLowerCase()}
+                            className="w-full h-full"
+                          />
+                        </div>
+                      )}
+                      <span className="flex-1">{option.label}</span>
                       {filter.field === "channel" && (
                         <span className="ml-2">
                           {getChannelIcon(option.value)}
@@ -1358,7 +1371,7 @@ function ContactsSegmentsPageContent() {
               })}
             </div>
           ) : (
-            <div className="px-2 py-1 text-sm text-muted-foreground text-center">
+            <div className="px-2 py-4 text-sm text-muted-foreground text-center">
               No results found
             </div>
           )}
@@ -1528,14 +1541,14 @@ function ContactsSegmentsPageContent() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
                       <DropdownMenuItem onClick={() => handleEditSegment(segment)}>
-                        Edit Segment
+                        Edit segment
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => {
                           handleOpenDeleteDialog(segment)
                         }}
                       >
-                        Delete Segment
+                        Delete segment
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
