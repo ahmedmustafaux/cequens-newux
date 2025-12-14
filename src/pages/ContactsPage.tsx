@@ -715,8 +715,8 @@ const ContactsPageContent = (): React.JSX.Element => {
       <Dialog 
         open={showArchiveDialog} 
         onOpenChange={(open) => {
+          setShowArchiveDialog(open)
           if (!open) {
-            setShowArchiveDialog(false)
             setArchiveConfirmation("")
           }
         }}
