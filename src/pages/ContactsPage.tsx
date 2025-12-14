@@ -712,7 +712,15 @@ const ContactsPageContent = (): React.JSX.Element => {
       </div>
 
       {/* Archive Dialog */}
-      <Dialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
+      <Dialog 
+        open={showArchiveDialog} 
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowArchiveDialog(false)
+            setArchiveConfirmation("")
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-lg p-0 gap-0">
           <DialogHeader className="p-4">
             <DialogTitle className="flex items-center gap-2">
@@ -780,8 +788,8 @@ const ContactsPageContent = (): React.JSX.Element => {
                     toast.success(`Successfully archived ${selectedIds.length} contact${selectedIds.length > 1 ? 's' : ''}`)
                     table.resetRowSelection()
                     // Close dialog and reset confirmation immediately after success
-                    setShowArchiveDialog(false)
                     setArchiveConfirmation("")
+                    setShowArchiveDialog(false)
                   } catch (error) {
                     console.error("Error archiving contacts:", error)
                     toast.error("Failed to archive contacts. Please try again.")
