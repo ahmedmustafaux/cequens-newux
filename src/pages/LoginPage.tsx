@@ -30,7 +30,6 @@ import { toast } from "sonner"
 import { useAuth } from "@/hooks/use-auth"
 import { validateLoginForm, validateEmail, isFormValid, type FieldValidation } from "@/lib/validation"
 import { ErrorMessage } from "@/components/ui/error-message"
-import { getDemoEmail } from "@/lib/config"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   InputOTP,
@@ -85,9 +84,6 @@ export default function LoginPage() {
       })
     }
   }, [emailVerified, verifiedUserData])
-
-  // Demo credentials from config
-  const demoCredentials = getDemoCredentials()
 
   // Countdown effect for resend code
   useEffect(() => {
@@ -282,42 +278,18 @@ export default function LoginPage() {
         return
       }
 
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-      // Check demo OTP
-      if (otp === "000000") {
-        toast.success("Welcome back! 👋", {
-          description: "You've successfully signed in. Redirecting to your dashboard...",
-          duration: 3000,
-        })
-        
-        // Use auth context to login with redirect
-        // For demo user, use the name from test users
-        const testUser = getTestUserByEmail(email)
-        if (testUser) {
-          login(email, `${testUser.firstName} ${testUser.lastName}`, undefined, from)
-        } else {
-          login(email, undefined, undefined, from)
-        }
-      } else {
-        // Show error in form
-        setErrors({
-          otp: { isValid: false, message: "Invalid OTP code" }
-        })
-      }
+      // OTP verification should be handled through Supabase/auth service
+      // For now, show error - OTP flow needs to be implemented with backend
+      setErrors({
+        otp: { isValid: false, message: "OTP verification is not yet implemented. Please use email/password login." }
+      })
+      toast.error("OTP verification unavailable", {
+        description: "Please use email and password to sign in.",
+        duration: 3000,
+      })
     }
 
     setIsLoading(false)
-  }
-
-  const fillDemoCredentials = () => {
-    setEmail(demoCredentials.email)
-    setPassword(demoCredentials.password)
-    toast.info("Demo credentials filled! 🔑", {
-      description: "Login form has been populated with demo credentials. You can now test the sign-in process.",
-      duration: 3000,
-    })
   }
 
   const goBackToCredentials = () => {

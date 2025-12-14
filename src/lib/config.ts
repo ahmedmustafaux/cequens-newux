@@ -18,12 +18,6 @@ export const appConfig = {
   version: "1.0.0",
   author: dynamicAppName,
   
-  // Demo Configuration
-  demo: {
-    email: `demo@${dynamicAppName.toLowerCase()}.com`,
-    password: "Demo123!@#"
-  },
-  
   // SEO Configuration
   seo: {
     title: {
@@ -49,24 +43,6 @@ export function generatePageTitle(pageTitle?: string): string {
 // Helper function to get full app name
 export function getAppName(): string {
   return appConfig.name
-}
-
-// Helper function to get demo email
-export function getDemoEmail(): string {
-  return appConfig.demo.email
-}
-
-// Helper function to get demo password
-export function getDemoPassword(): string {
-  return appConfig.demo.password
-}
-
-// Helper function to get demo credentials
-export function getDemoCredentials() {
-  return {
-    email: appConfig.demo.email,
-    password: appConfig.demo.password
-  }
 }
 
 // Helper function to get logo alt text
