@@ -636,7 +636,6 @@ const ContactsPageContent = (): React.JSX.Element => {
                       }}
                       disabled={unarchiveContactsMutation.isPending}
                     >
-                      <RotateCcw className="h-3 w-3 mr-1" />
                       {unarchiveContactsMutation.isPending ? "Restoring..." : "Restore"}
                     </Button>
                   ) : (
@@ -648,7 +647,6 @@ const ContactsPageContent = (): React.JSX.Element => {
                         setShowArchiveDialog(true)
                       }}
                     >
-                      <Archive className="h-3 w-3 mr-1" />
                       Archive
                     </Button>
                   )}

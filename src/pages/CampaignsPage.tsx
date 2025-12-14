@@ -35,6 +35,7 @@ import {
 import { SearchProvider } from "@/contexts/search-context"
 import { Highlight } from "@/components/ui/highlight"
 import { PageHeader } from "@/components/page-header"
+import { toast } from "sonner"
 import {
   DataTable,
   DataTableHeader,
@@ -44,7 +45,8 @@ import {
   DataTableHead,
   DataTableRow,
 } from "@/components/ui/data-table"
-import { mockCampaigns, type Campaign } from "@/data/mock-data"
+import { useCampaigns } from "@/hooks/use-campaigns"
+import type { Campaign } from "@/lib/supabase/types"
 
 // Column definitions for the campaigns table
 const columns: ColumnDef<Campaign>[] = [
@@ -103,11 +105,11 @@ const columns: ColumnDef<Campaign>[] = [
     ),
   },
   {
-    accessorKey: "openRate",
+    accessorKey: "open_rate",
     header: () => <div className="text-right">Open Rate</div>,
     cell: ({ row }) => {
-      const sentDate = row.original.sentDate;
-      const openRate = row.getValue<number>("openRate");
+      const sentDate = row.original.sent_date;
+      const openRate = row.getValue<number>("open_rate");
       return (
         <div className="text-right whitespace-nowrap text-sm text-muted-foreground">
           {sentDate ? `${openRate}%` : "-"}
@@ -116,11 +118,11 @@ const columns: ColumnDef<Campaign>[] = [
     },
   },
   {
-    accessorKey: "clickRate",
+    accessorKey: "click_rate",
     header: () => <div className="text-right">Click Rate</div>,
     cell: ({ row }) => {
-      const sentDate = row.original.sentDate;
-      const clickRate = row.getValue<number>("clickRate");
+      const sentDate = row.original.sent_date;
+      const clickRate = row.getValue<number>("click_rate");
       return (
         <div className="text-right whitespace-nowrap text-sm text-muted-foreground">
           {sentDate ? `${clickRate}%` : "-"}
@@ -129,10 +131,10 @@ const columns: ColumnDef<Campaign>[] = [
     },
   },
   {
-    accessorKey: "sentDate",
+    accessorKey: "sent_date",
     header: "Sent Date",
     cell: ({ row }) => {
-      const sentDate = row.getValue<string | null>("sentDate");
+      const sentDate = row.getValue<string | null>("sent_date");
       return (
         <div className="whitespace-nowrap">
           {sentDate ? new Date(sentDate).toLocaleDateString() : "Not sent"}
@@ -194,7 +196,8 @@ function CampaignsPageContent() {
     pageIndex: 0,
     pageSize: 15,
   })
-  const [isDataLoading, setIsDataLoading] = React.useState(true)
+  // Fetch campaigns from database
+  const { data: campaigns = [], isLoading: isDataLoading, error } = useCampaigns()
 
   // Filter states
   const [typeFilter, setTypeFilter] = React.useState<string[]>([])
@@ -216,29 +219,27 @@ function CampaignsPageContent() {
   // Dynamic page title
   usePageTitle("Campaigns")
 
-  // Simulate initial data loading from server
+  // Handle errors
   React.useEffect(() => {
-    setIsDataLoading(true)
-    const timer = setTimeout(() => {
-      setIsDataLoading(false)
-    }, 400) // Simulate 400ms loading time for server data
-
-    return () => clearTimeout(timer)
-  }, [])
+    if (error) {
+      console.error("Error fetching campaigns:", error)
+      toast.error("Failed to load campaigns. Please try again.")
+    }
+  }, [error])
 
   // Filter data based on selected view
   const filteredDataByView = React.useMemo(() => {
     switch (selectedView) {
       case "scheduled":
-        return mockCampaigns.filter(c => c.status === "Active")
+        return campaigns.filter(c => c.status === "Active")
       case "draft":
-        return mockCampaigns.filter(c => c.status === "Draft")
+        return campaigns.filter(c => c.status === "Draft")
       case "sent":
-        return mockCampaigns.filter(c => c.status === "Completed")
+        return campaigns.filter(c => c.status === "Completed")
       default:
-        return mockCampaigns
+        return campaigns
     }
-  }, [selectedView])
+  }, [selectedView, campaigns])
 
   // Apply filters to table
   React.useEffect(() => {
@@ -284,7 +285,7 @@ function CampaignsPageContent() {
   })
 
   const handleNewCampaign = () => {
-    // TODO: Implement new campaign creation
+    navigate("/campaigns/create")
   };
 
   return (
@@ -309,10 +310,10 @@ function CampaignsPageContent() {
             isLoading={isDataLoading}
             views={{
               options: [
-                { label: "All campaigns", value: "all", count: mockCampaigns.length },
-                { label: "Scheduled", value: "scheduled", count: mockCampaigns.filter(c => c.status === "Active").length },
-                { label: "Draft", value: "draft", count: mockCampaigns.filter(c => c.status === "Draft").length },
-                { label: "Sent", value: "sent", count: mockCampaigns.filter(c => c.status === "Completed").length }
+                { label: "All campaigns", value: "all", count: campaigns.length },
+                { label: "Scheduled", value: "scheduled", count: campaigns.filter(c => c.status === "Active").length },
+                { label: "Draft", value: "draft", count: campaigns.filter(c => c.status === "Draft").length },
+                { label: "Sent", value: "sent", count: campaigns.filter(c => c.status === "Completed").length }
               ],
               selectedView: selectedView,
               onViewChange: setSelectedView
