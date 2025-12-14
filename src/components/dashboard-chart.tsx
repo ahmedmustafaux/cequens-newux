@@ -79,6 +79,20 @@ export function DashboardChart({ timeRange, isLoading = false, isEmpty = false, 
     senders: sendersTotal
   }
 
+  // Prevent rendering if component is unmounting (helps avoid React warnings during navigation)
+  const [isMounted, setIsMounted] = React.useState(true)
+  
+  React.useEffect(() => {
+    setIsMounted(true)
+    return () => {
+      setIsMounted(false)
+    }
+  }, [])
+
+  if (!isMounted) {
+    return null
+  }
+
   return (
     <motion.div
       variants={loadingVariants}

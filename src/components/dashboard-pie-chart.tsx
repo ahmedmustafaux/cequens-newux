@@ -26,6 +26,16 @@ export function DashboardPieChart({ timeRange, isLoading = false, isEmpty = fals
   })
   const chartRef = React.useRef<HTMLDivElement>(null)
   
+  // Prevent rendering if component is unmounting (helps avoid React warnings during navigation)
+  const [isMounted, setIsMounted] = React.useState(true)
+  
+  React.useEffect(() => {
+    setIsMounted(true)
+    return () => {
+      setIsMounted(false)
+    }
+  }, [])
+  
   // Get computed colors from chart config CSS variables
   React.useEffect(() => {
     const updateColors = () => {
@@ -61,6 +71,10 @@ export function DashboardPieChart({ timeRange, isLoading = false, isEmpty = fals
   // Get chart data from mock data
   const chartData = getChartData(timeRange)
   
+  if (!isMounted) {
+    return null
+  }
+
   if (isLoading) {
     return <CardSkeleton className="h-[250px]" />
   }
