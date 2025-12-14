@@ -717,26 +717,28 @@ export default function CampaignsCreatePage() {
                 {/* Step Indicator */}
                 <div className="relative py-4 px-4 sm:px-4">
                   {/* Steps container */}
-                  <div className="relative flex items-start justify-between">
+                  <div className="relative flex items-start gap-12">
                     {/* Progress line background - from center of first to center of last circle */}
                     <div 
                       className="absolute top-4 h-0.5 bg-muted"
                       style={{
-                        left: '1.25rem', // Half of w-10 (2.5rem)
-                        right: '1.25rem', // Half of w-10 (2.5rem)
+                        left: '1rem', // Half of w-8 (2rem)
+                        right: '1rem', // Half of w-8 (2rem)
                       }}
                     />
                     
-                    {/* Progress fill - calculate based on completed segments */}
-                    {currentStep > 0 && (
-                      <div 
-                        className="absolute top-4 h-0.5 bg-primary transition-all duration-300"
-                        style={{
-                          left: '1.25rem',
-                          width: `calc(${(currentStep / (steps.length - 1)) * 100}% - 1.25rem)`
-                        }}
-                      />
-                    )}
+                    {/* Progress fill - calculated based on fixed step width (from start of step to start of next step) */}
+                    <div 
+                      className="absolute top-4 h-0.5 bg-primary transition-all duration-300 ease-out"
+                      style={{
+                        left: '1rem',
+                        // Fixed step segment width = step width + gap = (100% + 3rem) / steps.length
+                        // Progress = currentStep segments from center of first circle to center of current circle
+                        width: currentStep > 0 
+                          ? `calc(((100% + 3rem) / ${steps.length}) * ${currentStep})`
+                          : '0'
+                      }}
+                    />
                     
                     {/* Steps */}
                     {steps.map((step, index) => {
