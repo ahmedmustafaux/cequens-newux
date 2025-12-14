@@ -200,7 +200,7 @@ export default function NewUserOnboardingPage() {
   const [buildingProgress, setBuildingProgress] = useState(0)
   const wizardCardRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
-  const { user, updateOnboardingStatus } = useAuth()
+  const { user, updateOnboardingStatus, logout } = useAuth()
   const { completeOnboarding: markOnboardingComplete } = useOnboarding()
 
   // All steps including industry selection as first step
@@ -342,7 +342,15 @@ export default function NewUserOnboardingPage() {
             try {
               // Check if user has ID before proceeding
               if (!user?.id) {
-                throw new Error("User ID not available. Please log in again.")
+                // Clear auth state and redirect to login
+                toast.error("Session expired", {
+                  description: "Please log in again to continue.",
+                })
+                setTimeout(() => {
+                  logout()
+                }, 2000)
+                setIsLoading(false)
+                return
               }
               
               // Update onboarding status in database and context
@@ -362,9 +370,20 @@ export default function NewUserOnboardingPage() {
               console.error("Error completing onboarding:", error)
               const errorMessage = error?.message || "An unknown error occurred"
               console.error("Full error details:", error)
-              toast.error("Failed to save preferences", {
-                description: errorMessage || "Please try again.",
-              })
+              
+              // If error is about missing user ID, redirect to login
+              if (errorMessage.includes("User ID not available") || errorMessage.includes("log in again")) {
+                toast.error("Session expired", {
+                  description: "Please log in again to continue.",
+                })
+                setTimeout(() => {
+                  logout()
+                }, 2000)
+              } else {
+                toast.error("Failed to save preferences", {
+                  description: errorMessage || "Please try again.",
+                })
+              }
               setIsLoading(false)
             }
           }, 1000)
