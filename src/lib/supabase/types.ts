@@ -85,6 +85,7 @@ export type AppContact = {
   lastMessage: string;
   isSelected: boolean;
   createdAt?: Date;
+  updatedAt?: Date;
   lastInteractionTime?: Date;
   language?: string;
   botStatus?: string;

@@ -235,20 +235,55 @@ const ContactsPageContent = (): React.JSX.Element => {
       },
     },
     {
-      accessorKey: "lastMessage",
+      accessorKey: "updatedAt",
       header: "Last Update",
       meta: {
         displayName: "Last Update"
       },
       cell: ({ row }) => {
-        const lastUpdate = row.original.lastMessage;
+        const updatedAt = row.original.updatedAt;
+        const lastInteractionTime = row.original.lastInteractionTime;
+        
+        // Use lastInteractionTime if available, otherwise use updatedAt
+        const displayDate = lastInteractionTime || updatedAt;
+        
+        if (!displayDate) {
+          return (
+            <div className="text-sm text-muted-foreground">
+              —
+            </div>
+          );
+        }
+        
+        // Format date as relative time (e.g., "2 hours ago", "3 days ago")
+        const formatRelativeTime = (date: Date): string => {
+          const now = new Date();
+          const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+          
+          if (diffInSeconds < 60) {
+            return 'Just now';
+          } else if (diffInSeconds < 3600) {
+            const minutes = Math.floor(diffInSeconds / 60);
+            return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
+          } else if (diffInSeconds < 86400) {
+            const hours = Math.floor(diffInSeconds / 3600);
+            return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+          } else if (diffInSeconds < 604800) {
+            const days = Math.floor(diffInSeconds / 86400);
+            return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+          } else {
+            // For older dates, show formatted date
+            return date.toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+            });
+          }
+        };
+        
         return (
-          <div className="max-w-[200px] truncate">
-            <Highlight 
-              text={lastUpdate} 
-              columnId="lastMessage"
-              className="text-sm text-muted-foreground"
-            />
+          <div className="text-sm text-muted-foreground">
+            {formatRelativeTime(displayDate)}
           </div>
         );
       },

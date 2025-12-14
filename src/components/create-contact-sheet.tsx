@@ -187,6 +187,12 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
     }))
   }
 
+  // Helper to get country ISO from dial code
+  const getCountryISOFromDialCode = (dialCode: string): string => {
+    const country = countryCodes.find(c => c.dialCode === dialCode)
+    return country?.code.toUpperCase() || "SA" // Default to SA if not found
+  }
+
   const handleSave = async () => {
     // Validate phone number before saving
     const fullPhone = countryCode + formData.phone
@@ -198,16 +204,34 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
       return
     }
 
-    setIsSubmitting(true)
+    // Generate name from firstName and lastName
+    const name = [formData.firstName, formData.lastName].filter(Boolean).join(" ").trim() || "Unknown Contact"
+    
+    // Prepare contact data for database
+    const contactData: Partial<AppContact> = {
+      name,
+      firstName: formData.firstName || undefined,
+      lastName: formData.lastName || undefined,
+      phone: fullPhone,
+      emailAddress: formData.email || undefined,
+      countryISO: getCountryISOFromDialCode(countryCode),
+      tags: formData.tags,
+      channel: "whatsapp", // Default channel
+      conversationStatus: "unassigned", // Default status
+      assignee: null,
+      lastMessage: "",
+      avatar: name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
+      avatarColor: 'bg-blue-500',
+      // Notes are not stored in the schema currently
+    }
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await createContactMutation.mutateAsync(contactData)
       toast.success("Contact created successfully!")
       onOpenChange(false)
     } catch (error) {
+      console.error("Error creating contact:", error)
       toast.error("Failed to create contact. Please try again.")
-    } finally {
-      setIsSubmitting(false)
     }
   }
 

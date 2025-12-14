@@ -22,6 +22,7 @@ function dbContactToAppContact(dbContact: Contact): AppContact {
     lastMessage: dbContact.last_message || '',
     isSelected: false,
     createdAt: dbContact.created_at ? new Date(dbContact.created_at) : undefined,
+    updatedAt: dbContact.updated_at ? new Date(dbContact.updated_at) : undefined,
     lastInteractionTime: dbContact.last_interaction_time ? new Date(dbContact.last_interaction_time) : undefined,
     language: dbContact.language || undefined,
     botStatus: dbContact.bot_status || undefined,
