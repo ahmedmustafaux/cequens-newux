@@ -34,6 +34,8 @@ import {
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { validatePhoneNumber } from "@/lib/validation"
+import { useCreateContact } from "@/hooks/use-contacts"
+import type { AppContact } from "@/lib/supabase/types"
 
 interface ContactFormData {
   firstName: string
@@ -50,7 +52,7 @@ interface CreateContactSheetProps {
 }
 
 export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetProps) {
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const createContactMutation = useCreateContact()
   const [newTag, setNewTag] = React.useState("")
   const [countryCode, setCountryCode] = React.useState("+966")
   const [searchQuery, setSearchQuery] = React.useState("")
@@ -477,9 +479,9 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
                 </Button>
                 <Button
                   onClick={handleSave}
-                  disabled={!canSave || isSubmitting}
+                  disabled={!canSave || createContactMutation.isPending}
                 >
-                  {isSubmitting ? "Creating..." : "Create Contact"}
+                  {createContactMutation.isPending ? "Creating..." : "Create Contact"}
                 </Button>
               </div>
             </div>

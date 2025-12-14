@@ -35,6 +35,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
+import { useCreateContact } from "@/hooks/use-contacts"
+import type { AppContact } from "@/lib/supabase/types"
 
 interface ContactFormData {
   // Essential fields only
@@ -48,7 +50,7 @@ interface ContactFormData {
 
 export default function ContactsCreatePage() {
   const navigate = useNavigate()
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const createContactMutation = useCreateContact()
   const [newTag, setNewTag] = React.useState("")
   const [isDirty, setIsDirty] = React.useState(false)
   const [isInitialLoading, setIsInitialLoading] = React.useState(true)
@@ -197,6 +199,12 @@ export default function ContactsCreatePage() {
     setIsDirty(true)
   }
 
+  // Helper to get country ISO from dial code
+  const getCountryISOFromDialCode = (dialCode: string): string => {
+    const country = countryCodes.find(c => c.dialCode === dialCode)
+    return country?.code.toUpperCase() || "SA" // Default to SA if not found
+  }
+
   const handleSave = async () => {
     // Validate phone number before saving
     const fullPhone = countryCode + formData.phone
@@ -208,21 +216,34 @@ export default function ContactsCreatePage() {
       return
     }
 
-    setIsSubmitting(true)
+    // Generate name from firstName and lastName
+    const name = [formData.firstName, formData.lastName].filter(Boolean).join(" ").trim() || "Unknown Contact"
+    
+    // Prepare contact data for database
+    const contactData: Partial<AppContact> = {
+      name,
+      firstName: formData.firstName || undefined,
+      lastName: formData.lastName || undefined,
+      phone: fullPhone,
+      emailAddress: formData.email || undefined,
+      countryISO: getCountryISOFromDialCode(countryCode),
+      tags: formData.tags,
+      channel: "whatsapp", // Default channel
+      conversationStatus: "unassigned", // Default status
+      assignee: null,
+      lastMessage: "",
+      avatar: name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
+      avatarColor: 'bg-blue-500',
+      // Notes are not stored in the schema currently
+    }
 
     try {
-      // TODO: Implement actual API call to create contact
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
+      await createContactMutation.mutateAsync(contactData)
       toast.success("Contact created successfully!")
       navigate("/contacts")
     } catch (error) {
+      console.error("Error creating contact:", error)
       toast.error("Failed to create contact. Please try again.")
-      // Handle error appropriately
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
@@ -254,7 +275,7 @@ export default function ContactsCreatePage() {
               variant="outline"
               size="sm"
               onClick={handleDiscard}
-              disabled={isSubmitting || isInitialLoading}
+              disabled={createContactMutation.isPending || isInitialLoading}
             >
               <X className="h-4 w-4" />
               Cancel
@@ -262,10 +283,10 @@ export default function ContactsCreatePage() {
             <Button
               size="sm"
               onClick={handleSave}
-              disabled={!canSave || isInitialLoading}
+              disabled={!canSave || isInitialLoading || createContactMutation.isPending}
             >
               <Plus className="h-4 w-4" />
-              {isSubmitting ? "Creating..." : "Create Contact"}
+              {createContactMutation.isPending ? "Creating..." : "Create Contact"}
             </Button>
           </div>
         }
