@@ -33,8 +33,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { mockContacts } from "@/data/mock-data"
 import { validatePhoneNumber } from "@/lib/validation"
+import { useContact, useUpdateContact } from "@/hooks/use-contacts"
+import type { AppContact } from "@/lib/supabase/types"
 
 interface ContactFormData {
   name: string
@@ -56,6 +57,10 @@ export default function ContactsEditPage() {
   const params = useParams()
   const contactId = params.id as string
   
+  // Fetch contact from database
+  const { data: contact, isLoading: isContactLoading, error } = useContact(contactId)
+  const updateContactMutation = useUpdateContact()
+  
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [newTag, setNewTag] = React.useState("")
   const [isDirty, setIsDirty] = React.useState(false)
@@ -64,11 +69,6 @@ export default function ContactsEditPage() {
   const [searchQuery, setSearchQuery] = React.useState("")
   const [isCountryPopoverOpen, setIsCountryPopoverOpen] = React.useState(false)
   const [phoneError, setPhoneError] = React.useState<string>("")
-  
-  // Find the contact by ID
-  const contact = React.useMemo(() => {
-    return mockContacts.find(c => c.id === contactId)
-  }, [contactId])
   
   const displayName = contact 
     ? `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || 'Contact'
@@ -142,14 +142,16 @@ export default function ContactsEditPage() {
     }
   }, [contact])
 
-  // Simulate initial page loading
+  // Update initial loading state based on contact loading
   React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsInitialLoading(false)
-    }, 400) // Standard 400ms loading time
+    if (!isContactLoading) {
+      const timer = setTimeout(() => {
+        setIsInitialLoading(false)
+      }, 100) // Small delay for smooth transition
 
-    return () => clearTimeout(timer)
-  }, [])
+      return () => clearTimeout(timer)
+    }
+  }, [isContactLoading])
 
   // Initialize form data from contact
   const [formData, setFormData] = React.useState<ContactFormData>({
@@ -209,11 +211,11 @@ export default function ContactsEditPage() {
 
   // Redirect if contact not found
   React.useEffect(() => {
-    if (!isInitialLoading && !contact) {
+    if (!isContactLoading && (error || !contact)) {
       toast.error("Contact not found")
       navigate("/contacts")
     }
-  }, [contact, isInitialLoading, navigate])
+  }, [contact, error, isContactLoading, navigate])
 
   const handleInputChange = (field: keyof ContactFormData, value: string) => {
     // Capitalize first letter for firstName and lastName
@@ -313,19 +315,39 @@ export default function ContactsEditPage() {
       return
     }
 
+    if (!contact) {
+      toast.error("Contact not found")
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
-      // TODO: Implement actual API call to update contact
+      // Prepare contact data for update
+      const contactData: Partial<AppContact> = {
+        name: formData.name || `${formData.firstName || ''} ${formData.lastName || ''}`.trim() || formData.phone,
+        firstName: formData.firstName || undefined,
+        lastName: formData.lastName || undefined,
+        phone: fullPhone,
+        emailAddress: formData.email || undefined,
+        language: formData.language || undefined,
+        botStatus: formData.botStatus || undefined,
+        countryISO: formData.countryISO,
+        assignee: formData.assignee || undefined,
+        conversationStatus: formData.conversationStatus,
+        tags: formData.tags,
+      }
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await updateContactMutation.mutateAsync({
+        id: contactId,
+        contact: contactData
+      })
       
       toast.success("Contact updated successfully!")
       navigate(`/contacts/${contactId}`)
     } catch (error) {
+      console.error("Error updating contact:", error)
       toast.error("Failed to update contact. Please try again.")
-      // Handle error appropriately
     } finally {
       setIsSubmitting(false)
     }
@@ -345,9 +367,9 @@ export default function ContactsEditPage() {
 
   const fullPhone = countryCode + formData.phone
   const phoneValidation = validatePhoneNumber(fullPhone)
-  const canSave = phoneValidation.isValid && formData.phone.trim() !== ""
+  const canSave = phoneValidation.isValid && formData.phone.trim() !== "" && !isSubmitting
 
-  if (!contact && !isInitialLoading) {
+  if ((!contact && !isContactLoading) || error) {
     return null // Will redirect in useEffect
   }
 
@@ -371,7 +393,7 @@ export default function ContactsEditPage() {
             <Button
               size="sm"
               onClick={handleSave}
-              disabled={!canSave || isInitialLoading}
+              disabled={!canSave || isInitialLoading || isSubmitting}
             >
               <Save className="h-4 w-4" />
               {isSubmitting ? "Updating..." : "Update Contact"}

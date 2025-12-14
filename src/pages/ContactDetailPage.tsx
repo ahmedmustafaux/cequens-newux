@@ -26,7 +26,7 @@ import {
   Smartphone
 } from "lucide-react"
 import { toast } from "sonner"
-import { mockContacts, mockSegments, type Segment, contactMatchesSegment, updateSegmentContacts } from "@/data/mock-data"
+import { useContact, useUpdateContact } from "@/hooks/use-contacts"
 import { getActiveChannels } from "@/lib/channel-utils"
 
 export default function ContactDetailPage() {
@@ -34,24 +34,33 @@ export default function ContactDetailPage() {
   const navigate = useNavigate()
   const contactId = params.id as string
   
+  // Fetch contact from database
+  const { data: contact, isLoading, error } = useContact(contactId)
+  const updateContactMutation = useUpdateContact()
+  
   // All state declarations must be at the top before any early returns
   const [newTag, setNewTag] = React.useState("")
   const [activeChannels, setActiveChannels] = React.useState<string[]>([])
-  const [segments, setSegments] = React.useState<Segment[]>([])
   
   // Function to add a new tag
-  const addTag = () => {
+  const addTag = async () => {
     if (newTag.trim() && contact && !contact.tags.includes(newTag.trim())) {
-      // In a real app, you would update the contact via API
-      toast.success(`Tag "${newTag.trim()}" added successfully`)
-      setNewTag("")
+      try {
+        await updateContactMutation.mutateAsync({
+          id: contact.id,
+          contact: {
+            tags: [...contact.tags, newTag.trim()]
+          }
+        })
+        toast.success(`Tag "${newTag.trim()}" added successfully`)
+        setNewTag("")
+      } catch (error) {
+        toast.error("Failed to add tag. Please try again.")
+      }
     } else if (contact && contact.tags.includes(newTag.trim())) {
       toast.error("Tag already exists")
     }
   }
-  
-  // Find the contact by ID
-  const contact = mockContacts.find(c => c.id === contactId)
   
   // Dynamic page title - must be called before any early returns
   const displayName = contact 
@@ -59,51 +68,21 @@ export default function ContactDetailPage() {
     : 'Contact'
   usePageTitle(displayName)
   
-  // Load active channels and segments
+  // Load active channels
   React.useEffect(() => {
     setActiveChannels(getActiveChannels())
-    
-    // Load segments from localStorage
-    try {
-      const stored = localStorage.getItem("cequens-segments")
-      if (stored) {
-        const parsed = JSON.parse(stored)
-        const loadedSegments = parsed.map((seg: any) => ({
-          ...seg,
-          createdAt: new Date(seg.createdAt),
-          updatedAt: new Date(seg.updatedAt),
-        }))
-        // Update segments with current contacts
-        const updatedSegments = loadedSegments.map((seg: Segment) => updateSegmentContacts(seg, mockContacts))
-        setSegments(updatedSegments)
-      } else {
-        // Use default segments if none in storage
-        const updatedSegments = mockSegments.map(seg => updateSegmentContacts(seg, mockContacts))
-        setSegments(updatedSegments)
-      }
-    } catch (error) {
-      console.error("Error loading segments:", error)
-      const updatedSegments = mockSegments.map(seg => updateSegmentContacts(seg, mockContacts))
-      setSegments(updatedSegments)
-    }
   }, [])
 
-  // Find segments that include this contact
-  const contactSegments = React.useMemo(() => {
-    if (!contact) return []
-    return segments.filter(segment => contactMatchesSegment(contact, segment))
-  }, [contact, segments])
-
-  // If contact not found, redirect to contacts page
+  // If contact not found or error, redirect to contacts page
   React.useEffect(() => {
-    if (!contact) {
+    if (!isLoading && (error || !contact)) {
       toast.error("Contact not found")
       navigate("/contacts")
     }
-  }, [contact, navigate])
+  }, [contact, error, isLoading, navigate])
   
-  // Show loading state while checking for contact
-  if (!contact) {
+  // Show loading state while fetching contact
+  if (isLoading || !contact) {
     return (
       <PageWrapper isLoading={true}>
         <PageHeaderProfile
@@ -471,18 +450,7 @@ export default function ContactDetailPage() {
                               <CardDescription>Segments this contact belongs to</CardDescription>
                             </CardHeader>
                             <CardContent>
-                              {contactSegments.length > 0 ? (
-                                <div className="space-y-3">
-                                  {contactSegments.map((segment) => (
-                                    <div key={segment.id} className="flex items-center gap-2">
-                                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                      <span className="text-sm">{segment.name}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <p className="text-sm text-muted-foreground">This contact is not in any segments yet.</p>
-                              )}
+                              <p className="text-sm text-muted-foreground">This contact is not in any segments yet.</p>
                             </CardContent>
                           </Card>
 
