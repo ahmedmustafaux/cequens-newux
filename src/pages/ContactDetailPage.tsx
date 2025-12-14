@@ -267,10 +267,6 @@ export default function ContactDetailPage() {
                             <CardContent className="space-y-4">
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                  <label className="text-sm font-medium text-muted-foreground">Contact ID</label>
-                                  <p className="text-sm font-mono">{contact.id}</p>
-                                </div>
-                                <div>
                                   <label className="text-sm font-medium text-muted-foreground">Country</label>
                                   <div className="flex items-center gap-2 mt-1">
                                     <div className="w-4 h-4 flex-shrink-0 overflow-hidden rounded-full">

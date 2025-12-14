@@ -119,10 +119,19 @@ export default function ContactsEditPage() {
 
   const selectedCountry = countryCodes.find(c => c.dialCode === countryCode) || countryCodes[0]
 
-  // Extract country code from phone number and set countryISO
+  // Auto-detect country from countryISO (prioritize countryISO over phone detection)
   React.useEffect(() => {
     if (contact) {
-      // Phone is stored in E.164 format, detect country from it
+      // Priority 1: Use countryISO if available
+      if (contact.countryISO) {
+        const country = countryCodes.find(c => c.code === contact.countryISO.toLowerCase())
+        if (country) {
+          setCountryCode(country.dialCode)
+          return // Exit early if countryISO is found
+        }
+      }
+      
+      // Priority 2: Fallback to phone number detection
       const detection = detectCountryFromPhoneNumber(contact.phone)
       
       if (detection.countryCode) {
@@ -136,12 +145,6 @@ export default function ContactsEditPage() {
             setCountryCode(matchedCountry.dialCode)
             break
           }
-        }
-      } else {
-        // Try to detect from countryISO
-        const country = countryCodes.find(c => c.code === contact.countryISO?.toLowerCase())
-        if (country) {
-          setCountryCode(country.dialCode)
         }
       }
     }
@@ -207,19 +210,24 @@ export default function ContactsEditPage() {
         phoneNumber = phoneNumber.substring(1)
       }
       
-      // Update country code based on detected country or countryISO
-      if (detectedCountryCode) {
+      // Update country code - prioritize countryISO over phone detection
+      if (contact.countryISO) {
+        // Priority 1: Use countryISO if available
+        const country = countryCodes.find(c => c.code === contact.countryISO.toLowerCase())
+        if (country) {
+          setCountryCode(country.dialCode)
+        } else if (detectedCountryCode) {
+          // Fallback to phone detection if countryISO doesn't match
+          setCountryCode(detectedCountryCode)
+        }
+      } else if (detectedCountryCode) {
+        // Priority 2: Use phone detection if countryISO is not available
         setCountryCode(detectedCountryCode)
       } else {
-        // Fallback: try to detect from contact phone or countryISO
+        // Final fallback: try to detect from contact phone
         const detection = detectCountryFromPhoneNumber(contact.phone)
         if (detection.countryCode) {
           setCountryCode(detection.countryCode)
-        } else {
-          const country = countryCodes.find(c => c.code === contact.countryISO?.toLowerCase())
-          if (country) {
-            setCountryCode(country.dialCode)
-          }
         }
       }
       
@@ -521,19 +529,6 @@ export default function ContactsEditPage() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="text-sm font-medium text-muted-foreground mb-2 block">Email Address</label>
-                        <Input
-                          id="email"
-                          type="email"
-                          value={formData.email}
-                          onChange={(e) => handleInputChange("email", e.target.value)}
-                          placeholder="Enter email address"
-                          className="w-full"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
                         <label className="text-sm font-medium text-muted-foreground mb-2 block">Phone *</label>
                         <div className="flex">
                           <Popover open={isCountryPopoverOpen} onOpenChange={setIsCountryPopoverOpen}>
@@ -637,64 +632,41 @@ export default function ContactsEditPage() {
                         )}
                       </div>
                       <div>
-                        <label className="text-sm font-medium text-muted-foreground mb-2 block">Language</label>
-                        <Select
-                          value={formData.language}
-                          onValueChange={(value) => handleInputChange("language", value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select language" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="en">English</SelectItem>
-                            <SelectItem value="ar">Arabic</SelectItem>
-                            <SelectItem value="fr">French</SelectItem>
-                            <SelectItem value="es">Spanish</SelectItem>
-                            <SelectItem value="de">German</SelectItem>
-                            <SelectItem value="it">Italian</SelectItem>
-                            <SelectItem value="pt">Portuguese</SelectItem>
-                            <SelectItem value="ru">Russian</SelectItem>
-                            <SelectItem value="zh">Chinese</SelectItem>
-                            <SelectItem value="ja">Japanese</SelectItem>
-                            <SelectItem value="ko">Korean</SelectItem>
-                            <SelectItem value="hi">Hindi</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <label className="text-sm font-medium text-muted-foreground mb-2 block">Email Address</label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => handleInputChange("email", e.target.value)}
+                          placeholder="Enter email address"
+                          className="w-full"
+                        />
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground mb-2 block">Bot Status</label>
-                        <Select
-                          value={formData.botStatus}
-                          onValueChange={(value) => handleInputChange("botStatus", value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select bot status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="active">Active</SelectItem>
-                            <SelectItem value="inactive">Inactive</SelectItem>
-                            <SelectItem value="pending">Pending</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground mb-2 block">Last Conversation</label>
-                        <Select
-                          value={formData.conversationStatus}
-                          onValueChange={(value) => handleInputChange("conversationStatus", value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select conversation status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="unassigned">Unassigned</SelectItem>
-                            <SelectItem value="assigned">Assigned</SelectItem>
-                            <SelectItem value="closed">Closed</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground mb-2 block">Language</label>
+                      <Select
+                        value={formData.language}
+                        onValueChange={(value) => handleInputChange("language", value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select language" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="en">English</SelectItem>
+                          <SelectItem value="ar">Arabic</SelectItem>
+                          <SelectItem value="fr">French</SelectItem>
+                          <SelectItem value="es">Spanish</SelectItem>
+                          <SelectItem value="de">German</SelectItem>
+                          <SelectItem value="it">Italian</SelectItem>
+                          <SelectItem value="pt">Portuguese</SelectItem>
+                          <SelectItem value="ru">Russian</SelectItem>
+                          <SelectItem value="zh">Chinese</SelectItem>
+                          <SelectItem value="ja">Japanese</SelectItem>
+                          <SelectItem value="ko">Korean</SelectItem>
+                          <SelectItem value="hi">Hindi</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </CardContent>
                 </Card>
@@ -707,51 +679,28 @@ export default function ContactsEditPage() {
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="text-sm font-medium text-muted-foreground mb-2 block">Contact ID</label>
-                        <p className="text-sm font-mono">{contact?.id}</p>
-                      </div>
-                      <div>
                         <label className="text-sm font-medium text-muted-foreground mb-2 block">Country</label>
                         <div className="flex items-center gap-2">
                           {formData.countryISO && (
-                            <div className="w-4 h-4 flex-shrink-0 overflow-hidden rounded-full">
-                              <CircleFlag countryCode={formData.countryISO.toLowerCase()} className="w-full h-full" />
-                            </div>
+                            <>
+                              <div className="w-4 h-4 flex-shrink-0 overflow-hidden rounded-full">
+                                <CircleFlag countryCode={formData.countryISO.toLowerCase()} className="w-full h-full" />
+                              </div>
+                              <p className="text-sm">
+                                {countryCodes.find(c => c.code === formData.countryISO.toLowerCase())?.name || formData.countryISO}
+                              </p>
+                            </>
                           )}
-                          <Select
-                            value={formData.countryISO || ""}
-                            onValueChange={(value) => {
-                              handleInputChange("countryISO", value)
-                              const country = countryCodes.find(c => c.code === value.toLowerCase())
-                              if (country) {
-                                setCountryCode(country.dialCode)
-                              }
-                            }}
-                          >
-                            <SelectTrigger className="w-auto">
-                              <SelectValue placeholder="Select country" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {countryCodes.map((country) => (
-                                <SelectItem key={country.code} value={country.code.toUpperCase()}>
-                                  {country.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          {!formData.countryISO && (
+                            <p className="text-sm text-muted-foreground">—</p>
+                          )}
                         </div>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="text-sm font-medium text-muted-foreground mb-2 block">Assignee</label>
-                        <Input
-                          id="assignee"
-                          value={formData.assignee}
-                          onChange={(e) => handleInputChange("assignee", e.target.value)}
-                          placeholder="Enter assignee name"
-                          className="w-full"
-                        />
+                        <label className="text-sm font-medium text-muted-foreground mb-2 block">Last Conversation</label>
+                        <p className="text-sm capitalize">{formData.conversationStatus || '—'}</p>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-muted-foreground mb-2 block">Last Message</label>
@@ -841,6 +790,41 @@ export default function ContactsEditPage() {
                       placeholder="Add any additional notes about this contact..."
                       className="min-h-[100px]"
                     />
+                  </CardContent>
+                </Card>
+
+                {/* Bot Status & Assignee */}
+                <Card className="py-5 gap-5">
+                  <CardHeader>
+                    <CardTitle>Bot Status & Assignee</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground mb-2 block">Bot Status</label>
+                      <Select
+                        value={formData.botStatus}
+                        onValueChange={(value) => handleInputChange("botStatus", value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select bot status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="inactive">Inactive</SelectItem>
+                          <SelectItem value="pending">Pending</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground mb-2 block">Assignee</label>
+                      <Input
+                        id="assignee"
+                        value={formData.assignee}
+                        onChange={(e) => handleInputChange("assignee", e.target.value)}
+                        placeholder="Enter assignee name"
+                        className="w-full"
+                      />
+                    </div>
                   </CardContent>
                 </Card>
               </div>
