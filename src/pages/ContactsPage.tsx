@@ -51,13 +51,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ContactsImportDialog } from "@/components/contacts-import-dialog"
@@ -713,29 +715,28 @@ const ContactsPageContent = (): React.JSX.Element => {
         </DataTable>
       </div>
 
-      {/* Archive Dialog */}
-      <Dialog 
+      {/* Archive Alert Dialog */}
+      <AlertDialog 
         open={showArchiveDialog} 
-        onOpenChange={(open) => {
+        onOpenChange={(open: boolean) => {
           setShowArchiveDialog(open)
           if (!open) {
             setArchiveConfirmation("")
           }
         }}
       >
-        <DialogContent className="sm:max-w-lg p-0 gap-0">
-          <DialogHeader className="p-4">
-            <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-amber-600" />
+        <AlertDialogContent className="sm:max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
               Archive Contacts
-            </DialogTitle>
-            <DialogDescription className="mt-2">
+            </AlertDialogTitle>
+            <AlertDialogDescription>
               Are you sure you want to archive the selected contacts? 
               Archived contacts will be moved to the archived view and can be restored later.
-            </DialogDescription>
-          </DialogHeader>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
           
-          <div className="p-4 space-y-4">
+          <div className="space-y-4">
             <div className="rounded-lg border border-warning/30 bg-warning/10 p-3">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
@@ -751,7 +752,7 @@ const ContactsPageContent = (): React.JSX.Element => {
             
             <div className="space-y-2">
               <Label htmlFor="archiveConfirm" className="text-sm font-medium">
-                Type <code className="bg-gray-100 px-2 py-1 rounded font-mono text-xs">archive</code> to confirm:
+                Type <code className="bg-muted px-2 py-1 rounded font-mono text-xs">archive</code> to confirm:
               </Label>
               <Input
                 id="archiveConfirm"
@@ -763,18 +764,15 @@ const ContactsPageContent = (): React.JSX.Element => {
             </div>
           </div>
 
-          <DialogFooter className="px-4 py-4 border-t gap-3">
-            <Button
-              variant="outline"
+          <AlertDialogFooter>
+            <AlertDialogCancel
               onClick={() => {
-                setShowArchiveDialog(false)
                 setArchiveConfirmation("")
               }}
             >
               Cancel
-            </Button>
-            <Button
-              variant="destructive"
+            </AlertDialogCancel>
+            <AlertDialogAction
               onClick={async () => {
                 if (archiveConfirmation.toLowerCase() === "archive") {
                   const selectedRows = table.getSelectedRowModel().rows
@@ -800,12 +798,13 @@ const ContactsPageContent = (): React.JSX.Element => {
                 }
               }}
               disabled={archiveConfirmation.toLowerCase() !== "archive" || archiveContactsMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {archiveContactsMutation.isPending ? "Archiving..." : "Archive Contacts"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

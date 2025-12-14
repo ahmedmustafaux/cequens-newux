@@ -18,13 +18,15 @@ import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import {
   CheckCircle2,
   ExternalLink,
@@ -1135,21 +1137,20 @@ export default function ChannelsWhatsAppPage() {
         </motion.div>
       )}
 
-      {/* Disconnect Dialog */}
-      <Dialog open={showDisconnectDialog} onOpenChange={setShowDisconnectDialog}>
-        <DialogContent className="sm:max-w-lg p-0 gap-0">
-          <DialogHeader className="p-4">
-            <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-warning-foreground" />
+      {/* Disconnect Alert Dialog */}
+      <AlertDialog open={showDisconnectDialog} onOpenChange={setShowDisconnectDialog}>
+        <AlertDialogContent className="sm:max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
               Disconnect Meta Business Account
-            </DialogTitle>
-            <DialogDescription className="mt-2">
+            </AlertDialogTitle>
+            <AlertDialogDescription>
               Are you sure you want to disconnect your Meta Business Account? 
               This will remove all WhatsApp channel configurations and you'll need to reconnect to use WhatsApp Business API again.
-            </DialogDescription>
-          </DialogHeader>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
           
-          <div className="p-4 space-y-4">
+          <div className="space-y-4">
             <div className="rounded-lg border border-warning/30 bg-warning/10 p-3">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-warning-foreground flex-shrink-0 mt-0.5" />
@@ -1177,18 +1178,15 @@ export default function ChannelsWhatsAppPage() {
             </div>
           </div>
 
-          <DialogFooter className="px-4 py-4 border-t gap-3">
-            <Button
-              variant="outline"
+          <AlertDialogFooter>
+            <AlertDialogCancel
               onClick={() => {
-                setShowDisconnectDialog(false)
                 setDisconnectConfirmation("")
               }}
             >
               Cancel
-            </Button>
-            <Button
-              variant="destructive"
+            </AlertDialogCancel>
+            <AlertDialogAction
               onClick={async () => {
                 if (disconnectConfirmation.toLowerCase() === "disconnect") {
                   setFormData(prev => ({ ...prev, businessAccountId: "", apiToken: "" }))
@@ -1209,28 +1207,28 @@ export default function ChannelsWhatsAppPage() {
                 }
               }}
               disabled={disconnectConfirmation.toLowerCase() !== "disconnect"}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Disconnect
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-      {/* Revoke API Token Dialog */}
-      <Dialog open={showRevokeDialog} onOpenChange={setShowRevokeDialog}>
-        <DialogContent className="sm:max-w-lg p-0 gap-0">
-          <DialogHeader className="p-4">
-            <DialogTitle className="flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-destructive" />
+      {/* Revoke API Token Alert Dialog */}
+      <AlertDialog open={showRevokeDialog} onOpenChange={setShowRevokeDialog}>
+        <AlertDialogContent className="sm:max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
               Revoke API Token
-            </DialogTitle>
-            <DialogDescription className="mt-2">
+            </AlertDialogTitle>
+            <AlertDialogDescription>
               This action will revoke your current API token and generate a new one. 
               Any applications using the current token will stop working until you update them with the new token.
-            </DialogDescription>
-          </DialogHeader>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
           
-          <div className="p-4 space-y-4">
+          <div className="space-y-4">
             <div className="rounded-lg border border-warning/30 bg-warning/10 p-3">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-warning-foreground flex-shrink-0 mt-0.5" />
@@ -1258,18 +1256,15 @@ export default function ChannelsWhatsAppPage() {
             </div>
           </div>
 
-          <DialogFooter className="px-4 py-4 border-t gap-3">
-            <Button
-              variant="outline"
+          <AlertDialogFooter>
+            <AlertDialogCancel
               onClick={() => {
-                setShowRevokeDialog(false)
                 setRevokeConfirmation("")
               }}
             >
               Cancel
-            </Button>
-            <Button
-              variant="destructive"
+            </AlertDialogCancel>
+            <AlertDialogAction
               onClick={() => {
                 if (revokeConfirmation.toLowerCase() === "revoke") {
                   // Generate new token
@@ -1289,13 +1284,14 @@ export default function ChannelsWhatsAppPage() {
                 }
               }}
               disabled={revokeConfirmation.toLowerCase() !== "revoke"}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               <Trash2 className="w-4 h-4 mr-2" />
               Revoke & Regenerate
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageWrapper>
   )
 }

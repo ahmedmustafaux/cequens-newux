@@ -12,9 +12,10 @@ import {
 } from "@/components/ui/field"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import * as SelectPrimitive from "@radix-ui/react-select"
 import { PageHeaderWithActions } from "@/components/page-header"
 import { CardSkeleton } from "@/components/ui/card"
-import { Save, X, Users, Clock, Eye, Send, Calendar, ChevronLeft, ChevronRight, Check } from "lucide-react"
+import { Save, X, Users, Clock, Eye, Send, Calendar, ChevronLeft, ChevronRight, Check, CheckCircle2, AlertCircle } from "lucide-react"
 import { EnvelopeSimple, ChatText } from "phosphor-react"
 import { toast } from "sonner"
 import { motion } from "framer-motion"
@@ -24,17 +25,31 @@ import { Textarea } from "@/components/ui/textarea"
 import { useCreateCampaign } from "@/hooks/use-campaigns"
 import { useSegments } from "@/hooks/use-segments"
 import { useContacts } from "@/hooks/use-contacts"
+import { useAuth } from "@/hooks/use-auth"
+import { getUserConnectedChannels } from "@/lib/supabase/users"
+import { loadWhatsAppConfig } from "@/lib/channel-utils"
 import type { Campaign } from "@/lib/supabase/types"
 import { Badge } from "@/components/ui/badge"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 interface CampaignFormData {
   name: string
   type: "Email" | "SMS" | "Whatsapp" | ""
   status: "Draft" | "Active" | "Completed"
+  senderId: string
   selectedSegmentId: string
   recipients: number
   description: string
@@ -48,6 +63,7 @@ interface CampaignFormData {
 export default function CampaignsCreatePage() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { user } = useAuth()
   const createCampaignMutation = useCreateCampaign()
   const { data: segments = [], isLoading: segmentsLoading } = useSegments()
   const { data: allContacts = [] } = useContacts(undefined, true) // Get all contacts for "All contacts" option
@@ -56,14 +72,76 @@ export default function CampaignsCreatePage() {
   const [isInitialLoading, setIsInitialLoading] = React.useState(true)
   const [formErrors, setFormErrors] = React.useState<Record<string, string>>({})
   const [currentStep, setCurrentStep] = React.useState(0)
+  const [connectedChannels, setConnectedChannels] = React.useState<string[]>([])
+  const [senderIds, setSenderIds] = React.useState<Array<{ id: string; label: string; channel: string; status?: "verified" | "pending" | "restricted" }>>([])
+  const [showDiscardDialog, setShowDiscardDialog] = React.useState(false)
+  const [pendingNavigation, setPendingNavigation] = React.useState<string | null>(null)
+  const [shouldBlockNavigation, setShouldBlockNavigation] = React.useState(false)
   
   const steps = [
     { id: 0, label: "Details", description: "Campaign information" },
-    { id: 1, label: "Content", description: "Message content" },
-    { id: 2, label: "Schedule", description: "Send timing" }
+    { id: 1, label: "Recipients", description: "Select audience" },
+    { id: 2, label: "Content", description: "Message content" },
+    { id: 3, label: "Schedule", description: "Send timing" }
   ]
   
   usePageTitle("Create Campaign")
+
+  // Handle page refresh/close
+  React.useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault()
+        e.returnValue = ""
+        return ""
+      }
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload)
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload)
+    }
+  }, [isDirty])
+
+  // Intercept navigation attempts using popstate
+  React.useEffect(() => {
+    if (!isDirty) return
+
+    const handlePopState = (e: PopStateEvent) => {
+      if (isDirty && !shouldBlockNavigation) {
+        // Prevent navigation and show dialog
+        setPendingNavigation(window.location.pathname)
+        setShowDiscardDialog(true)
+        // Push current state back to prevent navigation
+        window.history.pushState(null, "", "/campaigns/create")
+      }
+    }
+
+    // Push a state to track navigation
+    window.history.pushState(null, "", window.location.pathname)
+    window.addEventListener("popstate", handlePopState)
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState)
+    }
+  }, [isDirty, shouldBlockNavigation])
+
+  // Watch for location changes (programmatic navigation)
+  const prevLocationRef = React.useRef(location.pathname)
+  React.useEffect(() => {
+    // Only intercept if we're trying to navigate away from this page
+    if (location.pathname !== "/campaigns/create" && prevLocationRef.current === "/campaigns/create") {
+      if (isDirty && !shouldBlockNavigation) {
+        // Prevent navigation and show dialog
+        setPendingNavigation(location.pathname)
+        setShowDiscardDialog(true)
+        // Navigate back to prevent the navigation
+        window.history.pushState(null, "", "/campaigns/create")
+        return
+      }
+    }
+    prevLocationRef.current = location.pathname
+  }, [location.pathname, isDirty, shouldBlockNavigation])
 
   // Get current date/time for scheduling
   const now = new Date()
@@ -75,6 +153,7 @@ export default function CampaignsCreatePage() {
     name: "",
     type: "",
     status: "Draft",
+    senderId: "",
     selectedSegmentId: "",
     recipients: 0,
     description: "",
@@ -118,14 +197,209 @@ export default function CampaignsCreatePage() {
     }
   }, [location.state])
 
-  // Simulate initial page loading
+  // Load user's connected channels and sender IDs
   React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsInitialLoading(false)
-    }, 400)
+    const loadChannelsAndSenderIds = async () => {
+      if (!user?.id) {
+        setIsInitialLoading(false)
+        return
+      }
 
-    return () => clearTimeout(timer)
-  }, [])
+      try {
+        // Get connected channels from database
+        const channels = await getUserConnectedChannels(user.id)
+        setConnectedChannels(channels)
+
+        // Load sender IDs from configured channels
+        const allSenderIds: Array<{ id: string; label: string; channel: string; status?: "verified" | "pending" | "restricted" }> = []
+
+        // Load WhatsApp sender IDs (phone numbers)
+        if (channels.includes("whatsapp")) {
+          const whatsappConfig = loadWhatsAppConfig()
+          if (whatsappConfig?.phoneNumbers) {
+            whatsappConfig.phoneNumbers.forEach((phone) => {
+              allSenderIds.push({
+                id: phone.phoneNumber,
+                label: phone.displayName || phone.phoneNumber,
+                channel: "whatsapp",
+                status: phone.status as "verified" | "pending" | "restricted" | undefined
+              })
+            })
+          }
+        }
+
+        // TODO: Load SMS sender IDs when SMS channel is implemented
+        // if (channels.includes("sms")) {
+        //   const smsConfig = loadSmsConfig()
+        //   // Add SMS sender IDs
+        // }
+
+        // TODO: Load Email sender IDs when Email channel is implemented
+        // if (channels.includes("email")) {
+        //   const emailConfig = loadEmailConfig()
+        //   // Add Email sender IDs
+        // }
+
+        setSenderIds(allSenderIds)
+      } catch (error) {
+        console.error("Error loading channels and sender IDs:", error)
+      } finally {
+        setIsInitialLoading(false)
+      }
+    }
+
+    loadChannelsAndSenderIds()
+  }, [user?.id])
+
+  // Filter sender IDs based on selected campaign type
+  const availableSenderIds = React.useMemo(() => {
+    if (!formData.type) return []
+    return senderIds.filter(sender => sender.channel.toLowerCase() === formData.type.toLowerCase())
+  }, [senderIds, formData.type])
+
+  // Clear sender ID if it's not valid for the selected type, or auto-select first if none selected
+  React.useEffect(() => {
+    if (formData.type && availableSenderIds.length > 0) {
+      const currentSenderId = formData.senderId
+      if (currentSenderId) {
+        const isValidSender = availableSenderIds.some(sender => sender.id === currentSenderId)
+        if (!isValidSender) {
+          // Auto-select first sender ID if current one is invalid
+          setFormData(prev => ({ ...prev, senderId: availableSenderIds[0].id }))
+        }
+      } else {
+        // Auto-select first sender ID if none selected
+        setFormData(prev => ({ ...prev, senderId: availableSenderIds[0].id }))
+      }
+    } else if (formData.type && availableSenderIds.length === 0 && formData.senderId) {
+      // Clear sender ID if no available sender IDs for the type
+      setFormData(prev => ({ ...prev, senderId: "" }))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.type, availableSenderIds])
+
+  // Get verification icon based on status
+  const getVerificationIcon = (status?: "verified" | "pending" | "restricted", senderId?: string) => {
+    switch (status) {
+      case "verified":
+        // Meta blue verification checkmark badge
+        return (
+          <svg 
+            width="16" 
+            height="16" 
+            viewBox="0 0 100 100" 
+            fill="none" 
+            xmlns="http://www.w3.org/2000/svg"
+            className="flex-shrink-0"
+          >
+            <g clipPath={`url(#clip0_meta_${senderId || 'default'})`}>
+              <path fillRule="evenodd" clipRule="evenodd" d="M93.9979 49.9999L99.4459 39.9939C100.604 37.8669 99.8909 35.2049 97.8239 33.9419L88.1029 28.0009L87.8189 16.6119C87.7579 14.1899 85.8099 12.2419 83.3879 12.1809L71.9989 11.8969L66.0579 2.17593C64.7949 0.10893 62.1329 -0.60407 60.0059 0.55393L49.9999 6.00193L39.9939 0.55393C37.8669 -0.60407 35.2049 0.10893 33.9419 2.17593L28.0009 11.8969L16.6119 12.1809C14.1899 12.2419 12.2419 14.1899 12.1819 16.6119L11.8969 28.0009L2.17593 33.9419C0.10893 35.2049 -0.60407 37.8669 0.55393 39.9939L6.00193 49.9999L0.55393 60.0059C-0.60407 62.1329 0.10893 64.7949 2.17593 66.0579L11.8969 71.9989L12.1809 83.3879C12.2419 85.8089 14.1899 87.7579 16.6119 87.8179L28.0009 88.1029L33.9419 97.8239C35.2049 99.8909 37.8669 100.604 39.9939 99.4459L49.9999 93.9979L60.0059 99.4459C62.1329 100.604 64.7949 99.8909 66.0579 97.8239L71.9989 88.1029L83.3879 87.8179C85.8099 87.7579 87.7579 85.8089 87.8189 83.3879L88.1029 71.9989L97.8239 66.0579C99.8909 64.7949 100.604 62.1329 99.4459 60.0059L93.9979 49.9999ZM71.0919 42.1279L70.7879 42.3809C62.1289 49.5969 54.1429 57.5839 46.9269 66.2419L46.6739 66.5459C45.8569 67.5269 44.6639 68.1189 43.3879 68.1769C42.1119 68.2349 40.8709 67.7529 39.9679 66.8499L28.6039 55.4869C26.8289 53.7119 26.8289 50.8329 28.6039 49.0589C30.3799 47.2839 33.2569 47.2839 35.0329 49.0589L42.9149 56.9409C49.6859 49.1919 57.0589 41.9879 64.9679 35.3979L65.2719 35.1449C67.1999 33.5379 70.0669 33.7979 71.6729 35.7269C73.2809 37.6549 73.0199 40.5209 71.0919 42.1279Z" fill="#3897F0"/>
+              <path fillRule="evenodd" clipRule="evenodd" d="M71.0919 42.1279L70.7879 42.3809C62.1289 49.5969 54.1429 57.5839 46.9269 66.2419L46.6739 66.5459C45.8569 67.5269 44.6639 68.1189 43.3879 68.1769C42.1119 68.2349 40.8709 67.7529 39.9679 66.8499L28.6039 55.4869C26.8289 53.7119 26.8289 50.8329 28.6039 49.0589C30.3799 47.2839 33.2569 47.2839 35.0329 49.0589L42.9149 56.9409C49.6859 49.1919 57.0589 41.9879 64.9679 35.3979L65.2719 35.1449C67.1999 33.5379 70.0669 33.7979 71.6729 35.7269C73.2809 37.6549 73.0199 40.5209 71.0919 42.1279Z" fill="white"/>
+            </g>
+            <defs>
+              <clipPath id={`clip0_meta_${senderId || 'default'}`}>
+                <rect width="100" height="100" fill="white"/>
+              </clipPath>
+            </defs>
+          </svg>
+        )
+      case "pending":
+        return <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+      case "restricted":
+        return <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+      default:
+        return null
+    }
+  }
+
+  // Get selected sender for display
+  const selectedSender = React.useMemo(() => {
+    return availableSenderIds.find(sender => sender.id === formData.senderId)
+  }, [availableSenderIds, formData.senderId])
+
+  // Helper functions for Recipients step
+  const formatSegmentName = (name: string): string => {
+    return name.charAt(0).toUpperCase() + name.slice(1)
+  }
+
+  const getContactCount = (segmentId: string | null): number => {
+    if (!segmentId) return 0
+    if (segmentId === "all-contacts") return allContacts.length
+    const segment = segments.find(s => s.id === segmentId)
+    return segment?.contact_ids?.length || 0
+  }
+
+  const renderSegmentItem = (segment: { id: string; name: string; contact_ids?: string[] }) => {
+    const segmentName = formatSegmentName(segment.name)
+    const contactCount = segment.contact_ids?.length || 0
+
+    return (
+      <SelectItem 
+        key={segment.id} 
+        value={segment.id} 
+        className="pr-2 pl-2 [&>span:first-child]:hidden"
+      >
+        <div className="flex items-center gap-2 w-full">
+          <div className="w-[120px] truncate">{segmentName}</div>
+          <div className="flex items-center gap-2 ml-auto flex-shrink-0">
+            <Badge variant="secondary">
+              {contactCount} contacts
+            </Badge>
+            <SelectPrimitive.ItemIndicator>
+              <Check className="h-4 w-4" />
+            </SelectPrimitive.ItemIndicator>
+          </div>
+        </div>
+      </SelectItem>
+    )
+  }
+
+  const renderRecipientsDescription = () => {
+    if (!selectedSegment) {
+      return "Select a segment to target your campaign"
+    }
+
+    const recipientCount = formData.recipients.toLocaleString()
+    const plural = formData.recipients !== 1 ? 's' : ''
+
+    return (
+      <span className="flex items-center gap-2">
+        <Users className="h-4 w-4" />
+        {recipientCount} contact{plural} will receive this campaign
+      </span>
+    )
+  }
+
+  // Render selected segment value for SelectValue
+  const renderSelectedSegmentValue = () => {
+    if (!formData.selectedSegmentId) return null
+
+    if (formData.selectedSegmentId === "all-contacts") {
+      return (
+        <div className="flex items-center gap-2">
+          <span>All Contacts</span>
+          <Badge variant="secondary" className="flex-shrink-0">
+            {allContacts.length} contacts
+          </Badge>
+        </div>
+      )
+    }
+
+    const segment = segments.find(s => s.id === formData.selectedSegmentId)
+    if (!segment) return null
+
+    const segmentName = formatSegmentName(segment.name)
+    const contactCount = segment.contact_ids?.length || 0
+
+    return (
+      <div className="flex items-center gap-2">
+        <span>{segmentName}</span>
+        <Badge variant="secondary" className="flex-shrink-0">
+          {contactCount} contacts
+        </Badge>
+      </div>
+    )
+  }
 
   const handleInputChange = (field: keyof CampaignFormData, value: string | number) => {
     setFormData(prev => ({
@@ -172,6 +446,18 @@ export default function CampaignsCreatePage() {
       errors.type = "Campaign type is required"
     }
 
+    if (!formData.senderId.trim()) {
+      errors.senderId = "Sender ID is required"
+    }
+
+    if (!formData.selectedSegmentId) {
+      errors.selectedSegmentId = "Please select an audience"
+    } else if (formData.selectedSegmentId && formData.selectedSegmentId !== "all-contacts" && formData.recipients === 0) {
+      errors.selectedSegmentId = "Selected segment has no contacts"
+    } else if (formData.selectedSegmentId === "all-contacts" && allContacts.length === 0) {
+      errors.selectedSegmentId = "No contacts available"
+    }
+
     if (formData.type === "Email" && !formData.subject.trim()) {
       errors.subject = "Subject line is required for email campaigns"
     }
@@ -180,13 +466,6 @@ export default function CampaignsCreatePage() {
       errors.message = "Message content is required"
     } else if (isOverLimit) {
       errors.message = `Message exceeds ${characterLimit} character limit`
-    }
-
-    if (formData.selectedSegmentId && formData.selectedSegmentId !== "all-contacts" && formData.recipients === 0) {
-      errors.selectedSegmentId = "Selected segment has no contacts"
-    }
-    if (formData.selectedSegmentId === "all-contacts" && allContacts.length === 0) {
-      errors.selectedSegmentId = "No contacts available"
     }
 
     if (formData.scheduleType === "scheduled") {
@@ -211,13 +490,21 @@ export default function CampaignsCreatePage() {
       if (!formData.type) {
         errors.type = "Campaign type is required"
       }
+      if (!formData.senderId.trim()) {
+        errors.senderId = "Sender ID is required"
+      }
+    } else if (step === 1) {
+      // Validate Recipients step
       if (formData.selectedSegmentId && formData.selectedSegmentId !== "all-contacts" && formData.recipients === 0) {
         errors.selectedSegmentId = "Selected segment has no contacts"
       }
       if (formData.selectedSegmentId === "all-contacts" && allContacts.length === 0) {
         errors.selectedSegmentId = "No contacts available"
       }
-    } else if (step === 1) {
+      if (!formData.selectedSegmentId) {
+        errors.selectedSegmentId = "Please select an audience"
+      }
+    } else if (step === 2) {
       // Validate Content step
       if (formData.type === "Email" && !formData.subject.trim()) {
         errors.subject = "Subject line is required for email campaigns"
@@ -227,7 +514,7 @@ export default function CampaignsCreatePage() {
       } else if (isOverLimit) {
         errors.message = `Message exceeds ${characterLimit} character limit`
       }
-    } else if (step === 2) {
+    } else if (step === 3) {
       // Validate Schedule step
       if (formData.scheduleType === "scheduled") {
         const scheduledDateTime = new Date(`${formData.scheduledDate}T${formData.scheduledTime}`)
@@ -257,16 +544,43 @@ export default function CampaignsCreatePage() {
     }
   }
 
+  const handleDiscardClick = () => {
+    if (isDirty) {
+      setShowDiscardDialog(true)
+    } else {
+      navigate("/campaigns")
+    }
+  }
+
+  const handleDiscard = () => {
+    setShowDiscardDialog(false)
+    const targetPath = pendingNavigation || "/campaigns"
+    setPendingNavigation(null)
+    setIsDirty(false) // Reset dirty state before navigation
+    setShouldBlockNavigation(true) // Allow navigation
+    // Use setTimeout to ensure state updates are processed
+    setTimeout(() => {
+      navigate(targetPath)
+    }, 0)
+  }
+
+  const handleDiscardCancel = () => {
+    setShowDiscardDialog(false)
+    setPendingNavigation(null)
+  }
+
   const handleSave = async () => {
     if (!validateForm()) {
       toast.error("Please fix the errors in the form")
       // Go to first step with errors
-      if (!formData.name.trim() || !formData.type) {
+      if (!formData.name.trim() || !formData.type || !formData.senderId.trim()) {
         setCurrentStep(0)
-      } else if (formData.type === "Email" && !formData.subject.trim() || !formData.message.trim()) {
+      } else if (!formData.selectedSegmentId) {
         setCurrentStep(1)
-      } else {
+      } else if (formData.type === "Email" && !formData.subject.trim() || !formData.message.trim()) {
         setCurrentStep(2)
+      } else {
+        setCurrentStep(3)
       }
       return
     }
@@ -289,6 +603,7 @@ export default function CampaignsCreatePage() {
       }
 
       await createCampaignMutation.mutateAsync(campaignData)
+      setIsDirty(false) // Reset dirty state after successful save
       toast.success(
         formData.scheduleType === "scheduled" 
           ? "Campaign scheduled successfully!" 
@@ -301,16 +616,6 @@ export default function CampaignsCreatePage() {
     }
   }
 
-  const handleDiscard = () => {
-    if (isDirty) {
-      const confirmed = window.confirm("Are you sure you want to discard your changes?")
-      if (confirmed) {
-        navigate("/campaigns")
-      }
-    } else {
-      navigate("/campaigns")
-    }
-  }
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -325,7 +630,42 @@ export default function CampaignsCreatePage() {
     }
   }
 
-  const canSave = formData.name.trim() !== "" && formData.type !== "" && formData.message.trim() !== "" && !isOverLimit && !createCampaignMutation.isPending
+  const canSave = formData.name.trim() !== "" && formData.type !== "" && formData.senderId.trim() !== "" && formData.message.trim() !== "" && !isOverLimit && !createCampaignMutation.isPending
+
+  // Check if current step is valid (for disabling Next button) - without setting errors
+  const isCurrentStepValid = React.useMemo(() => {
+    if (currentStep === 0) {
+      // Validate Details step
+      const hasName = formData.name.trim() !== ""
+      const hasType = formData.type !== ""
+      // Sender ID is required if type is selected
+      // If sender IDs are available in dropdown, one must be selected
+      // If no sender IDs available, manual entry is required
+      const hasSenderId = formData.type ? formData.senderId.trim() !== "" : true
+      return hasName && hasType && hasSenderId
+    } else if (currentStep === 1) {
+      // Validate Recipients step
+      if (!formData.selectedSegmentId) return false
+      if (formData.selectedSegmentId === "all-contacts") {
+        return allContacts.length > 0
+      }
+      const segment = segments.find(s => s.id === formData.selectedSegmentId)
+      return segment ? (segment.contact_ids?.length || 0) > 0 : false
+    } else if (currentStep === 2) {
+      // Validate Content step
+      const hasSubject = formData.type !== "Email" || formData.subject.trim() !== ""
+      const hasMessage = formData.message.trim() !== "" && !isOverLimit
+      return hasSubject && hasMessage
+    } else if (currentStep === 3) {
+      // Validate Schedule step
+      if (formData.scheduleType === "scheduled") {
+        const scheduledDateTime = new Date(`${formData.scheduledDate}T${formData.scheduledTime}`)
+        return scheduledDateTime >= now
+      }
+      return true
+    }
+    return true
+  }, [currentStep, formData, availableSenderIds, allContacts, segments, isOverLimit, now])
 
   // Preview message
   const previewMessage = React.useMemo(() => {
@@ -343,7 +683,7 @@ export default function CampaignsCreatePage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={handleDiscard}
+            onClick={handleDiscardClick}
             disabled={createCampaignMutation.isPending || isInitialLoading}
           >
             <X className="h-4 w-4" />
@@ -375,7 +715,7 @@ export default function CampaignsCreatePage() {
               {/* Main Content */}
               <div className="lg:col-span-2 grid grid-cols-1 gap-4 items-start">
                 {/* Step Indicator */}
-                <div className="relative py-4 px-4 sm:px-6">
+                <div className="relative py-4 px-4 sm:px-4">
                   {/* Steps container */}
                   <div className="relative flex items-start justify-between">
                     {/* Progress line background - from center of first to center of last circle */}
@@ -459,7 +799,7 @@ export default function CampaignsCreatePage() {
                               id="name"
                               value={formData.name}
                               onChange={(e) => handleInputChange("name", e.target.value)}
-                              placeholder="e.g., Summer Sale 2024"
+                              placeholder="e.g., Winter Sale 2026"
                               className={formErrors.name ? "border-destructive" : ""}
                             />
                           </FieldContent>
@@ -470,125 +810,345 @@ export default function CampaignsCreatePage() {
                           <FieldLabel>Campaign Type *</FieldLabel>
                           <FieldContent>
                             <div className="grid grid-cols-3 gap-4">
-                              <Card
-                                className={`cursor-pointer shadow-none ${
-                                  formData.type === "Whatsapp" 
-                                    ? "border-primary border-2" 
-                                    : formErrors.type 
-                                      ? "border-destructive border-2" 
-                                      : ""
-                                }`}
-                                onClick={() => {
-                                  handleInputChange("type", "Whatsapp")
-                                  // Reset message when type changes
-                                  if (formData.message) {
-                                    handleInputChange("message", "")
-                                  }
-                                }}
-                              >
-                                <CardContent className="p-4 flex flex-col items-left gap-4 text-left">
-                                  <img 
-                                    src="/icons/WhatsApp.svg" 
-                                    alt="WhatsApp" 
-                                    className="h-6 w-6" 
-                                  />
-                                  <div className="flex flex-col items-left gap-1">
-                                    <span className="text-sm font-semibold text-foreground">
-                                      WhatsApp
-                                    </span>
-                                    <span className="text-xs text-muted-foreground">
-                                      Interactive
-                                    </span>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                              <Card
-                                className={`cursor-pointer shadow-none ${
-                                  formData.type === "SMS" 
-                                    ? "border-primary border-2" 
-                                    : formErrors.type 
-                                      ? "border-destructive border-2" 
-                                      : ""
-                                }`}
-                                onClick={() => {
-                                  handleInputChange("type", "SMS")
-                                  // Reset message when type changes
-                                  if (formData.message) {
-                                    handleInputChange("message", "")
-                                  }
-                                }}
-                              >
-                                <CardContent className="p-4 flex flex-col items-left gap-4 text-left">
-                                  <ChatText 
-                                    className="h-6 w-6 text-primary" 
-                                    weight="fill" 
-                                  />
-                                  <div className="flex flex-col items-left gap-1">
-                                    <span className="text-sm font-semibold text-foreground">
-                                      SMS
-                                    </span>
-                                    <span className="text-xs text-muted-foreground">
-                                      Quick messages
-                                    </span>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <div>
-                                      <Card
-                                        className={`shadow-none cursor-not-allowed ${
-                                          formErrors.type 
-                                            ? "border-destructive border-2" 
-                                            : ""
-                                        }`}
-                                      >
-                                        <CardContent className="p-4 flex flex-col items-left gap-4 text-left">
-                                          <EnvelopeSimple 
-                                            className="h-6 w-6 text-blue-600 dark:text-blue-400 opacity-50" 
-                                            weight="fill" 
-                                          />
-                                          <div className="flex flex-col items-left gap-1">
-                                            <div className="flex items-center gap-2">
-                                              <span className="text-sm font-semibold text-foreground opacity-50">
-                                                Email
+                              {connectedChannels.includes("whatsapp") ? (
+                                <Card
+                                  className={`cursor-pointer shadow-none ${
+                                    formData.type === "Whatsapp" 
+                                      ? "border-primary border-2" 
+                                      : formErrors.type 
+                                        ? "border-destructive border-2" 
+                                        : ""
+                                  }`}
+                                  onClick={() => {
+                                    handleInputChange("type", "Whatsapp")
+                                    // Reset message and sender ID when type changes
+                                    if (formData.message) {
+                                      handleInputChange("message", "")
+                                    }
+                                    handleInputChange("senderId", "")
+                                  }}
+                                >
+                                  <CardContent className="p-4 flex flex-col items-left gap-4 text-left">
+                                    <img 
+                                      src="/icons/WhatsApp.svg" 
+                                      alt="WhatsApp" 
+                                      className="h-6 w-6" 
+                                    />
+                                    <div className="flex flex-col items-left gap-1">
+                                      <span className="text-sm font-semibold text-foreground">
+                                        WhatsApp
+                                      </span>
+                                      <span className="text-xs text-muted-foreground">
+                                        Interactive
+                                      </span>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              ) : (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div>
+                                        <Card className="shadow-none cursor-not-allowed opacity-50">
+                                          <CardContent className="p-4 flex flex-col items-left gap-4 text-left">
+                                            <img 
+                                              src="/icons/WhatsApp.svg" 
+                                              alt="WhatsApp" 
+                                              className="h-6 w-6" 
+                                            />
+                                            <div className="flex flex-col items-left gap-1">
+                                              <div className="flex items-center gap-2">
+                                                <span className="text-sm font-semibold text-foreground">
+                                                  WhatsApp
+                                                </span>
+                                                <Badge variant="secondary" className="text-xs">
+                                                  Not configured
+                                                </Badge>
+                                              </div>
+                                              <span className="text-xs text-muted-foreground">
+                                                Interactive
                                               </span>
-                                              <Badge variant="secondary" className="text-xs">
-                                                Not configured
-                                              </Badge>
                                             </div>
-                                            <span className="text-xs text-muted-foreground opacity-50">
-                                              Rich content
-                                            </span>
-                                          </div>
-                                        </CardContent>
-                                      </Card>
+                                          </CardContent>
+                                        </Card>
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="p-3">
+                                      <div className="flex items-center gap-2">
+                                        <p className="text-sm">WhatsApp channel needs to be configured</p>
+                                        <Button
+                                          variant="link"
+                                          size="sm"
+                                          className="h-auto p-0 text-primary underline"
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            navigate("/channels/whatsapp")
+                                          }}
+                                        >
+                                          Configure
+                                        </Button>
+                                      </div>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                              
+                              {connectedChannels.includes("sms") ? (
+                                <Card
+                                  className={`cursor-pointer shadow-none ${
+                                    formData.type === "SMS" 
+                                      ? "border-primary border-2" 
+                                      : formErrors.type 
+                                        ? "border-destructive border-2" 
+                                        : ""
+                                  }`}
+                                  onClick={() => {
+                                    handleInputChange("type", "SMS")
+                                    // Reset message and sender ID when type changes
+                                    if (formData.message) {
+                                      handleInputChange("message", "")
+                                    }
+                                    handleInputChange("senderId", "")
+                                  }}
+                                >
+                                  <CardContent className="p-4 flex flex-col items-left gap-4 text-left">
+                                    <ChatText 
+                                      className="h-6 w-6 text-primary" 
+                                      weight="fill" 
+                                    />
+                                    <div className="flex flex-col items-left gap-1">
+                                      <span className="text-sm font-semibold text-foreground">
+                                        SMS
+                                      </span>
+                                      <span className="text-xs text-muted-foreground">
+                                        Quick messages
+                                      </span>
                                     </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="top" className="p-3">
-                                    <div className="flex items-center gap-2">
-                                      <p className="text-sm">Email channel needs to be configured</p>
-                                      <Button
-                                        variant="link"
-                                        size="sm"
-                                        className="h-auto p-0 text-primary underline"
-                                        onClick={(e) => {
-                                          e.stopPropagation()
-                                          navigate("/campaigns/settings")
-                                        }}
-                                      >
-                                        Configure
-                                      </Button>
+                                  </CardContent>
+                                </Card>
+                              ) : (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div>
+                                        <Card className="shadow-none cursor-not-allowed opacity-50">
+                                          <CardContent className="p-4 flex flex-col items-left gap-4 text-left">
+                                            <ChatText 
+                                              className="h-6 w-6 text-primary opacity-50" 
+                                              weight="fill" 
+                                            />
+                                            <div className="flex flex-col items-left gap-1">
+                                              <div className="flex items-center gap-2">
+                                                <span className="text-sm font-semibold text-foreground">
+                                                  SMS
+                                                </span>
+                                                <Badge variant="secondary" className="text-xs">
+                                                  Not configured
+                                                </Badge>
+                                              </div>
+                                              <span className="text-xs text-muted-foreground">
+                                                Quick messages
+                                              </span>
+                                            </div>
+                                          </CardContent>
+                                        </Card>
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="p-3">
+                                      <div className="flex items-center gap-2">
+                                        <p className="text-sm">SMS channel needs to be configured</p>
+                                        <Button
+                                          variant="link"
+                                          size="sm"
+                                          className="h-auto p-0 text-primary underline"
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            navigate("/channels/sms")
+                                          }}
+                                        >
+                                          Configure
+                                        </Button>
+                                      </div>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                              
+                              {connectedChannels.includes("email") ? (
+                                <Card
+                                  className={`cursor-pointer shadow-none ${
+                                    formData.type === "Email" 
+                                      ? "border-primary border-2" 
+                                      : formErrors.type 
+                                        ? "border-destructive border-2" 
+                                        : ""
+                                  }`}
+                                  onClick={() => {
+                                    handleInputChange("type", "Email")
+                                    // Reset message and sender ID when type changes
+                                    if (formData.message) {
+                                      handleInputChange("message", "")
+                                    }
+                                    handleInputChange("senderId", "")
+                                  }}
+                                >
+                                  <CardContent className="p-4 flex flex-col items-left gap-4 text-left">
+                                    <EnvelopeSimple 
+                                      className="h-6 w-6 text-blue-600 dark:text-blue-400" 
+                                      weight="fill" 
+                                    />
+                                    <div className="flex flex-col items-left gap-1">
+                                      <span className="text-sm font-semibold text-foreground">
+                                        Email
+                                      </span>
+                                      <span className="text-xs text-muted-foreground">
+                                        Rich content
+                                      </span>
                                     </div>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
+                                  </CardContent>
+                                </Card>
+                              ) : (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div>
+                                        <Card className="shadow-none cursor-not-allowed opacity-50">
+                                          <CardContent className="p-4 flex flex-col items-left gap-4 text-left">
+                                            <EnvelopeSimple 
+                                              className="h-6 w-6 text-blue-600 dark:text-blue-400 opacity-50" 
+                                              weight="fill" 
+                                            />
+                                            <div className="flex flex-col items-left gap-1">
+                                              <div className="flex items-center gap-2">
+                                                <span className="text-sm font-semibold text-foreground opacity-50">
+                                                  Email
+                                                </span>
+                                                <Badge variant="secondary" className="text-xs">
+                                                  Not configured
+                                                </Badge>
+                                              </div>
+                                              <span className="text-xs text-muted-foreground opacity-50">
+                                                Rich content
+                                              </span>
+                                            </div>
+                                          </CardContent>
+                                        </Card>
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="p-3">
+                                      <div className="flex items-center gap-2">
+                                        <p className="text-sm">Email channel needs to be configured</p>
+                                        <Button
+                                          variant="link"
+                                          size="sm"
+                                          className="h-auto p-0 text-primary underline"
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            navigate("/channels/email")
+                                          }}
+                                        >
+                                          Configure
+                                        </Button>
+                                      </div>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
                             </div>
                           </FieldContent>
                           {formErrors.type && <FieldError>{formErrors.type}</FieldError>}
                         </Field>
 
+                        <Field>
+                          <FieldLabel>Sender ID *</FieldLabel>
+                          <FieldContent>
+                            <div className="w-[30%]">
+                              {formData.type && availableSenderIds.length > 0 ? (
+                                <Select
+                                  value={formData.senderId}
+                                  onValueChange={(value) => handleInputChange("senderId", value)}
+                                >
+                                  <SelectTrigger className={formErrors.senderId ? "border-destructive" : ""}>
+                                    <SelectValue placeholder="Select a sender ID" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {availableSenderIds.map((sender) => (
+                                      <SelectItem key={sender.id} value={sender.id}>
+                                        <div className="flex items-center gap-2">
+                                          {getVerificationIcon(sender.status, sender.id)}
+                                          <span>{sender.label}</span>
+                                        </div>
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              ) : formData.type ? (
+                                <div className="space-y-2">
+                                  <Input
+                                    id="senderId"
+                                    value={formData.senderId}
+                                    onChange={(e) => handleInputChange("senderId", e.target.value)}
+                                    placeholder="Enter sender ID"
+                                    className={formErrors.senderId ? "border-destructive" : ""}
+                                    disabled={!formData.type}
+                                  />
+                                  <p className="text-xs text-muted-foreground">
+                                    No sender IDs configured for {formData.type}. Configure sender IDs in channel settings.
+                                  </p>
+                                </div>
+                              ) : (
+                                <Input
+                                  id="senderId"
+                                  value={formData.senderId}
+                                  onChange={(e) => handleInputChange("senderId", e.target.value)}
+                                  placeholder="Select campaign type first"
+                                  className={formErrors.senderId ? "border-destructive" : ""}
+                                  disabled
+                                />
+                              )}
+                            </div>
+                          </FieldContent>
+                          {formErrors.senderId && <FieldError>{formErrors.senderId}</FieldError>}
+                          <FieldDescription>
+                            {formData.type && availableSenderIds.length > 0
+                              ? "Select the sender identifier that recipients will see"
+                              : formData.type
+                              ? "Configure sender IDs in your channel settings"
+                              : "Select a campaign type to choose a sender ID"}
+                          </FieldDescription>
+                        </Field>
+                      </CardContent>
+                      {/* Footer */}
+                      <div className="border-t pt-4 px-4 sm:px-4">
+                        <div className="flex items-center justify-between gap-4">
+                          <Button
+                            variant="outline"
+                            onClick={handleDiscardClick}
+                            className="flex-shrink-0"
+                          >
+                            <span className="hidden sm:inline">Discard</span>
+                          </Button>
+                          <Button 
+                            onClick={handleNext} 
+                            disabled={!isCurrentStepValid || isInitialLoading}
+                            className="flex-shrink-0"
+                          >
+                            <span className="hidden sm:inline">Next</span>
+                            <ChevronRight className="h-4 w-4 sm:ml-2" />
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  )}
+
+                  {/* Step 2: Recipients */}
+                  {currentStep === 1 && (
+                    <Card className="py-5 gap-5">
+                      <CardHeader>
+                        <CardTitle>Select Recipients</CardTitle>
+                        <CardDescription>Choose the audience for your campaign</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
                         <Field>
                           <FieldLabel>Select Audience *</FieldLabel>
                           <FieldContent>
@@ -598,18 +1158,32 @@ export default function CampaignsCreatePage() {
                               disabled={segmentsLoading}
                             >
                               <SelectTrigger className={formErrors.selectedSegmentId ? "border-destructive" : ""}>
-                                <SelectValue placeholder={segmentsLoading ? "Loading segments..." : "Select a segment"} />
+                                <SelectValue placeholder={segmentsLoading ? "Loading segments..." : "Select a segment"}>
+                                  {renderSelectedSegmentValue()}
+                                </SelectValue>
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="all-contacts">
-                                  <div className="flex items-center justify-between w-full gap-8">
-                                    <span>All Contacts</span>
-                                    <Badge variant="secondary">
-                                      {allContacts.length} contacts
-                                    </Badge>
+                                {/* All Contacts Option */}
+                                <SelectItem value="all-contacts" className="pr-2 pl-2 [&>span:first-child]:hidden">
+                                  <div className="flex items-center gap-2 w-full">
+                                    <div className="w-[120px] truncate">All Contacts</div>
+                                    <div className="flex items-center gap-2 ml-auto flex-shrink-0">
+                                      <Badge variant="secondary">
+                                        {allContacts.length} contacts
+                                      </Badge>
+                                      <SelectPrimitive.ItemIndicator>
+                                        <Check className="h-4 w-4" />
+                                      </SelectPrimitive.ItemIndicator>
+                                    </div>
                                   </div>
                                 </SelectItem>
-                                {segments.length === 0 ? (
+
+                                {/* Segments List */}
+                                {segmentsLoading ? (
+                                  <div className="px-2 py-6 text-center text-sm text-muted-foreground">
+                                    Loading segments...
+                                  </div>
+                                ) : segments.length === 0 ? (
                                   <div className="px-2 py-6 text-center text-sm text-muted-foreground">
                                     No segments available. <br />
                                     <Button 
@@ -621,41 +1195,45 @@ export default function CampaignsCreatePage() {
                                     </Button>
                                   </div>
                                 ) : (
-                                  segments.map((segment) => {
-                                    const capitalizedName = segment.name.charAt(0).toUpperCase() + segment.name.slice(1)
-                                    return (
-                                      <SelectItem key={segment.id} value={segment.id}>
-                                        <div className="flex items-center justify-between w-full gap-8">
-                                          <span>{capitalizedName}</span>
-                                          <Badge variant="secondary">
-                                            {segment.contact_ids?.length || 0} contacts
-                                          </Badge>
-                                        </div>
-                                      </SelectItem>
-                                    )
-                                  })
+                                  segments.map(renderSegmentItem)
                                 )}
                               </SelectContent>
                             </Select>
                           </FieldContent>
-                          {formErrors.selectedSegmentId && <FieldError>{formErrors.selectedSegmentId}</FieldError>}
+                          {formErrors.selectedSegmentId && (
+                            <FieldError>{formErrors.selectedSegmentId}</FieldError>
+                          )}
                           <FieldDescription>
-                            {selectedSegment ? (
-                              <span className="flex items-center gap-2">
-                                <Users className="h-4 w-4" />
-                                {formData.recipients.toLocaleString()} contact{formData.recipients !== 1 ? 's' : ''} will receive this campaign
-                              </span>
-                            ) : (
-                              "Select a segment to target your campaign"
-                            )}
+                            {renderRecipientsDescription()}
                           </FieldDescription>
                         </Field>
                       </CardContent>
+                      {/* Footer */}
+                      <div className="border-t pt-4 px-4 sm:px-4">
+                        <div className="flex items-center justify-between gap-4">
+                          <Button
+                            variant="outline"
+                            onClick={handlePrevious}
+                            className="flex-shrink-0"
+                          >
+                            <ChevronLeft className="h-4 w-4 mr-2" />
+                            <span className="hidden sm:inline">Back</span>
+                          </Button>
+                          <Button 
+                            onClick={handleNext} 
+                            disabled={!isCurrentStepValid || isInitialLoading}
+                            className="flex-shrink-0"
+                          >
+                            <span className="hidden sm:inline">Next</span>
+                            <ChevronRight className="h-4 w-4 sm:ml-2" />
+                          </Button>
+                        </div>
+                      </div>
                     </Card>
                   )}
 
-                  {/* Step 2: Content */}
-                  {currentStep === 1 && (
+                  {/* Step 3: Content */}
+                  {currentStep === 2 && (
                     <Card className="py-5 gap-5">
                       <CardHeader>
                         <CardTitle>Message Content</CardTitle>
@@ -746,11 +1324,32 @@ export default function CampaignsCreatePage() {
                           </>
                         )}
                       </CardContent>
+                      {/* Footer */}
+                      <div className="border-t pt-4 px-4 sm:px-4">
+                        <div className="flex items-center justify-between gap-4">
+                          <Button
+                            variant="outline"
+                            onClick={handlePrevious}
+                            className="flex-shrink-0"
+                          >
+                            <ChevronLeft className="h-4 w-4 mr-2" />
+                            <span className="hidden sm:inline">Back</span>
+                          </Button>
+                          <Button 
+                            onClick={handleNext} 
+                            disabled={!isCurrentStepValid || isInitialLoading}
+                            className="flex-shrink-0"
+                          >
+                            <span className="hidden sm:inline">Next</span>
+                            <ChevronRight className="h-4 w-4 sm:ml-2" />
+                          </Button>
+                        </div>
+                      </div>
                     </Card>
                   )}
 
-                  {/* Step 3: Schedule */}
-                  {currentStep === 2 && (
+                  {/* Step 4: Schedule */}
+                  {currentStep === 3 && (
                     <Card className="py-5 gap-5">
                       <CardHeader>
                         <CardTitle>Schedule Campaign</CardTitle>
@@ -837,34 +1436,17 @@ export default function CampaignsCreatePage() {
                           </div>
                         )}
                       </CardContent>
-                    </Card>
-                  )}
-
-                  {/* Navigation Buttons */}
-                  <Card className="py-4">
-                    <CardContent className="px-4 sm:px-6">
-                      <div className="flex items-center justify-between gap-4">
-                        <Button
-                          variant="outline"
-                          onClick={handlePrevious}
-                          disabled={currentStep === 0}
-                          className="flex-shrink-0"
-                        >
-                          <ChevronLeft className="h-4 w-4 mr-2" />
-                          <span className="hidden sm:inline">Previous</span>
-                        </Button>
-                        <div className="text-sm text-muted-foreground text-center hidden sm:block">
-                          Step {currentStep + 1} of {steps.length}
-                        </div>
-                        <div className="text-xs text-muted-foreground text-center sm:hidden">
-                          {currentStep + 1}/{steps.length}
-                        </div>
-                        {currentStep < steps.length - 1 ? (
-                          <Button onClick={handleNext} className="flex-shrink-0">
-                            <span className="hidden sm:inline">Next</span>
-                            <ChevronRight className="h-4 w-4 sm:ml-2" />
+                      {/* Footer */}
+                      <div className="border-t pt-4 px-4 sm:px-4">
+                        <div className="flex items-center justify-between gap-4">
+                          <Button
+                            variant="outline"
+                            onClick={handlePrevious}
+                            className="flex-shrink-0"
+                          >
+                            <ChevronLeft className="h-4 w-4 mr-2" />
+                            <span className="hidden sm:inline">Back</span>
                           </Button>
-                        ) : (
                           <Button
                             onClick={handleSave}
                             disabled={!canSave || isInitialLoading}
@@ -882,12 +1464,39 @@ export default function CampaignsCreatePage() {
                               {createCampaignMutation.isPending ? "Creating..." : "Save"}
                             </span>
                           </Button>
-                        )}
+                        </div>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </Card>
+                  )}
                 </div>
               </div>
+
+              {/* Discard Alert Dialog */}
+              <AlertDialog open={showDiscardDialog} onOpenChange={(open) => {
+                if (!open) {
+                  handleDiscardCancel()
+                }
+              }}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Discard Campaign?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to discard this campaign? All unsaved changes will be lost.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel onClick={handleDiscardCancel}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDiscard}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Discard
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
 
               {/* Sidebar */}
               <div className="grid grid-cols-1 gap-4 items-start">
