@@ -29,15 +29,18 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   // If authenticated but new user hasn't completed onboarding and not already on onboarding page
   // Check onboardingCompleted from user object first, then fall back to context
-  const userNeedsOnboarding = user?.onboardingCompleted === false || 
-    (user?.userType === "newUser" && user?.onboardingCompleted !== true)
-  
-  const needsOnboarding = 
-    (userNeedsOnboarding || !hasCompletedOnboarding) && 
-    currentPath !== "/onboarding"
-  
-  if (needsOnboarding) {
-    return <Navigate to="/onboarding" replace />
+  // Only check if we have a valid user object
+  if (user) {
+    const userNeedsOnboarding = user.onboardingCompleted === false || 
+      (user.userType === "newUser" && user.onboardingCompleted !== true)
+    
+    const needsOnboarding = 
+      (userNeedsOnboarding || !hasCompletedOnboarding) && 
+      currentPath !== "/onboarding"
+    
+    if (needsOnboarding) {
+      return <Navigate to="/onboarding" replace />
+    }
   }
 
   // If authenticated and onboarding completed (or not required), render the protected content

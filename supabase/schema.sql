@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
   last_name TEXT,
   company_name TEXT,
   onboarding_completed BOOLEAN DEFAULT FALSE,
+  onboarding_data JSONB,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -143,6 +144,12 @@ DROP POLICY IF EXISTS "Allow users to read own data" ON users;
 CREATE POLICY "Allow users to read own data" ON users
   FOR SELECT
   USING (true); -- For now, allow reading all users (can be restricted later)
+
+DROP POLICY IF EXISTS "Allow users to update own data" ON users;
+CREATE POLICY "Allow users to update own data" ON users
+  FOR UPDATE
+  USING (true)
+  WITH CHECK (true); -- For now, allow updating all users (can be restricted later)
 
 -- Contacts policies
 DROP POLICY IF EXISTS "Allow all operations on contacts" ON contacts;

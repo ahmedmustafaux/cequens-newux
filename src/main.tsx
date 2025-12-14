@@ -6,6 +6,7 @@ import App from './App.tsx'
 import './globals.css'
 import { getAppName } from './lib/config.ts'
 import { queryClient } from './lib/query-client.ts'
+import './lib/clear-auth.ts' // Make clearAuth available in console
 
 // Set the document title dynamically
 document.title = getAppName()

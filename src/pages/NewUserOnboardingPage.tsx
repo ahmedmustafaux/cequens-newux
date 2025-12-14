@@ -340,23 +340,32 @@ export default function NewUserOnboardingPage() {
           clearInterval(interval)
           setTimeout(async () => {
             try {
-              // Update onboarding status in database and context
-              await markOnboardingComplete(onboardingDataToSave)
-              if (user?.id) {
-                await updateOnboardingStatus(true)
-                // Small delay to ensure state updates propagate
-                await new Promise(resolve => setTimeout(resolve, 100))
+              // Check if user has ID before proceeding
+              if (!user?.id) {
+                throw new Error("User ID not available. Please log in again.")
               }
+              
+              // Update onboarding status in database and context
+              // markOnboardingComplete updates the database and onboarding context
+              await markOnboardingComplete(onboardingDataToSave)
+              
+              // Update auth context state (skip database update since it's already done)
+              await updateOnboardingStatus(true, true)
+              
+              // Small delay to ensure state updates propagate
+              await new Promise(resolve => setTimeout(resolve, 100))
               
               setIsLoading(false)
               // Redirect after completion
               // Special handling: ahmed@cequens should go to guide page, others go to dashboard
               const isAhmedUser = user?.email?.toLowerCase().includes("ahmed@cequens")
               navigate(isAhmedUser ? "/getting-started" : "/")
-            } catch (error) {
+            } catch (error: any) {
               console.error("Error completing onboarding:", error)
+              const errorMessage = error?.message || "An unknown error occurred"
+              console.error("Full error details:", error)
               toast.error("Failed to save preferences", {
-                description: "Please try again.",
+                description: errorMessage || "Please try again.",
               })
               setIsLoading(false)
             }

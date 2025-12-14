@@ -7,6 +7,7 @@ export type User = {
   last_name: string | null
   company_name: string | null
   onboarding_completed: boolean
+  onboarding_data?: any
   created_at: string
   updated_at: string
 }
@@ -69,15 +70,22 @@ export async function createUser(input: CreateUserInput): Promise<User> {
  * Find user by email
  */
 export async function findUserByEmail(email: string): Promise<User | null> {
+  // Note: onboarding_data column must exist in database. If you get column errors, run the migration:
+  // ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_data JSONB;
   const { data, error } = await supabase
     .from('users')
-    .select('id, email, first_name, last_name, company_name, onboarding_completed, created_at, updated_at')
+    .select('id, email, first_name, last_name, company_name, onboarding_completed, onboarding_data, created_at, updated_at')
     .eq('email', email)
     .single()
 
   if (error) {
     if (error.code === 'PGRST116') {
       return null // Not found
+    }
+    // If column doesn't exist, provide helpful error message
+    if (error.code === '42703' && error.message?.includes('onboarding_data')) {
+      console.error('onboarding_data column does not exist. Please run: ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_data JSONB;')
+      throw new Error('Database schema needs update. Please add onboarding_data column to users table.')
     }
     console.error('Error finding user:', error)
     throw error
@@ -113,22 +121,49 @@ export async function authenticateUser(email: string, password: string): Promise
 }
 
 /**
- * Update user onboarding status
+ * Update user onboarding status and optionally onboarding data
  */
-export async function updateUserOnboarding(userId: string, completed: boolean): Promise<User> {
+export async function updateUserOnboarding(
+  userId: string, 
+  completed: boolean, 
+  onboardingData?: any
+): Promise<User> {
+  const updateData: any = { onboarding_completed: completed }
+  if (onboardingData !== undefined) {
+    updateData.onboarding_data = onboardingData
+  }
+
+  console.log('Attempting to update user onboarding:', { userId, updateData })
+
+  // Select fields - include onboarding_data only if we're updating it
+  const selectFields = 'id, email, first_name, last_name, company_name, onboarding_completed, onboarding_data, created_at, updated_at'
+
   const { data, error } = await supabase
     .from('users')
-    .update({ onboarding_completed: completed })
+    .update(updateData)
     .eq('id', userId)
-    .select('id, email, first_name, last_name, company_name, onboarding_completed, created_at, updated_at')
-    .single()
+    .select(selectFields)
 
   if (error) {
     console.error('Error updating user onboarding:', error)
+    console.error('Error details:', {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint
+    })
     throw error
   }
 
-  return data as User
+  // Handle case where no rows were updated (user not found or RLS blocking)
+  if (!data || data.length === 0) {
+    const errorMsg = 'No rows updated - user not found or update blocked by RLS policies'
+    console.error(errorMsg, { userId })
+    throw new Error(errorMsg)
+  }
+
+  console.log('User onboarding updated successfully:', data[0])
+  return data[0] as User
 }
 
 /**

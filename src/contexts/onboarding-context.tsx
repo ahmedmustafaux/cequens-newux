@@ -64,8 +64,10 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   const completeOnboarding = async (data?: OnboardingData) => {
     if (user && user.id) {
       try {
-        // Update in database
-        await updateUserOnboarding(user.id, true)
+        // Update in database with onboarding data
+        console.log("Updating onboarding in database for user:", user.id, "with data:", data)
+        await updateUserOnboarding(user.id, true, data || null)
+        console.log("Onboarding updated successfully in database")
         
         // Update local storage
         localStorage.setItem(`onboarding-completed-${user.email}`, "true")
@@ -78,8 +80,14 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
           localStorage.setItem(`onboarding-data-${user.email}`, JSON.stringify(data))
           setOnboardingData(data)
         }
-      } catch (error) {
-        console.error("Error completing onboarding:", error)
+      } catch (error: any) {
+        console.error("Error completing onboarding in context:", error)
+        console.error("Error details:", {
+          message: error?.message,
+          code: error?.code,
+          details: error?.details,
+          hint: error?.hint
+        })
         throw error
       }
     } else if (user) {
