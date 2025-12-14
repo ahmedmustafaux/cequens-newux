@@ -28,6 +28,7 @@ export const FILTER_CATEGORIES: FilterCategory[] = [
       { value: "botStatus", label: "Bot Status", operators: ["equals", "notEquals", "in", "notIn", "hasAnyOf"], valueType: "array" },
       { value: "assignee", label: "Assignee", operators: ["equals", "notEquals", "in", "notIn", "hasAnyOf", "isEmpty", "isNotEmpty"], valueType: "array" },
       { value: "conversationStatus", label: "Conversation Status", operators: ["equals", "notEquals", "in", "notIn", "hasAnyOf"], valueType: "array" },
+      { value: "lastInteractedChannel", label: "Last Interacted Channel", operators: ["equals", "notEquals", "exists", "doesNotExist"], valueType: "array" },
       { value: "conversationOpenedTime", label: "Conversation Opened Time", operators: ["exists", "doesNotExist", "isTimestampAfter", "isTimestampBefore", "isTimestampBetween"], valueType: "date" },
       { value: "createdAt", label: "Created At", operators: ["exists", "doesNotExist", "isTimestampAfter", "isTimestampBefore", "isTimestampBetween"], valueType: "date" },
       { value: "lastInteractionTime", label: "Last Interaction Time", operators: ["exists", "doesNotExist", "isTimestampAfter", "isTimestampBefore", "isTimestampBetween"], valueType: "date" },

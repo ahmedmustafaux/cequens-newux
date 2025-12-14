@@ -33,7 +33,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { validatePhoneNumber } from "@/lib/validation"
+import { validatePhoneNumber as validatePhoneBasic } from "@/lib/validation"
+import { detectCountryFromPhoneNumber, validatePhoneNumber, formatPhoneForDisplay, getCountryISOFromCallingCode } from "@/lib/phone-utils"
 import { useContact, useUpdateContact } from "@/hooks/use-contacts"
 import type { AppContact } from "@/lib/supabase/types"
 
@@ -121,11 +122,15 @@ export default function ContactsEditPage() {
   // Extract country code from phone number and set countryISO
   React.useEffect(() => {
     if (contact) {
-      // Extract country code from phone if it starts with +
-      const phone = contact.phone
-      if (phone.startsWith('+')) {
+      // Phone is stored in E.164 format, detect country from it
+      const detection = detectCountryFromPhoneNumber(contact.phone)
+      
+      if (detection.countryCode) {
+        setCountryCode(detection.countryCode)
+      } else if (contact.phone.startsWith('+')) {
+        // Fallback: try to extract country code manually
         for (let i = 4; i >= 2; i--) {
-          const code = phone.substring(0, i)
+          const code = contact.phone.substring(0, i)
           const matchedCountry = countryCodes.find(c => c.dialCode === code)
           if (matchedCountry) {
             setCountryCode(matchedCountry.dialCode)
@@ -173,23 +178,49 @@ export default function ContactsEditPage() {
   React.useEffect(() => {
     if (contact) {
       // Extract phone number without country code
+      // Phone is stored in E.164 format, extract national number for display
       let phoneNumber = contact.phone
+      let detectedCountryCode: string | null = null
+      
       if (phoneNumber.startsWith('+')) {
-        // Remove country code
-        for (let i = 4; i >= 2; i--) {
-          const code = phoneNumber.substring(0, i)
-          const matchedCountry = countryCodes.find(c => c.dialCode === code)
-          if (matchedCountry) {
-            phoneNumber = phoneNumber.substring(i)
-            break
+        // Try to detect and extract national number
+        const detection = detectCountryFromPhoneNumber(phoneNumber)
+        if (detection.nationalNumber) {
+          phoneNumber = detection.nationalNumber
+          detectedCountryCode = detection.countryCode
+        } else {
+          // Fallback: try to remove country code manually
+          for (let i = 4; i >= 2; i--) {
+            const code = phoneNumber.substring(0, i)
+            const matchedCountry = countryCodes.find(c => c.dialCode === code)
+            if (matchedCountry) {
+              phoneNumber = phoneNumber.substring(i)
+              detectedCountryCode = matchedCountry.dialCode
+              break
+            }
           }
         }
       }
       
-      // Update country code based on countryISO
-      const country = countryCodes.find(c => c.code === contact.countryISO?.toLowerCase())
-      if (country) {
-        setCountryCode(country.dialCode)
+      // Remove leading "0" when country code is detected
+      if (detectedCountryCode && phoneNumber.startsWith('0')) {
+        phoneNumber = phoneNumber.substring(1)
+      }
+      
+      // Update country code based on detected country or countryISO
+      if (detectedCountryCode) {
+        setCountryCode(detectedCountryCode)
+      } else {
+        // Fallback: try to detect from contact phone or countryISO
+        const detection = detectCountryFromPhoneNumber(contact.phone)
+        if (detection.countryCode) {
+          setCountryCode(detection.countryCode)
+        } else {
+          const country = countryCodes.find(c => c.code === contact.countryISO?.toLowerCase())
+          if (country) {
+            setCountryCode(country.dialCode)
+          }
+        }
       }
       
       setFormData({
@@ -232,41 +263,53 @@ export default function ContactsEditPage() {
   }
 
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Only allow digits
-    const value = e.target.value.replace(/\D/g, '')
-    handleInputChange("phone", value)
+    // Only allow digits - keep value writable
+    let value = e.target.value.replace(/\D/g, '')
     setPhoneError("")
     
-    // Auto-detect country based on phone number input
-    // Detect Egyptian numbers (starting with 010, 011, 012, 015)
-    if (value.match(/^0(10|11|12|15)/) && value.length >= 4) {
-      setCountryCode('+20') // Egypt
+    // Auto-detect country from phone number using operator prefixes (first 3 digits)
+    // This prioritizes operator prefix detection for better accuracy
+    if (value.length >= 3) {
+      try {
+        const detection = detectCountryFromPhoneNumber(value)
+        
+        // Update country code if detected and different
+        if (detection.countryCode && detection.countryCode !== countryCode) {
+          setCountryCode(detection.countryCode)
+          
+          // Remove leading "0" ONLY after country code is detected
+          if (value.startsWith('0')) {
+            value = value.substring(1)
+          }
+        }
+        
+        // Update country ISO if detected
+        if (detection.countryISO) {
+          handleInputChange("countryISO", detection.countryISO)
+        }
+      } catch (error) {
+        console.error('Error in country detection:', error)
+      }
     }
-    // Detect Saudi numbers (starting with 05)
-    else if (value.match(/^05/) && value.length >= 3 && countryCode !== '+20') {
-      setCountryCode('+966') // Saudi Arabia
-    }
-    // Detect UAE numbers (starting with 05)
-    else if (value.match(/^05/) && value.length >= 3 && countryCode !== '+966' && countryCode !== '+20') {
-      setCountryCode('+971') // UAE
-    }
-    // Detect UK numbers (starting with 07)
-    else if (value.match(/^07/) && value.length >= 3) {
-      setCountryCode('+44') // UK
-    }
-    // Detect US/Canada numbers (starting with 1 and area code)
-    else if (value.match(/^1[2-9]/) && value.length >= 2) {
-      setCountryCode('+1') // US/Canada
-    }
+    
+    handleInputChange("phone", value)
   }
 
   const handlePhoneBlur = () => {
-    const fullPhone = countryCode + formData.phone
-    const validation = validatePhoneNumber(fullPhone)
-    if (!validation.isValid) {
-      setPhoneError(validation.message || "Please enter a valid phone number")
-    } else {
+    // Try detection first (handles operator prefixes)
+    const detection = detectCountryFromPhoneNumber(formData.phone)
+    
+    if (detection.isValid && detection.formattedNumber) {
       setPhoneError("")
+    } else {
+      // Fallback: validate with country code
+      const fullPhone = countryCode + formData.phone
+      const validation = validatePhoneNumber(fullPhone)
+      if (!validation.isValid) {
+        setPhoneError(validation.error || "Please enter a valid phone number")
+      } else {
+        setPhoneError("")
+      }
     }
   }
 
@@ -305,34 +348,51 @@ export default function ContactsEditPage() {
   }
 
   const handleSave = async () => {
-    // Validate phone number before saving
-    const fullPhone = countryCode + formData.phone
-    const phoneValidation = validatePhoneNumber(fullPhone)
-    
-    if (!phoneValidation.isValid) {
-      setPhoneError(phoneValidation.message || "Please enter a valid phone number")
-      toast.error(phoneValidation.message || "Please enter a valid phone number")
-      return
-    }
-
     if (!contact) {
       toast.error("Contact not found")
       return
     }
 
+    // Detect and normalize phone number from input (handles operator prefixes)
+    const phoneInput = formData.phone
+    const detection = detectCountryFromPhoneNumber(phoneInput)
+    
+    // If detection found a valid number, use it; otherwise try with country code
+    let normalizedPhone: string
+    let finalCountryISO: string
+    
+    if (detection.isValid && detection.formattedNumber) {
+      // Use detected and normalized phone number (E.164 format)
+      normalizedPhone = detection.formattedNumber
+      finalCountryISO = detection.countryISO || formData.countryISO || contact.countryISO
+    } else {
+      // Fallback: try with country code
+      const fullPhone = countryCode + phoneInput
+      const phoneValidation = validatePhoneNumber(fullPhone)
+      
+      if (!phoneValidation.isValid) {
+        setPhoneError(phoneValidation.error || "Please enter a valid phone number")
+        toast.error(phoneValidation.error || "Please enter a valid phone number")
+        return
+      }
+      
+      normalizedPhone = phoneValidation.formatted || fullPhone
+      finalCountryISO = phoneValidation.countryISO || formData.countryISO || contact.countryISO
+    }
+
     setIsSubmitting(true)
 
     try {
-      // Prepare contact data for update
+      // Prepare contact data for update - store phone in E.164 format
       const contactData: Partial<AppContact> = {
-        name: formData.name || `${formData.firstName || ''} ${formData.lastName || ''}`.trim() || formData.phone,
+        name: formData.name || `${formData.firstName || ''} ${formData.lastName || ''}`.trim() || normalizedPhone,
         firstName: formData.firstName || undefined,
         lastName: formData.lastName || undefined,
-        phone: fullPhone,
+        phone: normalizedPhone, // Store in E.164 format
         emailAddress: formData.email || undefined,
         language: formData.language || undefined,
         botStatus: formData.botStatus || undefined,
-        countryISO: formData.countryISO,
+        countryISO: finalCountryISO,
         assignee: formData.assignee || undefined,
         conversationStatus: formData.conversationStatus,
         tags: formData.tags,
@@ -366,7 +426,12 @@ export default function ContactsEditPage() {
   }
 
   const fullPhone = countryCode + formData.phone
-  const phoneValidation = validatePhoneNumber(fullPhone)
+  // Validate phone number for save button state
+  const phoneInput = formData.phone
+  const phoneDetection = detectCountryFromPhoneNumber(phoneInput)
+  const phoneValidation = phoneDetection.isValid 
+    ? { isValid: true, formatted: phoneDetection.formattedNumber }
+    : validatePhoneNumber(countryCode + phoneInput)
   const canSave = phoneValidation.isValid && formData.phone.trim() !== "" && !isSubmitting
 
   if ((!contact && !isContactLoading) || error) {

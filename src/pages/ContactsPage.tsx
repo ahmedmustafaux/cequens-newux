@@ -74,6 +74,8 @@ import {
 import { usePageTitle } from "@/hooks/use-dynamic-title"
 import { useContacts, useArchiveContacts, useUnarchiveContacts } from "@/hooks/use-contacts"
 import type { AppContact } from "@/lib/supabase/types"
+import { toast } from "sonner"
+import { formatPhoneWithCountryCode } from "@/lib/phone-utils"
 
 // Type alias for backward compatibility
 type Contact = AppContact
@@ -199,6 +201,8 @@ const ContactsPageContent = (): React.JSX.Element => {
       header: "Phone",
       cell: ({ row }) => {
         const contact = row.original;
+        // Format phone number with country code for display
+        const displayPhone = formatPhoneWithCountryCode(contact.phone, contact.countryISO);
         return (
           <div className="flex items-center gap-2 min-w-0">
             <div className="w-4 h-4 flex-shrink-0 overflow-hidden rounded-full">
@@ -206,7 +210,7 @@ const ContactsPageContent = (): React.JSX.Element => {
             </div>
             <div className="flex flex-col min-w-0">
               <Highlight 
-                text={contact.phone} 
+                text={displayPhone} 
                 columnId="phone"
                 className="font-normal text-sm text-muted-foreground whitespace-nowrap truncate"
               />
@@ -225,7 +229,7 @@ const ContactsPageContent = (): React.JSX.Element => {
         }
         const rowChannel = row.getValue(columnId) as string | null;
         // If channel is null/empty, don't show it in filtered results unless explicitly filtering for "null"
-        if (!rowChannel || rowChannel.trim() === '') {
+        if (!rowChannel || (typeof rowChannel === 'string' && rowChannel.trim() === '')) {
           return false; // Hide rows with undefined channels when filtering
         }
         return filterValue.includes(rowChannel);
@@ -234,7 +238,7 @@ const ContactsPageContent = (): React.JSX.Element => {
         const channel = row.getValue("channel") as string | null;
         
         // If channel is null or empty, show badge
-        if (!channel || channel.trim() === '') {
+        if (!channel || (typeof channel === 'string' && channel.trim() === '')) {
           return (
             <Badge variant="outline" className="text-xs">
               Not defined yet

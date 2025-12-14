@@ -33,10 +33,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { validatePhoneNumber } from "@/lib/validation"
 import { useCreateContact } from "@/hooks/use-contacts"
 import type { AppContact } from "@/lib/supabase/types"
-import { detectCountryFromPhoneNumber, checkWhatsAppAvailability, getCountryISOFromCallingCode } from "@/lib/phone-utils"
+import { detectCountryFromPhoneNumber, checkWhatsAppAvailability, getCountryISOFromCallingCode, validatePhoneNumber, formatPhoneForDisplay } from "@/lib/phone-utils"
 
 interface ContactFormData {
   firstName: string
@@ -146,24 +145,26 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
   }
 
   const handlePhoneNumberChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Only allow digits
-    const value = e.target.value.replace(/\D/g, '')
-    handleInputChange("phone", value)
+    // Only allow digits - keep value writable
+    let value = e.target.value.replace(/\D/g, '')
     setPhoneError("")
     setHasWhatsApp(null) // Reset WhatsApp status when number changes
     
-    // Auto-detect country from phone number using phone package
-    // This detects country from operator numbers automatically
+    // Auto-detect country from phone number using operator prefixes (first 3 digits)
+    // This prioritizes operator prefix detection for better accuracy
     if (value.length >= 3) {
       try {
-        // Don't combine with current country code - let the package detect from operator
-        // The phone package can detect country from operator prefixes like 010, 05, etc.
         const detection = detectCountryFromPhoneNumber(value)
         
         // Update country code if detected and different
         if (detection.countryCode && detection.countryCode !== countryCode) {
           console.log('Auto-detected country code:', detection.countryCode, 'from operator number:', value)
           setCountryCode(detection.countryCode)
+          
+          // Remove leading "0" ONLY after country code is detected
+          if (value.startsWith('0')) {
+            value = value.substring(1)
+          }
         }
         
         // Update country ISO if detected and different
@@ -175,24 +176,36 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
         console.error('Error in country detection:', error)
       }
     }
+    
+    handleInputChange("phone", value)
   }
   
   // Separate effect for WhatsApp checking with debounce
   React.useEffect(() => {
     const phoneValue = formData.phone
-    // Only check if we have at least 7 digits and a country code
-    if (phoneValue.length >= 7 && countryCode) {
+    // Only check if we have at least 7 digits
+    if (phoneValue.length >= 7) {
       const timeoutId = setTimeout(async () => {
         // Double-check the phone value hasn't changed
-        if (formData.phone === phoneValue && countryCode) {
-          console.log('Checking WhatsApp for:', { phone: phoneValue, countryCode })
+        if (formData.phone === phoneValue) {
+          console.log('Checking WhatsApp for:', { phone: phoneValue })
           setIsCheckingWhatsApp(true)
           
           try {
-            // Combine country code with phone number for WhatsApp check
-            const fullNumber = countryCode + phoneValue
+            // Detect and normalize phone number first
+            const detection = detectCountryFromPhoneNumber(phoneValue)
+            let numberToCheck: string
+            
+            if (detection.isValid && detection.formattedNumber) {
+              // Use normalized E.164 format
+              numberToCheck = detection.formattedNumber
+            } else {
+              // Fallback: combine with country code
+              numberToCheck = countryCode + phoneValue
+            }
+            
             // The checkWhatsAppAvailability function uses whatsapp-number-verify package
-            const result = await checkWhatsAppAvailability(fullNumber)
+            const result = await checkWhatsAppAvailability(numberToCheck)
             
             // Only update if we still have the same number
             if (formData.phone === phoneValue) {
@@ -219,12 +232,22 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
   }, [formData.phone, countryCode])
 
   const handlePhoneBlur = () => {
-    const fullPhone = countryCode + formData.phone
-    const validation = validatePhoneNumber(fullPhone)
-    if (!validation.isValid) {
-      setPhoneError(validation.message || "Please enter a valid phone number")
-    } else {
+    // Try detection first (handles operator prefixes)
+    const detection = detectCountryFromPhoneNumber(formData.phone)
+    
+    if (detection.isValid && detection.formattedNumber) {
       setPhoneError("")
+      // Optionally update the input to show local format
+      // But keep the raw digits for editing
+    } else {
+      // Fallback: validate with country code
+      const fullPhone = countryCode + formData.phone
+      const validation = validatePhoneNumber(fullPhone)
+      if (!validation.isValid) {
+        setPhoneError(validation.error || "Please enter a valid phone number")
+      } else {
+        setPhoneError("")
+      }
     }
   }
 
@@ -256,36 +279,54 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
 
   // Helper to get country ISO from dial code
   const getCountryISOFromDialCode = (dialCode: string): string => {
-    // Use the detected country ISO if available, otherwise fallback to countryCodes list
+    // Use the detected country ISO from phone number if available (most accurate)
     if (countryISO) {
-      return countryISO
+      return countryISO.toUpperCase()
     }
+    // Fallback to countryCodes list based on dial code
     const country = countryCodes.find(c => c.dialCode === dialCode)
     return country?.code.toUpperCase() || "SA" // Default to SA if not found
   }
 
   const handleSave = async () => {
-    // Validate phone number before saving
-    const fullPhone = countryCode + formData.phone
-    const phoneValidation = validatePhoneNumber(fullPhone)
+    // Detect and normalize phone number from input (handles operator prefixes)
+    const phoneInput = formData.phone
+    const detection = detectCountryFromPhoneNumber(phoneInput)
     
-    if (!phoneValidation.isValid) {
-      setPhoneError(phoneValidation.message || "Please enter a valid phone number")
-      toast.error(phoneValidation.message || "Please enter a valid phone number")
-      return
+    // If detection found a valid number, use it; otherwise try with country code
+    let normalizedPhone: string
+    let finalCountryISO: string
+    
+    if (detection.isValid && detection.formattedNumber) {
+      // Use detected and normalized phone number (E.164 format)
+      normalizedPhone = detection.formattedNumber
+      finalCountryISO = detection.countryISO || getCountryISOFromDialCode(countryCode)
+    } else {
+      // Fallback: try with country code
+      const fullPhone = countryCode + phoneInput
+      const phoneValidation = validatePhoneNumber(fullPhone)
+      
+      if (!phoneValidation.isValid) {
+        setPhoneError(phoneValidation.error || "Please enter a valid phone number")
+        toast.error(phoneValidation.error || "Please enter a valid phone number")
+        return
+      }
+      
+      normalizedPhone = phoneValidation.formatted || fullPhone
+      finalCountryISO = phoneValidation.countryISO || getCountryISOFromDialCode(countryCode)
     }
 
     // Generate name from firstName and lastName
     const name = [formData.firstName, formData.lastName].filter(Boolean).join(" ").trim() || "Unknown Contact"
     
-    // Prepare contact data for database
+    // Prepare contact data for database - store phone in E.164 format
     const contactData: Partial<AppContact> = {
       name,
       firstName: formData.firstName || undefined,
       lastName: formData.lastName || undefined,
-      phone: fullPhone,
+      phone: normalizedPhone, // Store in E.164 format
       emailAddress: formData.email || undefined,
-      countryISO: getCountryISOFromDialCode(countryCode),
+      countryISO: finalCountryISO,
       tags: formData.tags,
       channel: null, // Channel can be null - will be set later or can be edited
       conversationStatus: "unassigned", // Default status
@@ -306,8 +347,12 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
     }
   }
 
-  const fullPhone = countryCode + formData.phone
-  const phoneValidation = validatePhoneNumber(fullPhone)
+  // Validate phone number for save button state
+  const phoneInput = formData.phone
+  const phoneDetection = detectCountryFromPhoneNumber(phoneInput)
+  const phoneValidation = phoneDetection.isValid 
+    ? { isValid: true, formatted: phoneDetection.formattedNumber }
+    : validatePhoneNumber(countryCode + phoneInput)
   const canSave = phoneValidation.isValid && formData.phone.trim() !== ""
 
   return (

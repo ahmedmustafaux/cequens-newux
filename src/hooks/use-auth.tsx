@@ -100,6 +100,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               // Sync localStorage with database state
               localStorage.setItem("onboardingCompleted", dbUser.onboarding_completed.toString())
               localStorage.setItem("userType", validUserType)
+              
+              // Sync connected channels from database
+              if (dbUser.id) {
+                try {
+                  const { syncChannelsFromDatabase } = await import('@/lib/channel-utils')
+                  await syncChannelsFromDatabase(dbUser.id)
+                } catch (error) {
+                  console.error('Failed to sync channels from database:', error)
+                }
+              }
             } catch (error) {
               console.error("Error verifying user in database:", error)
               // On error, clear auth state to be safe
@@ -174,11 +184,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [navigate, isClient])
 
-  const login = (email: string, name?: string, userType?: UserType, redirectTo?: string, userId?: string, onboardingCompleted?: boolean) => {
+  const login = async (email: string, name?: string, userType?: UserType, redirectTo?: string, userId?: string, onboardingCompleted?: boolean) => {
     try {
       // Determine user type if not provided
       const determinedUserType = userType || determineUserType(email)
-      
+
       localStorage.setItem("isAuthenticated", "true")
       localStorage.setItem("userEmail", email)
       localStorage.setItem("userType", determinedUserType)
@@ -191,7 +201,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (onboardingCompleted !== undefined) {
         localStorage.setItem("onboardingCompleted", onboardingCompleted.toString())
       }
-      
+
       setUser({ 
         id: userId,
         email, 
@@ -199,6 +209,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         userType: determinedUserType,
         onboardingCompleted: onboardingCompleted
       })
+      
+      // Sync connected channels from database on login
+      if (userId) {
+        // Don't await - sync in background to not block login
+        import('@/lib/channel-utils').then(({ syncChannelsFromDatabase }) => {
+          syncChannelsFromDatabase(userId).catch(error => {
+            console.error('Failed to sync channels from database on login:', error)
+          })
+        })
+      }
       
       // Determine redirect destination
       let destination = redirectTo

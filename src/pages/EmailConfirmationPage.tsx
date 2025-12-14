@@ -190,7 +190,7 @@ export default function EmailConfirmationPage() {
                     className="flex-1"
                   >
                     <img src="/icons/Gmail.svg" alt="Gmail" className="h-4 w-4" />
-                    Open Gmail
+                    Open your Gmail
                   </Button>
                   <Button
                     type="button"
@@ -199,7 +199,7 @@ export default function EmailConfirmationPage() {
                     className="flex-1"
                   >
                     <img src="/icons/Outlook.svg" alt="Outlook" className="h-4 w-4" />
-                    Open Outlook
+                    Open your Outlook
                   </Button>
                 </div>
                 <div className="text-left">
@@ -268,7 +268,7 @@ export default function EmailConfirmationPage() {
               variant="link"
               onClick={handleConfirmation}
               disabled={isLoading}
-              className="text-gray-100 cursor-auto"
+              className="text-gray-300 cursor-auto"
             >
               {isLoading ? (
                 <div className="flex items-center space-x-2">

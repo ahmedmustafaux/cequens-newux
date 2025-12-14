@@ -5,14 +5,15 @@ import { phone } from 'phone'
 import { findNetworkByPhoneNumber } from 'mobile-carriers'
 
 /**
- * Detects country from phone number input using the 'phone' package
- * This package automatically detects country ISO from network operator
- * and normalizes the phone number by removing operator prefixes if needed
+ * Detects country from phone number input using operator prefixes (first 3 digits)
+ * This prioritizes operator prefix detection for better accuracy
+ * Returns normalized phone number in E.164 format for storage
  */
 export function detectCountryFromPhoneNumber(phoneInput: string): {
   countryCode: string | null
   countryISO: string | null
-  formattedNumber: string | null
+  formattedNumber: string | null // E.164 format for storage
+  localFormat: string | null // Local format for display
   isValid: boolean
   nationalNumber: string
   carrier?: string
@@ -22,6 +23,7 @@ export function detectCountryFromPhoneNumber(phoneInput: string): {
       countryCode: null,
       countryISO: null,
       formattedNumber: null,
+      localFormat: null,
       isValid: false,
       nationalNumber: phoneInput || ''
     }
@@ -35,74 +37,140 @@ export function detectCountryFromPhoneNumber(phoneInput: string): {
       countryCode: null,
       countryISO: null,
       formattedNumber: null,
+      localFormat: null,
       isValid: false,
       nationalNumber: digitsOnly
     }
   }
 
+  // PRIORITY 1: Detect from operator prefixes (first 3 digits) - most accurate for local numbers
+  if (digitsOnly.length >= 3) {
+    const firstThree = digitsOnly.substring(0, 3)
+    const firstTwo = digitsOnly.substring(0, 2)
+    
+    // Extended operator patterns for better detection
+    const operatorPatterns: Array<{ 
+      pattern: RegExp
+      countryCode: string
+      countryISO: string
+      removePrefix?: string // Prefix to remove for national number
+    }> = [
+      // Egypt - operator prefixes: 010, 011, 012, 015, 016
+      { pattern: /^010|^011|^012|^015|^016/, countryCode: '+20', countryISO: 'EG', removePrefix: '0' },
+      // Saudi Arabia - operator prefixes: 05x (where x is 0-9)
+      { pattern: /^05[0-9]/, countryCode: '+966', countryISO: 'SA', removePrefix: '0' },
+      // UAE - operator prefixes: 05x
+      { pattern: /^05[0-9]/, countryCode: '+971', countryISO: 'AE', removePrefix: '0' },
+      // UK - operator prefixes: 07x
+      { pattern: /^07[0-9]/, countryCode: '+44', countryISO: 'GB', removePrefix: '0' },
+      // US/Canada - operator prefixes: 1xx (area codes)
+      { pattern: /^1[2-9][0-9]/, countryCode: '+1', countryISO: 'US' },
+      // India - operator prefixes: 6-9 followed by 9 digits
+      { pattern: /^[6-9][0-9]{9}$/, countryCode: '+91', countryISO: 'IN' },
+      // More patterns can be added here
+    ]
+
+    // Try operator prefix detection first
+    for (const { pattern, countryCode, countryISO, removePrefix } of operatorPatterns) {
+      if (pattern.test(digitsOnly)) {
+        try {
+          // Prepare number for validation
+          let numberToTest = digitsOnly
+          
+          // Remove local prefix if specified (e.g., remove leading 0)
+          if (removePrefix && digitsOnly.startsWith(removePrefix)) {
+            numberToTest = digitsOnly.substring(removePrefix.length)
+          }
+          
+          // Test with country code
+          const testResult = phone(countryCode + numberToTest)
+          
+          if (testResult.isValid && testResult.countryIso2?.toUpperCase() === countryISO) {
+            // Get carrier if possible
+            let carrier: string | undefined
+            try {
+              if (testResult.countryCode) {
+                const network = findNetworkByPhoneNumber(testResult.phoneNumber, testResult.countryCode)
+                if (network) carrier = network
+              }
+            } catch {
+              // Carrier detection failed, continue
+            }
+
+            // Format for local display
+            let localFormat: string | null = null
+            try {
+              const parsed = parsePhoneNumberFromString(testResult.phoneNumber)
+              if (parsed) {
+                localFormat = parsed.formatNational()
+              }
+            } catch {
+              // Fallback to national number if formatting fails
+              localFormat = testResult.phoneNumber.replace(countryCode, '')
+            }
+
+            return {
+              countryCode: countryCode,
+              countryISO: countryISO,
+              formattedNumber: testResult.phoneNumber, // E.164 format for storage
+              localFormat: localFormat, // Local format for display
+              isValid: true,
+              nationalNumber: testResult.phoneNumber.replace(countryCode, ''),
+              carrier
+            }
+          }
+        } catch (error) {
+          // Continue to next pattern
+          continue
+        }
+      }
+    }
+  }
+
+  // PRIORITY 2: Try with 'phone' package directly (works if number already has country code)
   try {
-    // The phone package needs '+' prefix to detect country from operator numbers
-    // Try with '+' prefix - this helps detect from operator prefixes like 010, 05, etc.
-    let result = phone('+' + digitsOnly)
+    const testInput = phoneInput.startsWith('+') ? phoneInput : '+' + digitsOnly
+    const result = phone(testInput)
     
     if (result.isValid && result.countryIso2) {
-      // Try to find the carrier/network operator
+      // Get carrier if possible
       let carrier: string | undefined
       try {
-        // findNetworkByPhoneNumber requires phone number and country code
         if (result.countryCode) {
           const network = findNetworkByPhoneNumber(result.phoneNumber, result.countryCode)
-          if (network) {
-            carrier = network
-          }
+          if (network) carrier = network
         }
       } catch {
-        // Carrier detection failed, continue without it
+        // Carrier detection failed, continue
+      }
+
+      // Format for local display
+      let localFormat: string | null = null
+      try {
+        const parsed = parsePhoneNumberFromString(result.phoneNumber)
+        if (parsed) {
+          localFormat = parsed.formatNational()
+        }
+      } catch {
+        localFormat = result.phoneNumber.replace(result.countryCode || '', '')
       }
 
       return {
         countryCode: result.countryCode || null,
         countryISO: result.countryIso2?.toUpperCase() || null,
-        formattedNumber: result.phoneNumber, // Already in E.164 format
+        formattedNumber: result.phoneNumber, // E.164 format
+        localFormat: localFormat, // Local format
         isValid: true,
         nationalNumber: result.phoneNumber.replace(result.countryCode || '', ''),
         carrier
       }
     }
-
-    // If phone package didn't detect with '+', try common country codes for operator prefixes
-    // This handles cases where operator prefix alone might not be enough
-    if (digitsOnly.length >= 4) {
-      // Common country patterns based on operator prefixes
-      const operatorPatterns: Array<{ pattern: RegExp; countryCode: string; countryISO: string }> = [
-        { pattern: /^010|^011|^012|^015/, countryCode: '+20', countryISO: 'EG' }, // Egypt
-        { pattern: /^05/, countryCode: '+966', countryISO: 'SA' }, // Saudi Arabia
-        { pattern: /^07/, countryCode: '+44', countryISO: 'GB' }, // UK
-        { pattern: /^1[2-9]/, countryCode: '+1', countryISO: 'US' }, // US/Canada
-      ]
-
-      for (const { pattern, countryCode, countryISO } of operatorPatterns) {
-        if (pattern.test(digitsOnly)) {
-          const testResult = phone(countryCode + digitsOnly)
-          if (testResult.isValid && testResult.countryIso2 === countryISO.toLowerCase()) {
-            return {
-              countryCode: countryCode,
-              countryISO: countryISO,
-              formattedNumber: testResult.phoneNumber,
-              isValid: true,
-              nationalNumber: testResult.phoneNumber.replace(countryCode, ''),
-            }
-          }
-        }
-      }
-    }
   } catch (error) {
-    console.error('Error detecting country from phone number:', error)
+    // Continue to fallback
   }
 
-  // Fallback to libphonenumber-js if phone package fails
+  // PRIORITY 3: Fallback to libphonenumber-js
   try {
-    // Try with '+' prefix for better detection
     const testInput = phoneInput.startsWith('+') ? phoneInput : '+' + digitsOnly
     const phoneNumber = parsePhoneNumberFromString(testInput)
     
@@ -110,7 +178,8 @@ export function detectCountryFromPhoneNumber(phoneInput: string): {
       return {
         countryCode: phoneNumber.countryCallingCode ? `+${phoneNumber.countryCallingCode}` : null,
         countryISO: phoneNumber.country || null,
-        formattedNumber: phoneNumber.formatInternational(),
+        formattedNumber: phoneNumber.format('E.164'), // E.164 format
+        localFormat: phoneNumber.formatNational(), // Local format
         isValid: phoneNumber.isValid(),
         nationalNumber: phoneNumber.nationalNumber
       }
@@ -123,18 +192,20 @@ export function detectCountryFromPhoneNumber(phoneInput: string): {
     countryCode: null,
     countryISO: null,
     formattedNumber: null,
+    localFormat: null,
     isValid: false,
     nationalNumber: digitsOnly
   }
 }
 
 /**
- * Validates a phone number using the 'phone' package
- * This automatically normalizes the number and removes operator prefixes
+ * Validates and normalizes a phone number using the 'phone' package
+ * Returns E.164 format for storage and local format for display
  */
 export function validatePhoneNumber(phoneNumber: string, defaultCountry?: CountryCode): {
   isValid: boolean
-  formatted?: string
+  formatted?: string // E.164 format for storage
+  localFormat?: string // Local format for display
   error?: string
   countryISO?: string
 } {
@@ -143,13 +214,37 @@ export function validatePhoneNumber(phoneNumber: string, defaultCountry?: Countr
       return { isValid: false, error: 'Phone number is required' }
     }
 
-    // Use 'phone' package for validation and normalization
+    // First try detection from operator prefixes
+    const detection = detectCountryFromPhoneNumber(phoneNumber)
+    if (detection.isValid && detection.formattedNumber) {
+      return {
+        isValid: true,
+        formatted: detection.formattedNumber, // E.164 format
+        localFormat: detection.localFormat || undefined, // Local format
+        countryISO: detection.countryISO || undefined
+      }
+    }
+
+    // Fallback to 'phone' package for validation and normalization
     const result = phone(phoneNumber, { country: defaultCountry })
     
     if (result.isValid) {
+      // Get local format
+      let localFormat: string | undefined
+      try {
+        const parsed = parsePhoneNumberFromString(result.phoneNumber)
+        if (parsed) {
+          localFormat = parsed.formatNational()
+        }
+      } catch {
+        // Use national number as fallback
+        localFormat = result.phoneNumber.replace(result.countryCode || '', '')
+      }
+
       return {
         isValid: true,
         formatted: result.phoneNumber, // E.164 format
+        localFormat: localFormat, // Local format
         countryISO: result.countryIso2?.toUpperCase()
       }
     }
@@ -163,7 +258,8 @@ export function validatePhoneNumber(phoneNumber: string, defaultCountry?: Countr
       if (parsed && parsed.isValid()) {
         return {
           isValid: true,
-          formatted: parsed.formatInternational(),
+          formatted: parsed.format('E.164'), // E.164 format
+          localFormat: parsed.formatNational(), // Local format
           countryISO: parsed.country || undefined
         }
       }
@@ -172,6 +268,147 @@ export function validatePhoneNumber(phoneNumber: string, defaultCountry?: Countr
     }
 
     return { isValid: false, error: 'Invalid phone number format' }
+  }
+}
+
+/**
+ * Extracts country code from E.164 phone number
+ */
+export function extractCountryCode(phoneNumber: string): string | null {
+  if (!phoneNumber || !phoneNumber.startsWith('+')) {
+    return null
+  }
+  
+  try {
+    const detection = detectCountryFromPhoneNumber(phoneNumber)
+    if (detection.countryCode) {
+      return detection.countryCode
+    }
+    
+    // Fallback: try with phone package
+    const result = phone(phoneNumber)
+    if (result.isValid && result.countryCode) {
+      return result.countryCode
+    }
+    
+    // Last resort: try parsing manually
+    const parsed = parsePhoneNumberFromString(phoneNumber)
+    if (parsed && parsed.countryCallingCode) {
+      return `+${parsed.countryCallingCode}`
+    }
+    
+    return null
+  } catch (error) {
+    return null
+  }
+}
+
+/**
+ * Formats a phone number for display with country code
+ * Returns format: "+20 10 1234 5678" (country code + local format)
+ */
+export function formatPhoneWithCountryCode(phoneNumber: string, countryISO?: string): string {
+  if (!phoneNumber) return ''
+  
+  try {
+    // If number already includes country code in display format, return as is
+    if (phoneNumber.includes(' ') && phoneNumber.startsWith('+')) {
+      // Check if it's already formatted (has space after country code)
+      const parts = phoneNumber.split(' ')
+      if (parts.length >= 2 && parts[0].startsWith('+') && parts[0].length <= 5) {
+        return phoneNumber // Already formatted
+      }
+    }
+    
+    const countryCode = extractCountryCode(phoneNumber)
+    
+    // If no country code found and number doesn't start with +, return as is
+    if (!countryCode && !phoneNumber.startsWith('+')) {
+      return phoneNumber
+    }
+    
+    // Get local format
+    let localFormat = ''
+    if (phoneNumber.startsWith('+')) {
+      const parsed = parsePhoneNumberFromString(phoneNumber, countryISO as CountryCode)
+      if (parsed && parsed.isValid()) {
+        localFormat = parsed.formatNational()
+      } else {
+        // Fallback: extract national number using phone package
+        const result = phone(phoneNumber)
+        if (result.isValid && result.countryCode) {
+          // Remove country code to get national number
+          const national = result.phoneNumber.replace(result.countryCode, '').trim()
+          // Try to format it nicely
+          localFormat = national
+        } else {
+          // Last resort: manually remove country code
+          localFormat = phoneNumber.replace(/^\+\d{1,4}/, '').trim()
+        }
+      }
+    } else {
+      localFormat = phoneNumber
+    }
+    
+    // Remove leading zero from local format when country code is present
+    // This prevents redundant display like "+20 01012345678" -> "+20 1012345678"
+    if (countryCode && localFormat) {
+      // Remove leading zeros (but keep at least one digit)
+      localFormat = localFormat.replace(/^0+/, '') || localFormat
+    }
+    
+    // Combine country code with local format
+    if (countryCode && localFormat) {
+      // Ensure clean spacing
+      return `${countryCode} ${localFormat.trim()}`
+    } else if (countryCode) {
+      return countryCode
+    } else if (phoneNumber.startsWith('+')) {
+      // If we have E.164 but couldn't extract code, show as is
+      return phoneNumber
+    } else {
+      return localFormat || phoneNumber
+    }
+  } catch (error) {
+    // If all formatting fails, return original
+    return phoneNumber
+  }
+}
+
+/**
+ * Formats a phone number for display (local format only)
+ * If the number is in E.164 format, converts to local format
+ */
+export function formatPhoneForDisplay(phoneNumber: string, countryISO?: string): string {
+  if (!phoneNumber) return ''
+  
+  try {
+    // If already in local format (doesn't start with +), return as is
+    if (!phoneNumber.startsWith('+')) {
+      return phoneNumber
+    }
+    
+    // Parse and format as national/local format
+    const parsed = parsePhoneNumberFromString(phoneNumber, countryISO as CountryCode)
+    if (parsed && parsed.isValid()) {
+      return parsed.formatNational()
+    }
+    
+    // Fallback: try with phone package
+    const result = phone(phoneNumber)
+    if (result.isValid) {
+      const parsed2 = parsePhoneNumberFromString(result.phoneNumber)
+      if (parsed2) {
+        return parsed2.formatNational()
+      }
+      // Last resort: return national number
+      return result.phoneNumber.replace(result.countryCode || '', '')
+    }
+    
+    return phoneNumber
+  } catch (error) {
+    // If all formatting fails, return original
+    return phoneNumber
   }
 }
 

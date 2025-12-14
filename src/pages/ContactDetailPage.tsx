@@ -28,6 +28,7 @@ import {
 import { toast } from "sonner"
 import { useContact, useUpdateContact } from "@/hooks/use-contacts"
 import { getActiveChannels } from "@/lib/channel-utils"
+import { formatPhoneWithCountryCode } from "@/lib/phone-utils"
 
 export default function ContactDetailPage() {
   const params = useParams()
@@ -233,7 +234,7 @@ export default function ContactDetailPage() {
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                   <label className="text-sm font-medium text-muted-foreground">Phone</label>
-                                  <p className="text-sm">{contact.phone}</p>
+                                  <p className="text-sm">{formatPhoneWithCountryCode(contact.phone, contact.countryISO)}</p>
                                 </div>
                                 <div>
                                   <label className="text-sm font-medium text-muted-foreground">Language</label>

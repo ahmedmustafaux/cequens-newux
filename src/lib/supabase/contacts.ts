@@ -1,10 +1,39 @@
 import { supabase } from '../supabase'
 import type { Contact, AppContact } from './types'
+import { detectCountryFromPhoneNumber } from '../phone-utils'
+
+/**
+ * Extracts country ISO from phone number if not already set
+ */
+function ensureCountryISO(phone: string, existingCountryISO: string | null): string {
+  // If countryISO is already set and valid, use it
+  if (existingCountryISO && existingCountryISO.trim() !== '') {
+    return existingCountryISO.toUpperCase()
+  }
+  
+  // Try to detect country from phone number
+  if (phone && phone.trim() !== '') {
+    try {
+      const detection = detectCountryFromPhoneNumber(phone)
+      if (detection.countryISO) {
+        return detection.countryISO.toUpperCase()
+      }
+    } catch (error) {
+      console.warn('Failed to detect country from phone number:', error)
+    }
+  }
+  
+  // Default fallback
+  return existingCountryISO?.toUpperCase() || 'SA'
+}
 
 /**
  * Converts database Contact to app Contact format
  */
 function dbContactToAppContact(dbContact: Contact): AppContact {
+  // Ensure countryISO is set from phone number if missing
+  const countryISO = ensureCountryISO(dbContact.phone, dbContact.country_iso)
+  
   return {
     id: dbContact.id,
     name: dbContact.name,
@@ -12,11 +41,11 @@ function dbContactToAppContact(dbContact: Contact): AppContact {
     lastName: dbContact.last_name || undefined,
     phone: dbContact.phone,
     emailAddress: dbContact.email_address || undefined,
-    countryISO: dbContact.country_iso,
+    countryISO: countryISO,
     avatar: dbContact.avatar || dbContact.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
     avatarColor: dbContact.avatar_color || 'bg-blue-500',
     tags: dbContact.tags || [],
-    channel: dbContact.channel || '',
+    channel: dbContact.channel || null,
     conversationStatus: dbContact.conversation_status || 'unassigned',
     assignee: dbContact.assignee,
     lastMessage: dbContact.last_message || '',

@@ -2,7 +2,7 @@ import * as React from "react"
 import { useState, useRef, useEffect, useMemo } from "react"
 import { createPortal } from "react-dom"
 import { motion } from "framer-motion"
-import { Check, Sparkles, MessageSquare, Mail, Phone, ArrowRight, Search, ChevronDown, X, Info } from "lucide-react"
+import { Check, Sparkles, MessageSquare, Mail, Phone, Smartphone, ArrowRight, Search, ChevronDown, X, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -31,6 +31,8 @@ const channelIcons: Record<string, { icon: React.ReactNode; label: string }> = {
   "channel-3": { icon: <Mail className="w-3.5 h-3.5 text-primary" />, label: "Email" },
   "channel-4": { icon: <Phone className="w-3.5 h-3.5 text-primary" />, label: "Voice" },
   "channel-5": { icon: <img src="/icons/Messenger.png" alt="Messenger" className="w-3.5 h-3.5" />, label: "Messenger" },
+  "channel-6": { icon: <img src="/icons/Instagram.svg" alt="Instagram" className="w-3.5 h-3.5" />, label: "Instagram" },
+  "channel-7": { icon: <Smartphone className="w-3.5 h-3.5 text-primary" />, label: "Push Notifications" },
 }
 
 // Product icon mapping
@@ -58,7 +60,7 @@ const clientBenefitsByIndustry: Record<string, UseCaseItem[]> = {
       id: "use-case-1",
       title: "Order & shipping updates",
       benefit: "Reduced customer support inquiries by 40% with automated order tracking",
-      channels: ["channel-1", "channel-2", "channel-3"],
+      channels: ["channel-2", "channel-1", "channel-3"],
       products: ["product-api"]
     },
     {
@@ -79,7 +81,7 @@ const clientBenefitsByIndustry: Record<string, UseCaseItem[]> = {
       id: "use-case-4",
       title: "Customer support automation",
       benefit: "Reduced response time by 70% and improved customer satisfaction with AI-powered automated support",
-      channels: ["channel-1", "channel-2", "channel-3"],
+      channels: ["channel-2", "channel-1", "channel-3"],
       products: ["product-inbox", "product-ai-assist"]
     }
   ],
@@ -132,14 +134,14 @@ const clientBenefitsByIndustry: Record<string, UseCaseItem[]> = {
       id: "use-case-3",
       title: "Payment reminders",
       benefit: "Reduced late payments by 50% through automated payment reminders",
-      channels: ["channel-1", "channel-2", "channel-3"],
+      channels: ["channel-2", "channel-1", "channel-3"],
       products: ["product-flow"]
     },
     {
       id: "use-case-4",
       title: "Financial advice & updates",
       benefit: "Increased customer engagement by 55% with personalized financial insights and market updates",
-      channels: ["channel-1", "channel-2", "channel-3"],
+      channels: ["channel-2", "channel-1", "channel-3"],
       products: ["product-campaigns"]
     }
   ],
@@ -169,7 +171,7 @@ const clientBenefitsByIndustry: Record<string, UseCaseItem[]> = {
       id: "use-case-4",
       title: "Event notifications",
       benefit: "Increased event attendance by 40% with timely notifications and reminder campaigns",
-      channels: ["channel-1", "channel-2", "channel-3"],
+      channels: ["channel-2", "channel-1", "channel-3"],
       products: ["product-campaigns"]
     }
   ],
@@ -199,7 +201,7 @@ const clientBenefitsByIndustry: Record<string, UseCaseItem[]> = {
       id: "use-case-4",
       title: "Customer feedback collection",
       benefit: "Improved product quality with 3x more customer feedback collected through automated surveys",
-      channels: ["channel-1", "channel-2", "channel-3"],
+      channels: ["channel-2", "channel-1", "channel-3"],
       products: ["product-inbox"]
     }
   ],
@@ -208,7 +210,7 @@ const clientBenefitsByIndustry: Record<string, UseCaseItem[]> = {
       id: "use-case-1",
       title: "Product updates & releases",
       benefit: "Increased feature adoption by 65% with timely release notifications",
-      channels: ["channel-3", "channel-2"],
+      channels: ["channel-2", "channel-3"],
       products: ["product-campaigns"]
     },
     {
@@ -229,7 +231,7 @@ const clientBenefitsByIndustry: Record<string, UseCaseItem[]> = {
       id: "use-case-4",
       title: "Feature announcements",
       benefit: "Increased feature adoption by 65% with timely release notifications",
-      channels: ["channel-3", "channel-2"],
+      channels: ["channel-2", "channel-3"],
       products: ["product-campaigns"]
     }
   ]
@@ -267,7 +269,7 @@ export const industryTemplates: IndustryTemplate[] = [
       { text: "Product recommendations", products: ["product-campaigns"] },
       { text: "Customer support automation", products: ["product-inbox", "product-ai-assist"] }
     ],
-    channels: ["channel-1", "channel-2", "channel-3"],
+    channels: ["channel-2", "channel-1", "channel-3"],
     goals: ["goal-1", "goal-2", "goal-4"],
     teamSize: "team-3",
     industry: "industry-1"
@@ -283,7 +285,7 @@ export const industryTemplates: IndustryTemplate[] = [
       { text: "Health tips & wellness programs", products: ["product-campaigns"] },
       { text: "Emergency alerts", products: ["product-api"] }
     ],
-    channels: ["channel-1", "channel-2", "channel-4"],
+    channels: ["channel-2", "channel-1", "channel-4"],
     goals: ["goal-1", "goal-5"],
     teamSize: "team-4",
     industry: "industry-2"
@@ -299,7 +301,7 @@ export const industryTemplates: IndustryTemplate[] = [
       { text: "Payment reminders", products: ["product-flow"] },
       { text: "Financial advice & updates", products: ["product-campaigns"] }
     ],
-    channels: ["channel-1", "channel-2", "channel-3", "channel-4"],
+    channels: ["channel-2", "channel-1", "channel-3", "channel-4"],
     goals: ["goal-1", "goal-5"],
     teamSize: "team-5",
     industry: "industry-3"
@@ -315,7 +317,7 @@ export const industryTemplates: IndustryTemplate[] = [
       { text: "Parent-teacher communication", products: ["product-inbox"] },
       { text: "Event notifications", products: ["product-campaigns"] }
     ],
-    channels: ["channel-1", "channel-2", "channel-3", "channel-5"],
+    channels: ["channel-2", "channel-1", "channel-3", "channel-5"],
     goals: ["goal-1", "goal-5"],
     teamSize: "team-3",
     industry: "industry-4"
@@ -331,7 +333,7 @@ export const industryTemplates: IndustryTemplate[] = [
       { text: "In-store pickup notifications", products: ["product-api"] },
       { text: "Customer feedback collection", products: ["product-inbox"] }
     ],
-    channels: ["channel-1", "channel-2", "channel-3"],
+    channels: ["channel-2", "channel-1", "channel-3"],
     goals: ["goal-1", "goal-2", "goal-4"],
     teamSize: "team-3",
     industry: "industry-6"
@@ -780,7 +782,7 @@ export function OnboardingTemplateSelection({
                               <span
                                 key={productId}
                                 className={cn(
-                                  "rounded bg-primary/10 text-primary font-medium",
+                                  "rounded text-primary font-medium",
                                   "px-1.5 py-0.5 text-xs"
                                 )}
                                 title={product.label}
@@ -793,6 +795,37 @@ export function OnboardingTemplateSelection({
                       )}
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Most Common Channels */}
+            {selectedTemplate.channels && selectedTemplate.channels.length > 0 && (
+              <div className="space-y-2 pt-4 border-t border-border">
+                <p className={cn(
+                  "font-semibold text-foreground",
+                  "text-sm"
+                )}>
+                  Most commonly used channels
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedTemplate.channels.map((channelId) => {
+                    const channel = channelIcons[channelId]
+                    return channel ? (
+                      <div
+                        key={channelId}
+                        className={cn(
+                          "flex items-center gap-1.5 px-2 py-1.5 rounded-md",
+                          "text-sm"
+                        )}
+                      >
+                        {channel.icon}
+                        <span className="text-foreground font-medium">
+                          {channel.label}
+                        </span>
+                      </div>
+                    ) : null
+                  })}
                 </div>
               </div>
             )}

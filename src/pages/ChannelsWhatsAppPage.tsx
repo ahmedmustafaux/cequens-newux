@@ -56,13 +56,16 @@ import {
 import { toast } from "sonner"
 import { CircleFlag } from "react-circle-flags"
 import { 
-  addActiveChannel, 
-  removeActiveChannel, 
+  addActiveChannel,
+  addActiveChannelWithSync, 
+  removeActiveChannel,
+  removeActiveChannelWithSync, 
   saveWhatsAppConfig, 
   loadWhatsAppConfig, 
   clearWhatsAppConfig,
   type WhatsAppConfig 
 } from "@/lib/channel-utils"
+import { useAuth } from "@/hooks/use-auth"
 
 interface ResourceLink {
   id: string
@@ -88,6 +91,7 @@ interface PhoneNumber {
 }
 
 export default function ChannelsWhatsAppPage() {
+  const { user } = useAuth()
   const [isLoading, setIsLoading] = React.useState(true)
   const [showAccessToken, setShowAccessToken] = React.useState(false)
   const [showWebhookToken, setShowWebhookToken] = React.useState(false)
@@ -214,18 +218,28 @@ export default function ChannelsWhatsAppPage() {
     // Note: We don't clear config here - only on explicit disconnect
   }, [formData, phoneNumbers])
 
-  // Mark channel as active when configuration is complete
+  // Mark channel as active when configuration is complete and sync with database
   React.useEffect(() => {
     // Channel is successfully configured when:
     // 1. Meta Business Account is authenticated (businessAccountId exists)
     // 2. At least one phone number is added
     if (formData.businessAccountId && phoneNumbers.length > 0) {
-      addActiveChannel("whatsapp")
+      if (user?.id) {
+        addActiveChannelWithSync("whatsapp", user.id)
+      } else {
+        // Fallback to localStorage only if user not available
+        addActiveChannel("whatsapp")
+      }
     } else {
       // Remove channel if configuration is incomplete
-      removeActiveChannel("whatsapp")
+      if (user?.id) {
+        removeActiveChannelWithSync("whatsapp", user.id)
+      } else {
+        // Fallback to localStorage only if user not available
+        removeActiveChannel("whatsapp")
+      }
     }
-  }, [formData.businessAccountId, phoneNumbers.length])
+  }, [formData.businessAccountId, phoneNumbers.length, user?.id])
 
 
   const handleInputChange = (field: string, value: string) => {
@@ -397,7 +411,11 @@ export default function ChannelsWhatsAppPage() {
                               phoneNumbers: [initialPhoneNumber]
                             })
                             // Mark WhatsApp channel as active since configuration is complete
-                            addActiveChannel("whatsapp")
+                            if (user?.id) {
+                              addActiveChannelWithSync("whatsapp", user.id)
+                            } else {
+                              addActiveChannel("whatsapp")
+                            }
                             toast.success("Successfully connected to Meta Business Account")
                           }, 2000) // Simulate 2 second OAuth redirect delay
                         }}
@@ -550,7 +568,11 @@ export default function ChannelsWhatsAppPage() {
                           phoneNumbers: updatedPhoneNumbers
                         })
                         // Mark WhatsApp channel as active since configuration is complete
-                        addActiveChannel("whatsapp")
+                        if (user?.id) {
+                          addActiveChannelWithSync("whatsapp", user.id)
+                        } else {
+                          addActiveChannel("whatsapp")
+                        }
                         toast.success("Phone number added successfully")
                       }}
                     >
@@ -608,7 +630,11 @@ export default function ChannelsWhatsAppPage() {
                             phoneNumbers: updatedPhoneNumbers
                           })
                           // Mark WhatsApp channel as active since configuration is complete
-                          addActiveChannel("whatsapp")
+                          if (user?.id) {
+                            addActiveChannelWithSync("whatsapp", user.id)
+                          } else {
+                            addActiveChannel("whatsapp")
+                          }
                           toast.success("Phone number added successfully")
                         }}
                       >
@@ -1163,12 +1189,16 @@ export default function ChannelsWhatsAppPage() {
             </Button>
             <Button
               variant="destructive"
-              onClick={() => {
+              onClick={async () => {
                 if (disconnectConfirmation.toLowerCase() === "disconnect") {
                   setFormData(prev => ({ ...prev, businessAccountId: "", apiToken: "" }))
                   setPhoneNumbers([])
-                  // Remove WhatsApp channel from active channels
-                  removeActiveChannel("whatsapp")
+                  // Remove WhatsApp channel from active channels and sync with database
+                  if (user?.id) {
+                    await removeActiveChannelWithSync("whatsapp", user.id)
+                  } else {
+                    removeActiveChannel("whatsapp")
+                  }
                   // Clear saved configuration
                   clearWhatsAppConfig()
                   setShowDisconnectDialog(false)

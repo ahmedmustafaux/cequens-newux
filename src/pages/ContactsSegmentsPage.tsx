@@ -51,6 +51,8 @@ import { useSegments, useCreateSegment, useUpdateSegment, useDeleteSegment, useU
 import { useContacts } from "@/hooks/use-contacts"
 import type { Segment, SegmentFilter } from "@/lib/supabase/types"
 import type { AppContact } from "@/lib/supabase/types"
+import { contactMatchesFilter as dbContactMatchesFilter } from "@/lib/supabase/segments"
+import { formatPhoneWithCountryCode } from "@/lib/phone-utils"
 import type { Segment as MockSegment, SegmentFilter as MockSegmentFilter } from "@/data/mock-data"
 import { CreateSegmentDialog, type CreateSegmentDialogProps } from "@/components/create-segment-dialog"
 
@@ -159,10 +161,20 @@ const getAllTags = (contacts: AppContact[]): string[] => {
   return Array.from(tags).sort()
 }
 
-const getAllChannels = (): string[] => {
-  // Return all possible channels available in the system
-  // Meta channels first: WhatsApp, Messenger, Instagram, then others
-  return ["whatsapp", "messenger", "instagram", "sms", "email", "phone", "rcs", "push"]
+const getAllChannels = (contacts: AppContact[]): string[] => {
+  // Get actual channels from database contacts
+  const channels = new Set<string>()
+  contacts.forEach((contact) => {
+    if (contact.channel && contact.channel.trim() !== '') {
+      channels.add(contact.channel.toLowerCase())
+    }
+  })
+  // Return channels in preferred order, with actual channels from DB first
+  const preferredOrder = ["whatsapp", "messenger", "instagram", "sms", "email", "phone", "rcs", "push"]
+  const dbChannels = Array.from(channels)
+  const orderedChannels = preferredOrder.filter(ch => dbChannels.includes(ch))
+  const otherChannels = dbChannels.filter(ch => !preferredOrder.includes(ch))
+  return [...orderedChannels, ...otherChannels.sort()]
 }
 
 // Helper function to get channel icon
@@ -212,381 +224,64 @@ const getAllCountries = (contacts: AppContact[]): Array<{ code: string; name: st
 const getAllConversationStatuses = (contacts: AppContact[]): string[] => {
   const statuses = new Set<string>()
   contacts.forEach((contact) => {
-    statuses.add(contact.conversationStatus)
+    if (contact.conversationStatus) {
+      statuses.add(contact.conversationStatus)
+    }
   })
   return Array.from(statuses).sort()
 }
 
-// Helper function to check if a contact matches a filter (matches logic from segments.ts)
-const contactMatchesFilter = (contact: AppContact, filter: SegmentFilter): boolean => {
-  const { field, operator, value } = filter
-
-  switch (field) {
-    case 'countryISO':
-      if (operator === 'equals' && typeof value === 'string') {
-        return contact.countryISO === value
-      }
-      if (operator === 'notEquals' && typeof value === 'string') {
-        return contact.countryISO !== value
-      }
-      if (operator === 'in' && Array.isArray(value)) {
-        return value.some(v => typeof v === 'string' && v === contact.countryISO)
-      }
-      if (operator === 'notIn' && Array.isArray(value)) {
-        return !value.some(v => typeof v === 'string' && v === contact.countryISO)
-      }
-      if (operator === 'hasAnyOf' && Array.isArray(value)) {
-        return value.some(v => typeof v === 'string' && v === contact.countryISO)
-      }
-      return false
-
-    case 'tags':
-      if (operator === 'isEmpty') {
-        return contact.tags.length === 0
-      }
-      if (operator === 'isNotEmpty') {
-        return contact.tags.length > 0
-      }
-      if (operator === 'hasAnyOf' && Array.isArray(value)) {
-        return value.some(tag => typeof tag === 'string' && contact.tags.includes(tag))
-      }
-      if (operator === 'hasAllOf' && Array.isArray(value)) {
-        return value.every(tag => typeof tag === 'string' && contact.tags.includes(tag))
-      }
-      if (operator === 'hasNoneOf' && Array.isArray(value)) {
-        return !value.some(tag => typeof tag === 'string' && contact.tags.includes(tag))
-      }
-      if (operator === 'equals' && typeof value === 'string') {
-        return contact.tags.includes(value)
-      }
-      return false
-
-    case 'channel':
-      if (operator === 'equals' && typeof value === 'string') {
-        return contact.channel === value
-      }
-      if (operator === 'notEquals' && typeof value === 'string') {
-        return contact.channel !== value
-      }
-      if (operator === 'exists') {
-        return contact.channel !== null && contact.channel !== undefined && contact.channel !== ''
-      }
-      if (operator === 'doesNotExist') {
-        return contact.channel === null || contact.channel === undefined || contact.channel === ''
-      }
-      if (operator === 'hasAnyOf' && Array.isArray(value)) {
-        return value.some(v => typeof v === 'string' && v === contact.channel)
-      }
-      if (operator === 'hasAllOf' && Array.isArray(value)) {
-        return Array.isArray(value) && value.length > 0 && value.every(v => typeof v === 'string' && v === contact.channel)
-      }
-      if (operator === 'hasNoneOf' && Array.isArray(value)) {
-        return !value.some(v => typeof v === 'string' && v === contact.channel)
-      }
-      return false
-
-    case 'conversationStatus':
-      if (operator === 'equals' && typeof value === 'string') {
-        return contact.conversationStatus === value
-      }
-      if (operator === 'notEquals' && typeof value === 'string') {
-        return contact.conversationStatus !== value
-      }
-      if (operator === 'in' && Array.isArray(value)) {
-        return value.some(v => typeof v === 'string' && v === contact.conversationStatus)
-      }
-      if (operator === 'notIn' && Array.isArray(value)) {
-        return !value.some(v => typeof v === 'string' && v === contact.conversationStatus)
-      }
-      if (operator === 'hasAnyOf' && Array.isArray(value)) {
-        return value.some(v => typeof v === 'string' && v === contact.conversationStatus)
-      }
-      return false
-
-    case 'firstName':
-      const firstName = contact.firstName || ''
-      if (operator === 'equals' && typeof value === 'string') {
-        return firstName === value
-      }
-      if (operator === 'notEquals' && typeof value === 'string') {
-        return firstName !== value
-      }
-      if (operator === 'contains' && typeof value === 'string') {
-        return firstName.toLowerCase().includes(value.toLowerCase())
-      }
-      if (operator === 'notContains' && typeof value === 'string') {
-        return !firstName.toLowerCase().includes(value.toLowerCase())
-      }
-      if (operator === 'startsWith' && typeof value === 'string') {
-        return firstName.toLowerCase().startsWith(value.toLowerCase())
-      }
-      if (operator === 'endsWith' && typeof value === 'string') {
-        return firstName.toLowerCase().endsWith(value.toLowerCase())
-      }
-      if (operator === 'isEmpty') {
-        return firstName === ''
-      }
-      if (operator === 'isNotEmpty') {
-        return firstName !== ''
-      }
-      return false
-
-    case 'lastName':
-      const lastName = contact.lastName || ''
-      if (operator === 'equals' && typeof value === 'string') {
-        return lastName === value
-      }
-      if (operator === 'notEquals' && typeof value === 'string') {
-        return lastName !== value
-      }
-      if (operator === 'contains' && typeof value === 'string') {
-        return lastName.toLowerCase().includes(value.toLowerCase())
-      }
-      if (operator === 'notContains' && typeof value === 'string') {
-        return !lastName.toLowerCase().includes(value.toLowerCase())
-      }
-      if (operator === 'startsWith' && typeof value === 'string') {
-        return lastName.toLowerCase().startsWith(value.toLowerCase())
-      }
-      if (operator === 'endsWith' && typeof value === 'string') {
-        return lastName.toLowerCase().endsWith(value.toLowerCase())
-      }
-      if (operator === 'isEmpty') {
-        return lastName === ''
-      }
-      if (operator === 'isNotEmpty') {
-        return lastName !== ''
-      }
-      return false
-
-    case 'phoneNumber':
-      const phone = contact.phone || ''
-      if (operator === 'equals' && typeof value === 'string') {
-        return phone === value
-      }
-      if (operator === 'notEquals' && typeof value === 'string') {
-        return phone !== value
-      }
-      if (operator === 'contains' && typeof value === 'string') {
-        return phone.includes(value)
-      }
-      if (operator === 'startsWith' && typeof value === 'string') {
-        return phone.startsWith(value)
-      }
-      if (operator === 'endsWith' && typeof value === 'string') {
-        return phone.endsWith(value)
-      }
-      if (operator === 'exists') {
-        return phone !== null && phone !== undefined && phone !== ''
-      }
-      if (operator === 'doesNotExist') {
-        return phone === null || phone === undefined || phone === ''
-      }
-      return false
-
-    case 'emailAddress':
-      const email = contact.emailAddress || ''
-      if (operator === 'equals' && typeof value === 'string') {
-        return email === value
-      }
-      if (operator === 'notEquals' && typeof value === 'string') {
-        return email !== value
-      }
-      if (operator === 'contains' && typeof value === 'string') {
-        return email.toLowerCase().includes(value.toLowerCase())
-      }
-      if (operator === 'startsWith' && typeof value === 'string') {
-        return email.toLowerCase().startsWith(value.toLowerCase())
-      }
-      if (operator === 'endsWith' && typeof value === 'string') {
-        return email.toLowerCase().endsWith(value.toLowerCase())
-      }
-      if (operator === 'exists') {
-        return email !== null && email !== undefined && email !== ''
-      }
-      if (operator === 'doesNotExist') {
-        return email === null || email === undefined || email === ''
-      }
-      return false
-
-    case 'language':
-      const language = contact.language || ''
-      if (operator === 'equals' && typeof value === 'string') {
-        return language === value
-      }
-      if (operator === 'notEquals' && typeof value === 'string') {
-        return language !== value
-      }
-      if (operator === 'in' && Array.isArray(value)) {
-        return value.some(v => typeof v === 'string' && v === language)
-      }
-      if (operator === 'notIn' && Array.isArray(value)) {
-        return !value.some(v => typeof v === 'string' && v === language)
-      }
-      if (operator === 'hasAnyOf' && Array.isArray(value)) {
-        return value.some(v => typeof v === 'string' && v === language)
-      }
-      return false
-
-    case 'botStatus':
-      const botStatus = contact.botStatus || ''
-      if (operator === 'equals' && typeof value === 'string') {
-        return botStatus === value
-      }
-      if (operator === 'notEquals' && typeof value === 'string') {
-        return botStatus !== value
-      }
-      if (operator === 'in' && Array.isArray(value)) {
-        return value.some(v => typeof v === 'string' && v === botStatus)
-      }
-      if (operator === 'notIn' && Array.isArray(value)) {
-        return !value.some(v => typeof v === 'string' && v === botStatus)
-      }
-      if (operator === 'hasAnyOf' && Array.isArray(value)) {
-        return value.some(v => typeof v === 'string' && v === botStatus)
-      }
-      return false
-
-    case 'assignee':
-      const assignee = contact.assignee || ''
-      if (operator === 'equals' && typeof value === 'string') {
-        return assignee === value
-      }
-      if (operator === 'notEquals' && typeof value === 'string') {
-        return assignee !== value
-      }
-      if (operator === 'in' && Array.isArray(value)) {
-        return value.some(v => typeof v === 'string' && v === assignee)
-      }
-      if (operator === 'notIn' && Array.isArray(value)) {
-        return !value.some(v => typeof v === 'string' && v === assignee)
-      }
-      if (operator === 'hasAnyOf' && Array.isArray(value)) {
-        return value.some(v => typeof v === 'string' && v === assignee)
-      }
-      if (operator === 'isEmpty') {
-        return assignee === null || assignee === undefined || assignee === ''
-      }
-      if (operator === 'isNotEmpty') {
-        return assignee !== null && assignee !== undefined && assignee !== ''
-      }
-      return false
-
-    case 'lastInteractedChannel':
-      const lastInteractedChannel = contact.lastInteractedChannel || ''
-      if (operator === 'equals' && typeof value === 'string') {
-        return lastInteractedChannel === value
-      }
-      if (operator === 'notEquals' && typeof value === 'string') {
-        return lastInteractedChannel !== value
-      }
-      if (operator === 'exists') {
-        return lastInteractedChannel !== null && lastInteractedChannel !== undefined && lastInteractedChannel !== ''
-      }
-      if (operator === 'doesNotExist') {
-        return lastInteractedChannel === null || lastInteractedChannel === undefined || lastInteractedChannel === ''
-      }
-      return false
-
-    case 'createdAt':
-      if (!contact.createdAt) {
-        return operator === 'doesNotExist' || operator === 'isEmpty'
-      }
-      const createdAt = contact.createdAt
-      if (operator === 'exists') {
-        return true
-      }
-      if (operator === 'doesNotExist') {
-        return false
-      }
-      if (operator === 'isLessThanTime' && typeof value === 'number') {
-        const daysSinceCreation = Math.floor((Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24))
-        return daysSinceCreation < value
-      }
-      if (operator === 'isGreaterThanTime' && typeof value === 'number') {
-        const daysSinceCreation = Math.floor((Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24))
-        return daysSinceCreation > value
-      }
-      if (operator === 'isTimestampAfter' && typeof value === 'string') {
-        const filterDate = new Date(value)
-        return createdAt > filterDate
-      }
-      if (operator === 'isTimestampBefore' && typeof value === 'string') {
-        const filterDate = new Date(value)
-        return createdAt < filterDate
-      }
-      if (operator === 'isTimestampBetween' && typeof value === 'object' && value !== null && 'from' in value && 'to' in value) {
-        const fromDate = new Date(value.from)
-        const toDate = new Date(value.to)
-        return createdAt >= fromDate && createdAt <= toDate
-      }
-      return false
-
-    case 'lastInteractionTime':
-    case 'timeSinceLastIncomingMessage':
-      if (!contact.lastInteractionTime) {
-        return operator === 'doesNotExist' || operator === 'isEmpty'
-      }
-      const lastInteractionTime = contact.lastInteractionTime
-      if (operator === 'exists') {
-        return true
-      }
-      if (operator === 'doesNotExist') {
-        return false
-      }
-      if (operator === 'isGreaterThanTime' && typeof value === 'number') {
-        const daysSinceInteraction = Math.floor((Date.now() - lastInteractionTime.getTime()) / (1000 * 60 * 60 * 24))
-        return daysSinceInteraction > value
-      }
-      if (operator === 'isLessThanTime' && typeof value === 'number') {
-        const daysSinceInteraction = Math.floor((Date.now() - lastInteractionTime.getTime()) / (1000 * 60 * 60 * 24))
-        return daysSinceInteraction < value
-      }
-      if (operator === 'isTimestampAfter' && typeof value === 'string') {
-        const filterDate = new Date(value)
-        return lastInteractionTime > filterDate
-      }
-      if (operator === 'isTimestampBefore' && typeof value === 'string') {
-        const filterDate = new Date(value)
-        return lastInteractionTime < filterDate
-      }
-      if (operator === 'isTimestampBetween' && typeof value === 'object' && value !== null && 'from' in value && 'to' in value) {
-        const fromDate = new Date(value.from)
-        const toDate = new Date(value.to)
-        return lastInteractionTime >= fromDate && lastInteractionTime <= toDate
-      }
-      return false
-
-    case 'conversationOpenedTime':
-      if (!contact.conversationOpenedTime) {
-        return operator === 'doesNotExist' || operator === 'isEmpty'
-      }
-      const conversationOpenedTime = contact.conversationOpenedTime
-      if (operator === 'exists') {
-        return true
-      }
-      if (operator === 'doesNotExist') {
-        return false
-      }
-      if (operator === 'isTimestampAfter' && typeof value === 'string') {
-        const filterDate = new Date(value)
-        return conversationOpenedTime > filterDate
-      }
-      if (operator === 'isTimestampBefore' && typeof value === 'string') {
-        const filterDate = new Date(value)
-        return conversationOpenedTime < filterDate
-      }
-      if (operator === 'isTimestampBetween' && typeof value === 'object' && value !== null && 'from' in value && 'to' in value) {
-        const fromDate = new Date(value.from)
-        const toDate = new Date(value.to)
-        return conversationOpenedTime >= fromDate && conversationOpenedTime <= toDate
-      }
-      return false
-
-    default:
-      return false
-  }
+// Helper function to get all languages from contacts
+const getAllLanguages = (contacts: AppContact[]): string[] => {
+  const languages = new Set<string>()
+  contacts.forEach((contact) => {
+    if (contact.language && contact.language.trim() !== '') {
+      languages.add(contact.language)
+    }
+  })
+  return Array.from(languages).sort()
 }
+
+// Helper function to get all bot statuses from contacts
+const getAllBotStatuses = (contacts: AppContact[]): string[] => {
+  const botStatuses = new Set<string>()
+  contacts.forEach((contact) => {
+    if (contact.botStatus && contact.botStatus.trim() !== '') {
+      botStatuses.add(contact.botStatus)
+    }
+  })
+  return Array.from(botStatuses).sort()
+}
+
+// Helper function to get all assignees from contacts
+const getAllAssignees = (contacts: AppContact[]): string[] => {
+  const assignees = new Set<string>()
+  contacts.forEach((contact) => {
+    if (contact.assignee && contact.assignee.trim() !== '') {
+      assignees.add(contact.assignee)
+    }
+  })
+  return Array.from(assignees).sort()
+}
+
+// Helper function to get all last interacted channels from contacts
+const getAllLastInteractedChannels = (contacts: AppContact[]): string[] => {
+  const channels = new Set<string>()
+  contacts.forEach((contact) => {
+    if (contact.lastInteractedChannel && contact.lastInteractedChannel.trim() !== '') {
+      channels.add(contact.lastInteractedChannel.toLowerCase())
+    }
+  })
+  // Return channels in preferred order
+  const preferredOrder = ["whatsapp", "messenger", "instagram", "sms", "email", "phone", "rcs", "push"]
+  const dbChannels = Array.from(channels)
+  const orderedChannels = preferredOrder.filter(ch => dbChannels.includes(ch))
+  const otherChannels = dbChannels.filter(ch => !preferredOrder.includes(ch))
+  return [...orderedChannels, ...otherChannels.sort()]
+}
+
+// Use the exported function from segments.ts to ensure consistency
+const contactMatchesFilter = dbContactMatchesFilter
 
 // Helper function to get contacts that match a segment's filters
 const getContactsForSegment = (contacts: AppContact[], segment: Segment): AppContact[] => {
@@ -595,6 +290,9 @@ const getContactsForSegment = (contacts: AppContact[], segment: Segment): AppCon
   }
 
   return contacts.filter((contact) => {
+    if (!segment.filters || segment.filters.length === 0) {
+      return false // No filters means no contacts
+    }
     return segment.filters.every((filter) => contactMatchesFilter(contact, filter))
   })
 }
@@ -753,6 +451,8 @@ const createContactColumns = (): ColumnDef<AppContact>[] => [
     header: "Phone",
     cell: ({ row }) => {
       const contact = row.original
+      // Format phone number with country code for display
+      const displayPhone = formatPhoneWithCountryCode(contact.phone, contact.countryISO);
       return (
         <div className="flex items-center gap-2 min-w-0">
           <div className="w-4 h-4 flex-shrink-0 overflow-hidden rounded-full">
@@ -763,7 +463,7 @@ const createContactColumns = (): ColumnDef<AppContact>[] => [
           </div>
           <div className="flex flex-col min-w-0">
             <Highlight
-              text={contact.phone}
+              text={displayPhone}
               columnId="phone"
               className="font-normal text-sm text-muted-foreground whitespace-nowrap truncate"
             />
@@ -779,7 +479,7 @@ const createContactColumns = (): ColumnDef<AppContact>[] => [
       const channel = row.getValue("channel") as string | null;
       
       // If channel is null or empty, show badge
-      if (!channel || channel.trim() === '') {
+      if (!channel || (typeof channel === 'string' && channel.trim() === '')) {
         return (
           <Badge variant="outline" className="text-xs">
             Not defined yet
@@ -1126,7 +826,7 @@ function ContactsSegmentsPageContent() {
       case "tags":
         return getAllTags(contacts).map((tag) => ({ value: tag, label: tag }))
       case "channel":
-        return getAllChannels().map((channel) => {
+        return getAllChannels(contacts).map((channel) => {
           // Format channel names for display
           const channelLabels: Record<string, string> = {
             whatsapp: "WhatsApp",
@@ -1140,18 +840,37 @@ function ContactsSegmentsPageContent() {
           }
           return { 
             value: channel, 
-            label: channelLabels[channel] || channel,
+            label: channelLabels[channel] || channel.charAt(0).toUpperCase() + channel.slice(1),
             icon: channel // Pass channel ID for icon rendering
           }
         })
       case "conversationStatus":
         return getAllConversationStatuses(contacts).map((status) => ({ value: status, label: status }))
       case "language":
-        return getAllConversationStatuses(contacts).map((status) => ({ value: status, label: status })) // TODO: Get actual languages
+        return getAllLanguages(contacts).map((language) => ({ value: language, label: language }))
       case "botStatus":
-        return getAllConversationStatuses(contacts).map((status) => ({ value: status, label: status })) // TODO: Get actual bot statuses
+        return getAllBotStatuses(contacts).map((botStatus) => ({ value: botStatus, label: botStatus }))
       case "assignee":
-        return getAllConversationStatuses(contacts).map((status) => ({ value: status, label: status })) // TODO: Get actual assignees
+        return getAllAssignees(contacts).map((assignee) => ({ value: assignee, label: assignee }))
+      case "lastInteractedChannel":
+        return getAllLastInteractedChannels(contacts).map((channel) => {
+          // Format channel names for display
+          const channelLabels: Record<string, string> = {
+            whatsapp: "WhatsApp",
+            instagram: "Instagram",
+            messenger: "Messenger",
+            sms: "SMS",
+            email: "Email",
+            phone: "Phone",
+            rcs: "RCS",
+            push: "Push Notifications",
+          }
+          return { 
+            value: channel, 
+            label: channelLabels[channel] || channel.charAt(0).toUpperCase() + channel.slice(1),
+            icon: channel
+          }
+        })
       default:
         return []
     }

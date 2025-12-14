@@ -203,8 +203,37 @@ export default function NewUserOnboardingPage() {
   const { user, updateOnboardingStatus, logout } = useAuth()
   const { completeOnboarding: markOnboardingComplete } = useOnboarding()
 
-  // All steps including industry selection as first step
-  const totalSteps = 5 // Industry selection + 4 questions
+  // Check if "Other" industry was selected
+  const isOtherIndustry = () => {
+    return customIndustryName.trim().length > 0 && selectedTemplate === null
+  }
+
+  // Get the questions to show based on industry selection
+  // If specific industry: show only last 2 questions (company size, usage)
+  // If "Other": show all 4 questions (goals, channels, company size, usage)
+  const getQuestionsToShow = () => {
+    if (isOtherIndustry()) {
+      // Show all 4 questions for "Other"
+      return onboardingSteps
+    } else {
+      // Show only last 2 questions for specific industry
+      return shortWizardSteps
+    }
+  }
+
+  // Calculate total steps: 1 (industry) + questions to show
+  const questionsToShow = getQuestionsToShow()
+  const totalSteps = 1 + questionsToShow.length
+
+  // Map current step to the actual question index
+  // Step 0 = industry selection
+  // Step 1+ = questions (mapped from questionsToShow array)
+  const getCurrentQuestionStep = () => {
+    if (currentStep === 0) return null // Industry selection
+    // Map to the actual question from questionsToShow
+    const questionIndex = currentStep - 1
+    return questionsToShow[questionIndex]
+  }
 
   // Redirect if not a new user
   useEffect(() => {
@@ -229,7 +258,8 @@ export default function NewUserOnboardingPage() {
   }
 
   const handleOptionSelect = (optionId: string) => {
-    const step = onboardingSteps[currentStep - 1] // Adjust index since step 0 is industry
+    const step = getCurrentQuestionStep()
+    if (!step) return // Industry selection handled separately
     
     if (step.multiSelect) {
       // For multi-select, toggle the option
@@ -260,7 +290,8 @@ export default function NewUserOnboardingPage() {
 
   const isOptionSelected = (optionId: string) => {
     if (currentStep === 0) return false // Industry selection handled separately
-    const step = onboardingSteps[currentStep - 1] // Adjust index since step 0 is industry
+    const step = getCurrentQuestionStep()
+    if (!step) return false
     const selections = selectedOptions[step.id] || []
     return selections.includes(optionId)
   }
@@ -268,7 +299,8 @@ export default function NewUserOnboardingPage() {
   // Check if an option matches the selected industry template
   const isOptionCommonForIndustry = (optionId: string) => {
     if (!selectedTemplate) return false
-    const step = onboardingSteps[currentStep - 1] // Adjust index since step 0 is industry
+    const step = getCurrentQuestionStep()
+    if (!step) return false
     
     // Check based on step type
     if (step.id === 1) {
@@ -299,7 +331,8 @@ export default function NewUserOnboardingPage() {
       return selectedTemplate !== null || customIndustryName.trim().length > 0
     }
     // For other steps, require selection
-    const step = onboardingSteps[currentStep - 1] // Adjust index since step 0 is industry
+    const step = getCurrentQuestionStep()
+    if (!step) return false
     const selections = selectedOptions[step.id] || []
     return selections.length > 0
   }
@@ -323,6 +356,8 @@ export default function NewUserOnboardingPage() {
     setIsLoading(true)
 
     // Prepare onboarding data to save
+    // Map selected options based on question IDs
+    // Question IDs: 1=goals, 2=channels, 3=teamSize, 4=usage
     const onboardingDataToSave = {
       industry: selectedTemplate?.industry || (customIndustryName ? "custom" : "none"),
       customIndustryName: customIndustryName || undefined,
@@ -444,24 +479,31 @@ export default function NewUserOnboardingPage() {
               transition={smoothTransition}
               className="space-y-4"
             >
-              {/* Progress indicator */}
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex-1 flex space-x-1">
-                  {Array.from({ length: totalSteps }).map((_, index) => (
-                    <div
-                      key={index}
-                      className={`h-1 flex-1 rounded-full ${
-                        index <= currentStep
-                          ? "bg-primary"
-                          : "bg-muted"
-                      }`}
-                    />
-                  ))}
+              {/* Progress indicator - Only show after industry selection (step 0) */}
+              {currentStep > 0 && (
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex-1 flex space-x-1">
+                    {Array.from({ length: questionsToShow.length }).map((_, index) => {
+                      // Map question index to current step (currentStep - 1 because step 0 is industry)
+                      const questionIndex = index
+                      const currentQuestionIndex = currentStep - 1
+                      return (
+                        <div
+                          key={index}
+                          className={`h-1 flex-1 rounded-full ${
+                            questionIndex <= currentQuestionIndex
+                              ? "bg-primary"
+                              : "bg-muted"
+                          }`}
+                        />
+                      )
+                    })}
+                  </div>
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    {currentStep}/{questionsToShow.length}
+                  </span>
                 </div>
-                <span className="ml-2 text-xs text-muted-foreground">
-                  {currentStep + 1}/{totalSteps}
-                </span>
-              </div>
+              )}
 
               {/* Industry Selection Step (Step 0) */}
               {currentStep === 0 ? (
@@ -494,36 +536,41 @@ export default function NewUserOnboardingPage() {
                   </div>
                 </motion.div>
               ) : (
-                /* Regular Questions (Steps 1-4) */
+                /* Regular Questions */
                 <>
                   {/* Question */}
-                  <motion.div
-                    key={`step-${currentStep}`}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                    variants={stepVariants}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <h3 className="text-md font-semibold mb-1">
-                      {onboardingSteps[currentStep - 1].question}
-                    </h3>
+                  {(() => {
+                    const currentQuestion = getCurrentQuestionStep()
+                    if (!currentQuestion) return null
                     
-                    {onboardingSteps[currentStep - 1].multiSelect ? (
-                      <p className="text-xs text-muted-foreground mb-3">
-                        You can select multiple options
-                      </p>
-                    ) : (
-                      <p className="text-xs text-muted-foreground mb-3">
-                        Please select one option
-                      </p>
-                    )}
+                    return (
+                      <motion.div
+                        key={`step-${currentStep}`}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        variants={stepVariants}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <h3 className="text-md font-semibold mb-1">
+                          {currentQuestion.question}
+                        </h3>
+                        
+                        {currentQuestion.multiSelect ? (
+                          <p className="text-xs text-muted-foreground mb-3">
+                            You can select multiple options
+                          </p>
+                        ) : (
+                          <p className="text-xs text-muted-foreground mb-3">
+                            Please select one option
+                          </p>
+                        )}
 
-                    {/* Options */}
-                    {onboardingSteps[currentStep - 1].visualOptions ? (
-                      // Visual options for usage question - with grayscale visuals above labels
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {onboardingSteps[currentStep - 1].options.map(option => {
+                        {/* Options */}
+                        {currentQuestion.visualOptions ? (
+                          // Visual options for usage question - with grayscale visuals above labels
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {currentQuestion.options.map(option => {
                           const isSelected = isOptionSelected(option.id);
                           const hasIconData = hasIcon(option);
                           return (
@@ -562,11 +609,11 @@ export default function NewUserOnboardingPage() {
                             </div>
                           );
                         })}
-                      </div>
-                    ) : (
-                      // Standard options for other questions
-                      <div className="mt-8">
-                        {onboardingSteps[currentStep - 1].options.map(option => {
+                          </div>
+                        ) : (
+                          // Standard options for other questions
+                          <div className="mt-8">
+                            {currentQuestion.options.map(option => {
                           const isSelected = isOptionSelected(option.id);
                           return (
                           <div
@@ -574,12 +621,12 @@ export default function NewUserOnboardingPage() {
                             onClick={() => handleOptionSelect(option.id)}
                             className={`group flex items-center gap-2.5 cursor-pointer rounded-md p-2 -mx-2 transition-colors hover:bg-accent`}
                           >
-                            {onboardingSteps[currentStep - 1].multiSelect ? (
-                              <Checkbox 
-                                checked={isOptionSelected(option.id)}
-                                className="pointer-events-none"
-                              />
-                            ) : (
+                              {currentQuestion.multiSelect ? (
+                                <Checkbox 
+                                  checked={isOptionSelected(option.id)}
+                                  className="pointer-events-none"
+                                />
+                              ) : (
                               <div 
                                 className={`h-4 w-4 rounded-full border-1 shrink-0 flex items-center justify-center ${
                                   isOptionSelected(option.id) 
@@ -607,10 +654,12 @@ export default function NewUserOnboardingPage() {
                             )}
                           </div>
                           );
-                        })}
-                      </div>
-                    )}
-                  </motion.div>
+                            })}
+                          </div>
+                        )}
+                      </motion.div>
+                    )
+                  })()}
                 </>
               )}
 

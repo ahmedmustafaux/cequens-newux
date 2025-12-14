@@ -8,6 +8,7 @@ export type User = {
   company_name: string | null
   onboarding_completed: boolean
   onboarding_data?: any
+  connected_channels?: string[]
   created_at: string
   updated_at: string
 }
@@ -70,11 +71,12 @@ export async function createUser(input: CreateUserInput): Promise<User> {
  * Find user by email
  */
 export async function findUserByEmail(email: string): Promise<User | null> {
-  // Note: onboarding_data column must exist in database. If you get column errors, run the migration:
+  // Note: onboarding_data and connected_channels columns must exist in database. If you get column errors, run the migrations:
   // ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_data JSONB;
+  // ALTER TABLE users ADD COLUMN IF NOT EXISTS connected_channels TEXT[] DEFAULT '{}';
   const { data, error } = await supabase
     .from('users')
-    .select('id, email, first_name, last_name, company_name, onboarding_completed, onboarding_data, created_at, updated_at')
+    .select('id, email, first_name, last_name, company_name, onboarding_completed, onboarding_data, connected_channels, created_at, updated_at')
     .eq('email', email)
     .single()
 
@@ -136,7 +138,7 @@ export async function updateUserOnboarding(
   console.log('Attempting to update user onboarding:', { userId, updateData })
 
   // Select fields - include onboarding_data only if we're updating it
-  const selectFields = 'id, email, first_name, last_name, company_name, onboarding_completed, onboarding_data, created_at, updated_at'
+  const selectFields = 'id, email, first_name, last_name, company_name, onboarding_completed, onboarding_data, connected_channels, created_at, updated_at'
 
   const { data, error } = await supabase
     .from('users')
@@ -172,5 +174,97 @@ export async function updateUserOnboarding(
 export async function emailExists(email: string): Promise<boolean> {
   const user = await findUserByEmail(email)
   return user !== null
+}
+
+/**
+ * Get connected channels for a user
+ */
+export async function getUserConnectedChannels(userId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('users')
+    .select('connected_channels')
+    .eq('id', userId)
+    .single()
+
+  if (error) {
+    console.error('Error fetching connected channels:', error)
+    throw error
+  }
+
+  return data?.connected_channels || []
+}
+
+/**
+ * Update connected channels for a user
+ */
+export async function updateUserConnectedChannels(
+  userId: string,
+  channels: string[]
+): Promise<User> {
+  const { data, error } = await supabase
+    .from('users')
+    .update({ connected_channels: channels })
+    .eq('id', userId)
+    .select('id, email, first_name, last_name, company_name, onboarding_completed, onboarding_data, connected_channels, created_at, updated_at')
+    .single()
+
+  if (error) {
+    console.error('Error updating connected channels:', error)
+    throw error
+  }
+
+  return data as User
+}
+
+/**
+ * Add a channel to user's connected channels
+ */
+export async function addUserConnectedChannel(
+  userId: string,
+  channelId: string
+): Promise<User> {
+  const currentChannels = await getUserConnectedChannels(userId)
+  
+  if (!currentChannels.includes(channelId)) {
+    return await updateUserConnectedChannels(userId, [...currentChannels, channelId])
+  }
+
+  // Return current user if channel already exists
+  const { data, error } = await supabase
+    .from('users')
+    .select('id, email, first_name, last_name, company_name, onboarding_completed, onboarding_data, connected_channels, created_at, updated_at')
+    .eq('id', userId)
+    .single()
+
+  if (error) {
+    console.error('Error fetching user:', error)
+    throw error
+  }
+
+  return data as User
+}
+
+/**
+ * Remove a channel from user's connected channels
+ */
+export async function removeUserConnectedChannel(
+  userId: string,
+  channelId: string
+): Promise<User> {
+  const currentChannels = await getUserConnectedChannels(userId)
+  const updatedChannels = currentChannels.filter(id => id !== channelId)
+  
+  return await updateUserConnectedChannels(userId, updatedChannels)
+}
+
+/**
+ * Check if a user has a specific channel connected
+ */
+export async function hasUserConnectedChannel(
+  userId: string,
+  channelId: string
+): Promise<boolean> {
+  const channels = await getUserConnectedChannels(userId)
+  return channels.includes(channelId)
 }
 

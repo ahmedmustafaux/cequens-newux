@@ -2,6 +2,7 @@ import { supabase } from '../supabase'
 import type { Segment, SegmentFilter } from './types'
 import { fetchContacts } from './contacts'
 import type { AppContact } from './types'
+import { detectCountryFromPhoneNumber, validatePhoneNumber } from '../phone-utils'
 
 /**
  * Fetch all segments
@@ -216,27 +217,30 @@ function getMatchingContactIds(contacts: AppContact[], filters: SegmentFilter[])
 /**
  * Check if a contact matches a filter
  * Comprehensive filter matching for all supported fields and operators
+ * Exported for use in client-side filtering
  */
-function contactMatchesFilter(contact: AppContact, filter: SegmentFilter): boolean {
+export function contactMatchesFilter(contact: AppContact, filter: SegmentFilter): boolean {
   const { field, operator, value } = filter
 
   switch (field) {
-    // Country ISO
+    // Country ISO - case-insensitive comparison
     case 'countryISO':
+      // Normalize country ISO values for case-insensitive comparison
+      const contactCountryISO = contact.countryISO ? contact.countryISO.toUpperCase() : null
       if (operator === 'equals' && typeof value === 'string') {
-        return contact.countryISO === value
+        return contactCountryISO === value.toUpperCase()
       }
       if (operator === 'notEquals' && typeof value === 'string') {
-        return contact.countryISO !== value
+        return contactCountryISO !== value.toUpperCase()
       }
       if (operator === 'in' && Array.isArray(value)) {
-        return value.some(v => typeof v === 'string' && v === contact.countryISO)
+        return value.some(v => typeof v === 'string' && contactCountryISO === v.toUpperCase())
       }
       if (operator === 'notIn' && Array.isArray(value)) {
-        return !value.some(v => typeof v === 'string' && v === contact.countryISO)
+        return !value.some(v => typeof v === 'string' && contactCountryISO === v.toUpperCase())
       }
       if (operator === 'hasAnyOf' && Array.isArray(value)) {
-        return value.some(v => typeof v === 'string' && v === contact.countryISO)
+        return value.some(v => typeof v === 'string' && contactCountryISO === v.toUpperCase())
       }
       return false
 
@@ -264,11 +268,13 @@ function contactMatchesFilter(contact: AppContact, filter: SegmentFilter): boole
 
     // Channel
     case 'channel':
+      // Normalize channel values for case-insensitive comparison
+      const contactChannel = contact.channel ? contact.channel.toLowerCase() : null
       if (operator === 'equals' && typeof value === 'string') {
-        return contact.channel === value
+        return contactChannel === value.toLowerCase()
       }
       if (operator === 'notEquals' && typeof value === 'string') {
-        return contact.channel !== value
+        return contactChannel !== value.toLowerCase()
       }
       if (operator === 'exists') {
         return contact.channel !== null && contact.channel !== undefined && contact.channel !== ''
@@ -277,13 +283,13 @@ function contactMatchesFilter(contact: AppContact, filter: SegmentFilter): boole
         return contact.channel === null || contact.channel === undefined || contact.channel === ''
       }
       if (operator === 'hasAnyOf' && Array.isArray(value)) {
-        return value.some(v => typeof v === 'string' && v === contact.channel)
+        return value.some(v => typeof v === 'string' && contactChannel === v.toLowerCase())
       }
       if (operator === 'hasAllOf' && Array.isArray(value)) {
-        return Array.isArray(value) && value.length > 0 && value.every(v => typeof v === 'string' && v === contact.channel)
+        return Array.isArray(value) && value.length > 0 && value.every(v => typeof v === 'string' && contactChannel === v.toLowerCase())
       }
       if (operator === 'hasNoneOf' && Array.isArray(value)) {
-        return !value.some(v => typeof v === 'string' && v === contact.channel)
+        return !value.some(v => typeof v === 'string' && contactChannel === v.toLowerCase())
       }
       return false
 
@@ -364,29 +370,54 @@ function contactMatchesFilter(contact: AppContact, filter: SegmentFilter): boole
       }
       return false
 
-    // Phone Number
+    // Phone Number - contact.phone is stored in E.164 format
     case 'phoneNumber':
-      const phone = contact.phone || ''
+      const contactPhone = contact.phone || '' // E.164 format
+      
+      // Normalize filter value to E.164 format for comparison
+      const normalizeFilterValue = (val: string): string => {
+        // Try to detect and normalize the filter value
+        const detection = detectCountryFromPhoneNumber(val)
+        if (detection.isValid && detection.formattedNumber) {
+          return detection.formattedNumber
+        }
+        // If detection fails, try validation
+        const validation = validatePhoneNumber(val)
+        if (validation.isValid && validation.formatted) {
+          return validation.formatted
+        }
+        // Return as-is if normalization fails
+        return val
+      }
+      
       if (operator === 'equals' && typeof value === 'string') {
-        return phone === value
+        const normalizedValue = normalizeFilterValue(value)
+        return contactPhone === normalizedValue
       }
       if (operator === 'notEquals' && typeof value === 'string') {
-        return phone !== value
+        const normalizedValue = normalizeFilterValue(value)
+        return contactPhone !== normalizedValue
       }
       if (operator === 'contains' && typeof value === 'string') {
-        return phone.includes(value)
+        // For contains, check both E.164 format and local format
+        const normalizedValue = normalizeFilterValue(value)
+        return contactPhone.includes(normalizedValue) || contactPhone.includes(value)
       }
       if (operator === 'startsWith' && typeof value === 'string') {
-        return phone.startsWith(value)
+        // For startsWith, normalize and compare
+        const normalizedValue = normalizeFilterValue(value)
+        return contactPhone.startsWith(normalizedValue) || contactPhone.startsWith(value)
       }
       if (operator === 'endsWith' && typeof value === 'string') {
-        return phone.endsWith(value)
+        // For endsWith, check the last digits (national number part)
+        const contactNational = contactPhone.replace(/^\+\d{1,4}/, '') // Remove country code
+        return contactNational.endsWith(value.replace(/\D/g, ''))
       }
       if (operator === 'exists') {
-        return phone !== null && phone !== undefined && phone !== ''
+        return contactPhone !== null && contactPhone !== undefined && contactPhone !== ''
       }
       if (operator === 'doesNotExist') {
-        return phone === null || phone === undefined || phone === ''
+        return contactPhone === null || contactPhone === undefined || contactPhone === ''
       }
       return false
 
@@ -484,18 +515,19 @@ function contactMatchesFilter(contact: AppContact, filter: SegmentFilter): boole
 
     // Last Interacted Channel
     case 'lastInteractedChannel':
-      const lastInteractedChannel = contact.lastInteractedChannel || ''
+      // Normalize channel values for case-insensitive comparison
+      const lastInteractedChannel = contact.lastInteractedChannel ? contact.lastInteractedChannel.toLowerCase() : null
       if (operator === 'equals' && typeof value === 'string') {
-        return lastInteractedChannel === value
+        return lastInteractedChannel === value.toLowerCase()
       }
       if (operator === 'notEquals' && typeof value === 'string') {
-        return lastInteractedChannel !== value
+        return lastInteractedChannel !== value.toLowerCase()
       }
       if (operator === 'exists') {
-        return lastInteractedChannel !== null && lastInteractedChannel !== undefined && lastInteractedChannel !== ''
+        return contact.lastInteractedChannel !== null && contact.lastInteractedChannel !== undefined && contact.lastInteractedChannel !== ''
       }
       if (operator === 'doesNotExist') {
-        return lastInteractedChannel === null || lastInteractedChannel === undefined || lastInteractedChannel === ''
+        return contact.lastInteractedChannel === null || contact.lastInteractedChannel === undefined || contact.lastInteractedChannel === ''
       }
       return false
 
