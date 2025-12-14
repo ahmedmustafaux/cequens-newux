@@ -1561,9 +1561,9 @@ export default function CampaignsCreatePage() {
                               screenWidth={320}
                               screenType="notch"
                               frameColor="#1f2937"
-                              hideStatusBar={false}
+                              hideStatusBar={true}
                             >
-                            <div className={`w-full h-full relative ${
+                            <div className={`pt-6 w-full h-full relative ${
                               formData.type === "Whatsapp" 
                                 ? "bg-[#efeae2]" 
                                 : "bg-white dark:bg-gray-900"
