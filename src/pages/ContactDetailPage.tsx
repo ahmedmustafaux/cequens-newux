@@ -13,7 +13,6 @@ import { smoothTransition } from "@/lib/transitions"
 import { CircleFlag } from "react-circle-flags"
 import { 
   User, 
-  Phone, 
   MessageSquare,
   Globe,
   Edit,
@@ -21,10 +20,9 @@ import {
   CheckCircle,
   AlertCircle,
   XCircle,
-  Plus,
-  Mail,
-  Smartphone
+  Plus
 } from "lucide-react"
+import { EnvelopeSimple, ChatText, Phone as PhoneIcon, Bell } from "phosphor-react"
 import { toast } from "sonner"
 import { useContact, useUpdateContact } from "@/hooks/use-contacts"
 import { getActiveChannels } from "@/lib/channel-utils"
@@ -407,11 +405,13 @@ export default function ContactDetailPage() {
                                       case "messenger":
                                         return <img src="/icons/Messenger.png" alt="Messenger" className="w-4 h-4 flex-shrink-0" onError={(e) => { e.currentTarget.style.display = "none" }} />
                                       case "sms":
-                                        return <Smartphone className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+                                        return <ChatText weight="fill" className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
                                       case "email":
-                                        return <Mail className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+                                        return <EnvelopeSimple weight="fill" className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
                                       case "phone":
-                                        return <Phone className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+                                        return <PhoneIcon weight="fill" className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+                                      case "push":
+                                        return <Bell weight="fill" className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
                                       default:
                                         return <MessageSquare className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
                                     }

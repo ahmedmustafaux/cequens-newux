@@ -2,7 +2,8 @@ import * as React from "react"
 import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { Check, ChevronRight, Loader2, MessageSquare, Mail, Phone, Smartphone, Code, AppWindow } from "lucide-react"
+import { Check, ChevronRight, Loader2, Code, AppWindow } from "lucide-react"
+import { EnvelopeSimple, ChatText, Phone as PhoneIcon, Bell } from "phosphor-react"
 import { useAuth } from "@/hooks/use-auth"
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { smoothTransition, pageVariants } from "@/lib/transitions"
@@ -23,7 +24,7 @@ interface BaseOption {
 }
 
 interface IconOption extends BaseOption {
-  iconType: "lucide" | "svg" | "img" | "visual";
+  iconType: "lucide" | "svg" | "img" | "visual" | "phosphor";
   icon: string;
 }
 
@@ -108,12 +109,16 @@ const renderIcon = (option: IconOption, size: "small" | "large" = "small") => {
   const iconSize = size === "large" ? "w-12 h-12" : "w-4 h-4";
   if (option.iconType === "lucide") {
     const iconMap: Record<string, React.ReactNode> = {
-      MessageSquare: <MessageSquare className={`${iconSize} text-primary`} />,
-      Mail: <Mail className={`${iconSize} text-primary`} />,
-      Phone: <Phone className={`${iconSize} text-primary`} />,
-      Smartphone: <Smartphone className={`${iconSize} text-primary`} />,
       Code: <Code className={`${iconSize} text-primary`} />,
       AppWindow: <AppWindow className={`${iconSize} text-primary`} />,
+    };
+    return iconMap[option.icon] || null;
+  } else if (option.iconType === "phosphor") {
+    const iconMap: Record<string, React.ReactNode> = {
+      ChatText: <ChatText weight="fill" className={`${iconSize} text-primary`} />,
+      EnvelopeSimple: <EnvelopeSimple weight="fill" className={`${iconSize} text-primary`} />,
+      Phone: <PhoneIcon weight="fill" className={`${iconSize} text-primary`} />,
+      Bell: <Bell weight="fill" className={`${iconSize} text-primary`} />,
     };
     return iconMap[option.icon] || null;
   } else if (option.iconType === "svg" || option.iconType === "img") {
@@ -153,10 +158,10 @@ const onboardingSteps = [
       { id: "channel-2", label: "WhatsApp", iconType: "svg", icon: "/icons/WhatsApp.svg" },
       { id: "channel-6", label: "Instagram", iconType: "svg", icon: "/icons/Instagram.svg" },
       { id: "channel-5", label: "Messenger", iconType: "img", icon: "/icons/Messenger.png" },
-      { id: "channel-1", label: "SMS", iconType: "lucide", icon: "MessageSquare" },
-      { id: "channel-3", label: "Email", iconType: "lucide", icon: "Mail" },
-      { id: "channel-4", label: "Voice", iconType: "lucide", icon: "Phone" },
-      { id: "channel-7", label: "Push Notifications", iconType: "lucide", icon: "Smartphone" },
+      { id: "channel-1", label: "SMS", iconType: "phosphor", icon: "ChatText" },
+      { id: "channel-3", label: "Email", iconType: "phosphor", icon: "EnvelopeSimple" },
+      { id: "channel-4", label: "Voice", iconType: "phosphor", icon: "Phone" },
+      { id: "channel-7", label: "Push Notifications", iconType: "phosphor", icon: "Bell" },
     ],
     multiSelect: true,
   },

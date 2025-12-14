@@ -2,7 +2,8 @@ import * as React from "react"
 import { useState, useRef, useEffect, useMemo } from "react"
 import { createPortal } from "react-dom"
 import { motion } from "framer-motion"
-import { Check, Sparkles, MessageSquare, Mail, Phone, Smartphone, ArrowRight, Search, ChevronDown, X, Info } from "lucide-react"
+import { Check, Sparkles, MessageSquare, ArrowRight, Search, ChevronDown, X, Info } from "lucide-react"
+import { EnvelopeSimple, ChatText, Phone as PhoneIcon, Bell } from "phosphor-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -26,13 +27,34 @@ import { cn } from "@/lib/utils"
 
 // Channel icon mapping
 const channelIcons: Record<string, { icon: React.ReactNode; label: string }> = {
-  "channel-1": { icon: <MessageSquare className="w-3.5 h-3.5 text-primary" />, label: "SMS" },
-  "channel-2": { icon: <img src="/icons/WhatsApp.svg" alt="WhatsApp" className="w-3.5 h-3.5" />, label: "WhatsApp" },
-  "channel-3": { icon: <Mail className="w-3.5 h-3.5 text-primary" />, label: "Email" },
-  "channel-4": { icon: <Phone className="w-3.5 h-3.5 text-primary" />, label: "Voice" },
-  "channel-5": { icon: <img src="/icons/Messenger.png" alt="Messenger" className="w-3.5 h-3.5" />, label: "Messenger" },
-  "channel-6": { icon: <img src="/icons/Instagram.svg" alt="Instagram" className="w-3.5 h-3.5" />, label: "Instagram" },
-  "channel-7": { icon: <Smartphone className="w-3.5 h-3.5 text-primary" />, label: "Push Notifications" },
+  "channel-1": { 
+    icon: <ChatText weight="fill" className="w-3.5 h-3.5 text-primary" />, 
+    label: "SMS" 
+  },
+  "channel-2": { 
+    icon: <img src="/icons/WhatsApp.svg" alt="WhatsApp" className="w-3.5 h-3.5" />, 
+    label: "WhatsApp" 
+  },
+  "channel-3": { 
+    icon: <EnvelopeSimple weight="fill" className="w-3.5 h-3.5 text-primary" />, 
+    label: "Email" 
+  },
+  "channel-4": { 
+    icon: <PhoneIcon weight="fill" className="w-3.5 h-3.5 text-primary" />, 
+    label: "Voice" 
+  },
+  "channel-5": { 
+    icon: <img src="/icons/Messenger.png" alt="Messenger" className="w-3.5 h-3.5" />, 
+    label: "Messenger" 
+  },
+  "channel-6": { 
+    icon: <img src="/icons/Instagram.svg" alt="Instagram" className="w-3.5 h-3.5" />, 
+    label: "Instagram" 
+  },
+  "channel-7": { 
+    icon: <Bell weight="fill" className="w-3.5 h-3.5 text-primary" />, 
+    label: "Push Notifications" 
+  },
 }
 
 // Product icon mapping

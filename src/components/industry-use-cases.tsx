@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ChevronLeft, ChevronRight, ArrowRight, Inbox, Code, Sparkles, Workflow, Megaphone, Bot } from "lucide-react"
+import { EnvelopeSimple, ChatText, Phone as PhoneIcon, Bell } from "phosphor-react"
 import { cn } from "@/lib/utils"
 
 interface UseCaseItem {
@@ -118,6 +119,17 @@ const getProductTitle = (productId: string, industry: string): string => {
   }
   
   return titles[productId]?.[industry] || `Use ${productInfo[productId]?.name || "Product"}`
+}
+
+// Channel icon mapping
+const channelIcons: Record<string, { icon: React.ReactNode; label: string }> = {
+  "channel-1": { icon: <ChatText weight="fill" className="w-4 h-4 text-muted-foreground" />, label: "SMS" },
+  "channel-2": { icon: <img src="/icons/WhatsApp.svg" alt="WhatsApp" className="w-4 h-4" />, label: "WhatsApp" },
+  "channel-3": { icon: <EnvelopeSimple weight="fill" className="w-4 h-4 text-muted-foreground" />, label: "Email" },
+  "channel-4": { icon: <PhoneIcon weight="fill" className="w-4 h-4 text-muted-foreground" />, label: "Voice" },
+  "channel-5": { icon: <img src="/icons/Messenger.png" alt="Messenger" className="w-4 h-4" />, label: "Messenger" },
+  "channel-6": { icon: <img src="/icons/Instagram.svg" alt="Instagram" className="w-4 h-4" />, label: "Instagram" },
+  "channel-7": { icon: <Bell weight="fill" className="w-4 h-4 text-muted-foreground" />, label: "Push Notifications" },
 }
 
 // Use cases with benefits per industry

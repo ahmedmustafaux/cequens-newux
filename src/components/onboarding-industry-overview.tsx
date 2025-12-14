@@ -1,7 +1,8 @@
 import * as React from "react"
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Check, ChevronRight, ChevronLeft, MessageSquare, Mail, Phone, TrendingUp, Users, Clock, Info } from "lucide-react"
+import { Check, ChevronRight, ChevronLeft, MessageSquare, TrendingUp, Users, Clock, Info } from "lucide-react"
+import { EnvelopeSimple, ChatText, Phone as PhoneIcon, Bell } from "phosphor-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -295,7 +296,7 @@ const caseStudiesByIndustry: Record<string, CaseStudy[]> = {
 // Channel icon mapping
 const channelIcons: Record<string, { icon: React.ReactNode; label: string; description: string }> = {
   "channel-1": { 
-    icon: <MessageSquare className="w-5 h-5" />, 
+    icon: <ChatText weight="fill" className="w-5 h-5" />, 
     label: "SMS",
     description: "Reach customers instantly with text messages"
   },
@@ -305,12 +306,12 @@ const channelIcons: Record<string, { icon: React.ReactNode; label: string; descr
     description: "Connect via the world's most popular messaging app"
   },
   "channel-3": { 
-    icon: <Mail className="w-5 h-5" />, 
+    icon: <EnvelopeSimple weight="fill" className="w-5 h-5" />, 
     label: "Email",
     description: "Send professional email communications"
   },
   "channel-4": { 
-    icon: <Phone className="w-5 h-5" />, 
+    icon: <PhoneIcon weight="fill" className="w-5 h-5" />, 
     label: "Voice",
     description: "Make automated voice calls and announcements"
   },
@@ -318,6 +319,16 @@ const channelIcons: Record<string, { icon: React.ReactNode; label: string; descr
     icon: <img src="/icons/Messenger.png" alt="Messenger" className="w-5 h-5" />, 
     label: "Messenger",
     description: "Engage customers on Facebook Messenger"
+  },
+  "channel-6": { 
+    icon: <img src="/icons/Instagram.svg" alt="Instagram" className="w-5 h-5" />, 
+    label: "Instagram",
+    description: "Connect via Instagram Direct Messages"
+  },
+  "channel-7": { 
+    icon: <Bell weight="fill" className="w-5 h-5" />, 
+    label: "Push Notifications",
+    description: "Send mobile and web push notifications"
   },
 }
 

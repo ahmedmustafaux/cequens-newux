@@ -13,7 +13,8 @@ import {
   EmptyAction,
 } from "@/components/ui/empty"
 import { Button } from "@/components/ui/button"
-import { Plus, Users2, X, Download, Trash2 as TrashIcon, Send, Save, RotateCcw, ArrowLeft, ChevronDown, Smartphone, Mail, Phone, Bell, AlertTriangle } from "lucide-react"
+import { Plus, Users2, X, Download, Trash2 as TrashIcon, Send, Save, RotateCcw, ArrowLeft, ChevronDown, AlertTriangle } from "lucide-react"
+import { EnvelopeSimple, ChatText, Phone as PhoneIcon, Bell } from "phosphor-react"
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -179,7 +180,7 @@ const getAllChannels = (contacts: AppContact[]): string[] => {
 
 // Helper function to get channel icon
 const getChannelIcon = (channel: string): React.ReactNode => {
-  switch (channel) {
+  switch (channel.toLowerCase()) {
     case "whatsapp":
       return <img src="/icons/WhatsApp.svg" alt="WhatsApp" className="w-4 h-4 flex-shrink-0" onError={(e) => { e.currentTarget.style.display = "none" }} />
     case "instagram":
@@ -187,15 +188,15 @@ const getChannelIcon = (channel: string): React.ReactNode => {
     case "messenger":
       return <img src="/icons/Messenger.png" alt="Messenger" className="w-4 h-4 flex-shrink-0" onError={(e) => { e.currentTarget.style.display = "none" }} />
     case "sms":
-      return <Smartphone className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+      return <ChatText weight="fill" className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
     case "email":
-      return <Mail className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+      return <EnvelopeSimple weight="fill" className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
     case "phone":
-      return <Phone className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+      return <PhoneIcon weight="fill" className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
     case "rcs":
       return <Send className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
     case "push":
-      return <Bell className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+      return <Bell weight="fill" className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
     default:
       return null
   }

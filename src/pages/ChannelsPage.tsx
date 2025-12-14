@@ -20,16 +20,13 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { 
-  Phone, 
-  Mail, 
-  Smartphone,
   Send,
-  Bell,
   Settings,
   CheckCircle2,
   Clock,
   Zap
 } from "lucide-react"
+import { EnvelopeSimple, ChatText, Phone as PhoneIcon, Bell } from "phosphor-react"
 
 // Channel type definition
 interface Channel {
@@ -87,7 +84,7 @@ const channels: Channel[] = [
     id: "sms",
     name: "SMS",
     description: "Text messaging for notifications and campaigns",
-    icon: Smartphone,
+    icon: ChatText,
     status: "available",
     category: "other",
     color: "",
@@ -99,7 +96,7 @@ const channels: Channel[] = [
     id: "email",
     name: "Email",
     description: "Respond to customer queries via email",
-    icon: Mail,
+    icon: EnvelopeSimple,
     status: "available",
     category: "recommended",
     color: "",
@@ -110,7 +107,7 @@ const channels: Channel[] = [
     id: "phone",
     name: "Phone",
     description: "Voice and video calls with screen sharing",
-    icon: Phone,
+    icon: PhoneIcon,
     status: "available",
     category: "recommended",
     color: "",
@@ -217,9 +214,15 @@ export default function ChannelsPage() {
     
     if (channel.icon) {
       const Icon = channel.icon
+      // Check if it's a Phosphor icon (has weight prop) and use filled style
+      const isPhosphorIcon = Icon === ChatText || Icon === EnvelopeSimple || Icon === PhoneIcon || Icon === Bell
       return (
         <div className="p-2.5 rounded-lg bg-muted border border-border">
-          <Icon className="w-6 h-6 text-foreground" />
+          {isPhosphorIcon ? (
+            <Icon weight="fill" className="w-6 h-6 text-foreground" />
+          ) : (
+            <Icon className="w-6 h-6 text-foreground" />
+          )}
         </div>
       )
     }
