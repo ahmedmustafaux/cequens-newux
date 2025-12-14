@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { fetchContacts, fetchContactById, createContact, updateContact, deleteContact, fetchContactsByStatus } from '@/lib/supabase/contacts'
+import { fetchContacts, fetchContactById, createContact, updateContact, deleteContact, fetchContactsByStatus, archiveContacts, unarchiveContacts } from '@/lib/supabase/contacts'
 import type { AppContact } from '@/lib/supabase/types'
 import { useAuth } from '@/hooks/use-auth'
 
@@ -16,14 +16,14 @@ export const contactKeys = {
  * Fetch all contacts with optional search
  * Uses placeholderData to keep previous results visible during loading for smooth transitions
  */
-export function useContacts(searchQuery?: string) {
+export function useContacts(searchQuery?: string, includeArchived: boolean = false) {
   const { user } = useAuth()
   
   return useQuery({
-    queryKey: contactKeys.list({ search: searchQuery, userId: user?.id }),
+    queryKey: contactKeys.list({ search: searchQuery, userId: user?.id, includeArchived }),
     queryFn: () => {
       if (!user?.id) throw new Error('User not authenticated')
-      return fetchContacts(user.id, searchQuery)
+      return fetchContacts(user.id, searchQuery, includeArchived)
     },
     enabled: !!user?.id,
     placeholderData: (previousData) => previousData, // Keep previous data while loading for smooth transitions
@@ -112,6 +112,42 @@ export function useDeleteContact() {
     mutationFn: (id: string) => {
       if (!user?.id) throw new Error('User not authenticated')
       return deleteContact(user.id, id)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: contactKeys.lists() })
+    },
+  })
+}
+
+/**
+ * Archive one or more contacts
+ */
+export function useArchiveContacts() {
+  const queryClient = useQueryClient()
+  const { user } = useAuth()
+
+  return useMutation({
+    mutationFn: (ids: string[]) => {
+      if (!user?.id) throw new Error('User not authenticated')
+      return archiveContacts(user.id, ids)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: contactKeys.lists() })
+    },
+  })
+}
+
+/**
+ * Unarchive one or more contacts
+ */
+export function useUnarchiveContacts() {
+  const queryClient = useQueryClient()
+  const { user } = useAuth()
+
+  return useMutation({
+    mutationFn: (ids: string[]) => {
+      if (!user?.id) throw new Error('User not authenticated')
+      return unarchiveContacts(user.id, ids)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: contactKeys.lists() })

@@ -17,6 +17,7 @@ import {
   Users, 
   Edit, 
   Archive,
+  RotateCcw,
   Clock,
   CheckCircle,
   XCircle,
@@ -71,7 +72,7 @@ import {
   DataTableRow,
 } from "@/components/ui/data-table"
 import { usePageTitle } from "@/hooks/use-dynamic-title"
-import { useContacts } from "@/hooks/use-contacts"
+import { useContacts, useArchiveContacts, useUnarchiveContacts } from "@/hooks/use-contacts"
 import type { AppContact } from "@/lib/supabase/types"
 
 // Type alias for backward compatibility
@@ -122,10 +123,15 @@ const ContactsPageContent = (): React.JSX.Element => {
   }, [globalFilter])
 
   // Fetch contacts from Supabase with search query
-  // keepPreviousData ensures smooth transitions without flickering
-  const { data: contacts = [], isLoading: isDataLoading, error } = useContacts(
-    debouncedSearchQuery || undefined
+  // Always fetch all contacts (including archived) to get accurate counts
+  const { data: allContacts = [], isLoading: isDataLoading, error } = useContacts(
+    debouncedSearchQuery || undefined,
+    true // Always include archived for accurate counts
   )
+  
+  // Archive and unarchive mutations
+  const archiveContactsMutation = useArchiveContacts()
+  const unarchiveContactsMutation = useUnarchiveContacts()
   
   // Column definitions for the contacts table
   const columns: ColumnDef<Contact>[] = [
@@ -353,10 +359,10 @@ const ContactsPageContent = (): React.JSX.Element => {
   // Filter data based on selected view
   const filteredDataByView = React.useMemo(() => {
     if (selectedView === TAB_ARCHIVED) {
-      return contacts.filter(c => c.conversationStatus === "closed")
+      return allContacts.filter(c => c.archived === true)
     }
-    return contacts
-  }, [selectedView, contacts])
+    return allContacts.filter(c => !c.archived)
+  }, [selectedView, allContacts])
 
   // Apply filters to table
   React.useEffect(() => {
@@ -517,8 +523,8 @@ const ContactsPageContent = (): React.JSX.Element => {
           isLoading={isDataLoading}
           views={{
             options: [
-              { label: "All contacts", value: TAB_ALL, count: contacts.length },
-              { label: "Archived", value: TAB_ARCHIVED, count: contacts.filter(c => c.conversationStatus === "closed").length }
+              { label: "All contacts", value: TAB_ALL, count: allContacts.filter(c => !c.archived).length },
+              { label: "Archived", value: TAB_ARCHIVED, count: allContacts.filter(c => c.archived === true).length }
             ],
             selectedView: selectedView,
             onViewChange: setSelectedView
@@ -605,16 +611,47 @@ const ContactsPageContent = (): React.JSX.Element => {
                   >
                     Export
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-6 px-2 text-xs text-destructive hover:text-destructive/90 hover:border-border-destructive"
-                    onClick={() => {
-                      setShowArchiveDialog(true)
-                    }}
-                  >
-                    Archive
-                  </Button>
+                  {selectedView === TAB_ARCHIVED ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-6 px-2 text-xs"
+                      onClick={async () => {
+                        const selectedRows = table.getSelectedRowModel().rows
+                        const selectedIds = selectedRows.map(row => row.original.id)
+                        
+                        if (selectedIds.length === 0) {
+                          toast.error("No contacts selected")
+                          return
+                        }
+
+                        try {
+                          await unarchiveContactsMutation.mutateAsync(selectedIds)
+                          toast.success(`Successfully restored ${selectedIds.length} contact${selectedIds.length > 1 ? 's' : ''}`)
+                          table.resetRowSelection()
+                        } catch (error) {
+                          console.error("Error restoring contacts:", error)
+                          toast.error("Failed to restore contacts. Please try again.")
+                        }
+                      }}
+                      disabled={unarchiveContactsMutation.isPending}
+                    >
+                      <RotateCcw className="h-3 w-3 mr-1" />
+                      {unarchiveContactsMutation.isPending ? "Restoring..." : "Restore"}
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-6 px-2 text-xs"
+                      onClick={() => {
+                        setShowArchiveDialog(true)
+                      }}
+                    >
+                      <Archive className="h-3 w-3 mr-1" />
+                      Archive
+                    </Button>
+                  )}
                 </>
               }
             />
@@ -728,16 +765,33 @@ const ContactsPageContent = (): React.JSX.Element => {
             </Button>
             <Button
               variant="destructive"
-              onClick={() => {
+              onClick={async () => {
                 if (archiveConfirmation.toLowerCase() === "archive") {
-                  // TODO: Implement archive functionality
-                  setShowArchiveDialog(false)
-                  setArchiveConfirmation("")
+                  const selectedRows = table.getSelectedRowModel().rows
+                  const selectedIds = selectedRows.map(row => row.original.id)
+                  
+                  if (selectedIds.length === 0) {
+                    toast.error("No contacts selected")
+                    return
+                  }
+
+                  try {
+                    await archiveContactsMutation.mutateAsync(selectedIds)
+                    toast.success(`Successfully archived ${selectedIds.length} contact${selectedIds.length > 1 ? 's' : ''}`)
+                    table.resetRowSelection()
+                    // Close dialog and reset confirmation immediately after success
+                    setShowArchiveDialog(false)
+                    setArchiveConfirmation("")
+                  } catch (error) {
+                    console.error("Error archiving contacts:", error)
+                    toast.error("Failed to archive contacts. Please try again.")
+                    // Don't close dialog on error so user can try again
+                  }
                 }
               }}
-              disabled={archiveConfirmation.toLowerCase() !== "archive"}
+              disabled={archiveConfirmation.toLowerCase() !== "archive" || archiveContactsMutation.isPending}
             >
-              Archive Contacts
+              {archiveContactsMutation.isPending ? "Archiving..." : "Archive Contacts"}
             </Button>
           </DialogFooter>
         </DialogContent>

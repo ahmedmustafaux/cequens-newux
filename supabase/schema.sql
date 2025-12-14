@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS contacts (
   bot_status TEXT,
   last_interacted_channel TEXT,
   conversation_opened_time TIMESTAMPTZ,
+  archived BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   last_interaction_time TIMESTAMPTZ,
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -62,6 +63,7 @@ CREATE INDEX IF NOT EXISTS idx_contacts_created_at ON contacts(created_at);
 CREATE INDEX IF NOT EXISTS idx_contacts_last_interaction_time ON contacts(last_interaction_time);
 CREATE INDEX IF NOT EXISTS idx_contacts_assignee ON contacts(assignee);
 CREATE INDEX IF NOT EXISTS idx_contacts_tags ON contacts USING GIN(tags);
+CREATE INDEX IF NOT EXISTS idx_contacts_archived ON contacts(archived);
 
 -- ============================================================================
 -- SEGMENTS TABLE

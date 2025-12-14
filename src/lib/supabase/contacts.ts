@@ -28,6 +28,7 @@ function dbContactToAppContact(dbContact: Contact): AppContact {
     botStatus: dbContact.bot_status || undefined,
     lastInteractedChannel: dbContact.last_interacted_channel || undefined,
     conversationOpenedTime: dbContact.conversation_opened_time ? new Date(dbContact.conversation_opened_time) : undefined,
+    archived: dbContact.archived || false,
   }
 }
 
@@ -54,6 +55,7 @@ function appContactToDbContact(appContact: Partial<AppContact>): Partial<Contact
     last_interacted_channel: appContact.lastInteractedChannel || null,
     conversation_opened_time: appContact.conversationOpenedTime?.toISOString() || null,
     last_interaction_time: appContact.lastInteractionTime?.toISOString() || null,
+    archived: appContact.archived !== undefined ? appContact.archived : undefined,
   }
 }
 
@@ -61,8 +63,9 @@ function appContactToDbContact(appContact: Partial<AppContact>): Partial<Contact
  * Fetch all contacts with optional search
  * @param userId - The ID of the user whose contacts to fetch
  * @param searchQuery - Optional search query to filter contacts
+ * @param includeArchived - Whether to include archived contacts (default: false)
  */
-export async function fetchContacts(userId: string, searchQuery?: string): Promise<AppContact[]> {
+export async function fetchContacts(userId: string, searchQuery?: string, includeArchived: boolean = false): Promise<AppContact[]> {
   if (!userId) {
     throw new Error('userId is required to fetch contacts')
   }
@@ -71,6 +74,11 @@ export async function fetchContacts(userId: string, searchQuery?: string): Promi
     .from('contacts')
     .select('*')
     .eq('user_id', userId)
+
+  // Filter out archived contacts by default
+  if (!includeArchived) {
+    query = query.eq('archived', false)
+  }
 
   // If search query is provided, search in name, phone, and last_message columns
   if (searchQuery && searchQuery.trim()) {
@@ -226,5 +234,57 @@ export async function fetchContactsByStatus(userId: string, status: string): Pro
   }
 
   return (data || []).map(dbContactToAppContact)
+}
+
+/**
+ * Archive one or more contacts
+ * @param userId - The ID of the user who owns the contacts
+ * @param ids - Array of contact IDs to archive
+ */
+export async function archiveContacts(userId: string, ids: string[]): Promise<void> {
+  if (!userId) {
+    throw new Error('userId is required to archive contacts')
+  }
+
+  if (!ids || ids.length === 0) {
+    throw new Error('At least one contact ID is required')
+  }
+
+  const { error } = await supabase
+    .from('contacts')
+    .update({ archived: true })
+    .eq('user_id', userId)
+    .in('id', ids)
+
+  if (error) {
+    console.error('Error archiving contacts:', error)
+    throw error
+  }
+}
+
+/**
+ * Unarchive one or more contacts
+ * @param userId - The ID of the user who owns the contacts
+ * @param ids - Array of contact IDs to unarchive
+ */
+export async function unarchiveContacts(userId: string, ids: string[]): Promise<void> {
+  if (!userId) {
+    throw new Error('userId is required to unarchive contacts')
+  }
+
+  if (!ids || ids.length === 0) {
+    throw new Error('At least one contact ID is required')
+  }
+
+  const { error } = await supabase
+    .from('contacts')
+    .update({ archived: false })
+    .eq('user_id', userId)
+    .in('id', ids)
+
+  if (error) {
+    console.error('Error unarchiving contacts:', error)
+    throw error
+  }
 }
 

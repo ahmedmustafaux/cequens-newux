@@ -21,6 +21,7 @@ export type Contact = {
   bot_status: string | null;
   last_interacted_channel: string | null;
   conversation_opened_time: string | null;
+  archived: boolean;
   created_at: string;
   last_interaction_time: string | null;
   updated_at: string;
@@ -95,5 +96,6 @@ export type AppContact = {
   botStatus?: string;
   lastInteractedChannel?: string;
   conversationOpenedTime?: Date;
+  archived?: boolean;
 }
 
