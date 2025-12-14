@@ -32,7 +32,6 @@ import {
   Cloud,
 } from "lucide-react"
 import { PageWrapper } from "@/components/page-wrapper"
-import { CreateContactSheet } from "@/components/create-contact-sheet"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -76,6 +75,7 @@ import { useContacts, useArchiveContacts, useUnarchiveContacts } from "@/hooks/u
 import type { AppContact } from "@/lib/supabase/types"
 import { toast } from "sonner"
 import { formatPhoneWithCountryCode } from "@/lib/phone-utils"
+import { useCreateContactContext } from "@/contexts/create-contact-context"
 
 // Type alias for backward compatibility
 type Contact = AppContact
@@ -87,7 +87,7 @@ const TAB_ARCHIVED = "archived"
 const ContactsPageContent = (): React.JSX.Element => {
   const navigate = useNavigate()
   const location = useLocation()
-  const [isCreateSheetOpen, setIsCreateSheetOpen] = React.useState(false)
+  const { open: openCreateContactSheet } = useCreateContactContext()
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
@@ -454,7 +454,7 @@ const ContactsPageContent = (): React.JSX.Element => {
   }
 
   const handleCreateContact = () => {
-    setIsCreateSheetOpen(true)
+    openCreateContactSheet()
   }
 
   return (
@@ -806,7 +806,6 @@ const ContactsPageContent = (): React.JSX.Element => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <CreateContactSheet open={isCreateSheetOpen} onOpenChange={setIsCreateSheetOpen} />
     </>
   )
 }

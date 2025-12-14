@@ -17,6 +17,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useContacts } from '@/hooks/use-contacts'
 import { cn } from '@/lib/utils'
+import { useCreateContactContext } from '@/contexts/create-contact-context'
 interface SearchItem {
   id: string
   title: string
@@ -52,6 +53,7 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
     originalItem?: any
   }>>([])
   const navigate = useNavigate()
+  const { open: openCreateContactSheet } = useCreateContactContext()
   
   // Minimal debounce (100ms) for real-time feel
   const [debouncedQuery, setDebouncedQuery] = useState("")
@@ -76,7 +78,7 @@ export function ActionCenter({ isOpen, onClose, searchValue, onSearchChange }: A
       shortcut: '⌘ A',
       category: 'action',
       action: () => {
-        navigate('/contacts/create')
+        openCreateContactSheet()
         onClose()
       }
     },

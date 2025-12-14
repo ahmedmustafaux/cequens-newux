@@ -6,6 +6,8 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { NavigationProvider, useNavigationContext } from "@/hooks/use-navigation-context"
 import { useAuth } from "@/hooks/use-auth"
 import { NotificationProvider } from "@/contexts/notification-context"
+import { CreateContactProvider, useCreateContactContext } from "@/contexts/create-contact-context"
+import { CreateContactSheet } from "@/components/create-contact-sheet"
 
 interface DashboardLayoutProps {
   children: ReactNode
@@ -14,6 +16,7 @@ interface DashboardLayoutProps {
 // Inner component that can access the navigation context
 function DashboardContent({ children }: { children: ReactNode }) {
   const { isLoading: isNavigating } = useNavigationContext()
+  const { isOpen: isCreateSheetOpen, setOpen: setCreateSheetOpen } = useCreateContactContext()
   const [searchValue, setSearchValue] = useState("")
   const [isActionCenterOpen, setIsActionCenterOpen] = useState(false)
 
@@ -85,6 +88,7 @@ function DashboardContent({ children }: { children: ReactNode }) {
           </div>
         </SidebarInset>
       </div>
+      <CreateContactSheet open={isCreateSheetOpen} onOpenChange={setCreateSheetOpen} />
     </SidebarProvider>
   )
 }
@@ -112,11 +116,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <NotificationProvider>
       <NavigationProvider>
-        <div className="h-full w-full m-0 p-0">
-          <DashboardContent>
-            {children}
-          </DashboardContent>
-        </div>
+        <CreateContactProvider>
+          <div className="h-full w-full m-0 p-0">
+            <DashboardContent>
+              {children}
+            </DashboardContent>
+          </div>
+        </CreateContactProvider>
       </NavigationProvider>
     </NotificationProvider>
   )
