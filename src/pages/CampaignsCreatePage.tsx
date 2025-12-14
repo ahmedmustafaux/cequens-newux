@@ -14,7 +14,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PageHeaderWithActions } from "@/components/page-header"
 import { CardSkeleton } from "@/components/ui/card"
-import { Save, X, Users, Mail, MessageSquare, Smartphone, Clock, Eye, Send, Calendar } from "lucide-react"
+import { Save, X, Users, Clock, Eye, Send, Calendar } from "lucide-react"
+import { EnvelopeSimple, ChatText } from "phosphor-react"
 import { toast } from "sonner"
 import { motion } from "framer-motion"
 import { pageVariants, smoothTransition } from "@/lib/transitions"
@@ -22,6 +23,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useCreateCampaign } from "@/hooks/use-campaigns"
 import { useSegments } from "@/hooks/use-segments"
+import { useContacts } from "@/hooks/use-contacts"
 import type { Campaign } from "@/lib/supabase/types"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -48,6 +50,7 @@ export default function CampaignsCreatePage() {
   const location = useLocation()
   const createCampaignMutation = useCreateCampaign()
   const { data: segments = [], isLoading: segmentsLoading } = useSegments()
+  const { data: allContacts = [] } = useContacts(undefined, true) // Get all contacts for "All contacts" option
   
   const [isDirty, setIsDirty] = React.useState(false)
   const [isInitialLoading, setIsInitialLoading] = React.useState(true)
@@ -79,8 +82,9 @@ export default function CampaignsCreatePage() {
   // Get selected segment to calculate recipients
   const selectedSegment = React.useMemo(() => {
     if (!formData.selectedSegmentId) return null
+    if (formData.selectedSegmentId === "all-contacts") return { id: "all-contacts", name: "All Contacts", contact_ids: allContacts.map(c => c.id) }
     return segments.find(s => s.id === formData.selectedSegmentId) || null
-  }, [segments, formData.selectedSegmentId])
+  }, [segments, formData.selectedSegmentId, allContacts])
 
   // Calculate recipients from selected segment
   React.useEffect(() => {
@@ -172,8 +176,11 @@ export default function CampaignsCreatePage() {
       errors.message = `Message exceeds ${characterLimit} character limit`
     }
 
-    if (formData.selectedSegmentId && formData.recipients === 0) {
+    if (formData.selectedSegmentId && formData.selectedSegmentId !== "all-contacts" && formData.recipients === 0) {
       errors.selectedSegmentId = "Selected segment has no contacts"
+    }
+    if (formData.selectedSegmentId === "all-contacts" && allContacts.length === 0) {
+      errors.selectedSegmentId = "No contacts available"
     }
 
     if (formData.scheduleType === "scheduled") {
@@ -202,9 +209,9 @@ export default function CampaignsCreatePage() {
       const campaignData: Omit<Campaign, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
         name: formData.name.trim(),
         type: formData.type as "Email" | "SMS" | "Whatsapp",
-        status: formData.scheduleType === "now" && formData.status === "Draft" ? "Active" : formData.status,
+        status: formData.scheduleType === "now" ? "Active" : "Draft",
         recipients: formData.recipients,
-        sent_date: formData.scheduleType === "now" && formData.status === "Active" 
+        sent_date: formData.scheduleType === "now" 
           ? new Date().toISOString() 
           : scheduledDateTime,
         open_rate: 0,
@@ -238,11 +245,11 @@ export default function CampaignsCreatePage() {
   const getTypeIcon = (type: string) => {
     switch (type) {
       case "Email":
-        return <Mail className="h-4 w-4" />
+        return <EnvelopeSimple className="h-4 w-4" weight="fill" />
       case "SMS":
-        return <MessageSquare className="h-4 w-4" />
+        return <ChatText className="h-4 w-4" weight="fill" />
       case "Whatsapp":
-        return <Smartphone className="h-4 w-4" />
+        return <img src="/icons/WhatsApp.svg" alt="WhatsApp" className="h-4 w-4" />
       default:
         return null
     }
@@ -283,9 +290,7 @@ export default function CampaignsCreatePage() {
                 ? "Creating..." 
                 : formData.scheduleType === "scheduled" 
                   ? "Schedule Campaign" 
-                  : formData.status === "Active" 
-                    ? "Send Now" 
-                    : "Save Draft"}
+                  : "Send Now"}
             </Button>
           </div>
         }
@@ -342,70 +347,108 @@ export default function CampaignsCreatePage() {
                           {formErrors.name && <FieldError>{formErrors.name}</FieldError>}
                         </Field>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <Field>
-                            <FieldLabel>Campaign Type *</FieldLabel>
-                            <FieldContent>
-                              <Select
-                                value={formData.type}
-                                onValueChange={(value) => {
-                                  handleInputChange("type", value)
+                        <Field>
+                          <FieldLabel>Campaign Type *</FieldLabel>
+                          <FieldContent>
+                            <div className="grid grid-cols-3 gap-4">
+                              <Card
+                                className={`cursor-pointer shadow-none ${
+                                  formData.type === "Email" 
+                                    ? "border-primary border-2" 
+                                    : formErrors.type 
+                                      ? "border-destructive border-2" 
+                                      : ""
+                                }`}
+                                onClick={() => {
+                                  handleInputChange("type", "Email")
                                   // Reset message when type changes
                                   if (formData.message) {
                                     handleInputChange("message", "")
                                   }
                                 }}
                               >
-                                <SelectTrigger className={formErrors.type ? "border-destructive" : ""}>
-                                  <SelectValue placeholder="Select campaign type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="Email">
-                                    <div className="flex items-center gap-2">
-                                      <Mail className="h-4 w-4" />
+                                <CardContent className="p-4 flex flex-col items-center gap-4 text-center">
+                                  <EnvelopeSimple 
+                                    className="h-6 w-6 text-blue-600 dark:text-blue-400" 
+                                    weight="fill" 
+                                  />
+                                  <div className="flex flex-col items-center gap-1">
+                                    <span className="text-sm font-semibold text-foreground">
                                       Email
-                                    </div>
-                                  </SelectItem>
-                                  <SelectItem value="SMS">
-                                    <div className="flex items-center gap-2">
-                                      <MessageSquare className="h-4 w-4" />
-                                      SMS
-                                    </div>
-                                  </SelectItem>
-                                  <SelectItem value="Whatsapp">
-                                    <div className="flex items-center gap-2">
-                                      <Smartphone className="h-4 w-4" />
-                                      WhatsApp
-                                    </div>
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </FieldContent>
-                            {formErrors.type && <FieldError>{formErrors.type}</FieldError>}
-                          </Field>
-
-                          <Field>
-                            <FieldLabel>Status</FieldLabel>
-                            <FieldContent>
-                              <Select
-                                value={formData.status}
-                                onValueChange={(value) => handleInputChange("status", value as "Draft" | "Active" | "Completed")}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                      Rich content
+                                    </span>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                              <Card
+                                className={`cursor-pointer shadow-none ${
+                                  formData.type === "SMS" 
+                                    ? "border-primary border-2" 
+                                    : formErrors.type 
+                                      ? "border-destructive border-2" 
+                                      : ""
+                                }`}
+                                onClick={() => {
+                                  handleInputChange("type", "SMS")
+                                  // Reset message when type changes
+                                  if (formData.message) {
+                                    handleInputChange("message", "")
+                                  }
+                                }}
                               >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="Draft">Draft</SelectItem>
-                                  <SelectItem value="Active">Active</SelectItem>
-                                  <SelectItem value="Completed">Completed</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </FieldContent>
-                            <FieldDescription>
-                              Draft: Save for later. Active: Send immediately.
-                            </FieldDescription>
-                          </Field>
-                        </div>
+                                <CardContent className="p-4 flex flex-col items-center gap-4 text-center">
+                                  <ChatText 
+                                    className="h-6 w-6 text-primary" 
+                                    weight="fill" 
+                                  />
+                                  <div className="flex flex-col items-center gap-1">
+                                    <span className="text-sm font-semibold text-foreground">
+                                      SMS
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                      Quick messages
+                                    </span>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                              <Card
+                                className={`cursor-pointer shadow-none ${
+                                  formData.type === "Whatsapp" 
+                                    ? "border-primary border-2" 
+                                    : formErrors.type 
+                                      ? "border-destructive border-2" 
+                                      : ""
+                                }`}
+                                onClick={() => {
+                                  handleInputChange("type", "Whatsapp")
+                                  // Reset message when type changes
+                                  if (formData.message) {
+                                    handleInputChange("message", "")
+                                  }
+                                }}
+                              >
+                                <CardContent className="p-4 flex flex-col items-center gap-4 text-center">
+                                  <img 
+                                    src="/icons/WhatsApp.svg" 
+                                    alt="WhatsApp" 
+                                    className="h-6 w-6" 
+                                  />
+                                  <div className="flex flex-col items-center gap-1">
+                                    <span className="text-sm font-semibold text-foreground">
+                                      WhatsApp
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                      Interactive
+                                    </span>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            </div>
+                          </FieldContent>
+                          {formErrors.type && <FieldError>{formErrors.type}</FieldError>}
+                        </Field>
 
                         <Field>
                           <FieldLabel>Description</FieldLabel>
@@ -434,6 +477,14 @@ export default function CampaignsCreatePage() {
                                 <SelectValue placeholder={segmentsLoading ? "Loading segments..." : "Select a segment"} />
                               </SelectTrigger>
                               <SelectContent>
+                                <SelectItem value="all-contacts">
+                                  <div className="flex items-center justify-between w-full gap-8">
+                                    <span>All Contacts</span>
+                                    <Badge variant="secondary">
+                                      {allContacts.length} contacts
+                                    </Badge>
+                                  </div>
+                                </SelectItem>
                                 {segments.length === 0 ? (
                                   <div className="px-2 py-6 text-center text-sm text-muted-foreground">
                                     No segments available. <br />
@@ -446,16 +497,19 @@ export default function CampaignsCreatePage() {
                                     </Button>
                                   </div>
                                 ) : (
-                                  segments.map((segment) => (
-                                    <SelectItem key={segment.id} value={segment.id}>
-                                      <div className="flex items-center justify-between w-full">
-                                        <span>{segment.name}</span>
-                                        <Badge variant="secondary" className="ml-2">
-                                          {segment.contact_ids?.length || 0} contacts
-                                        </Badge>
-                                      </div>
-                                    </SelectItem>
-                                  ))
+                                  segments.map((segment) => {
+                                    const capitalizedName = segment.name.charAt(0).toUpperCase() + segment.name.slice(1)
+                                    return (
+                                      <SelectItem key={segment.id} value={segment.id}>
+                                        <div className="flex items-center justify-between w-full gap-8">
+                                          <span>{capitalizedName}</span>
+                                          <Badge variant="secondary">
+                                            {segment.contact_ids?.length || 0} contacts
+                                          </Badge>
+                                        </div>
+                                      </SelectItem>
+                                    )
+                                  })
                                 )}
                               </SelectContent>
                             </Select>
@@ -678,14 +732,6 @@ export default function CampaignsCreatePage() {
                         <div className="flex items-center gap-2 mt-1">
                           {formData.type && getTypeIcon(formData.type)}
                           <p className="text-sm">{formData.type || "Not selected"}</p>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground">Status</label>
-                        <div className="mt-1">
-                          <Badge variant={formData.status === "Active" ? "default" : formData.status === "Completed" ? "secondary" : "outline"}>
-                            {formData.status}
-                          </Badge>
                         </div>
                       </div>
                       <div>
