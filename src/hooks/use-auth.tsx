@@ -202,12 +202,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Determine redirect destination
       let destination = redirectTo
       
-      // If no specific redirect and user hasn't completed onboarding, redirect to onboarding
+      // If no specific redirect, determine based on onboarding status
       if (!destination) {
-        if (onboardingCompleted === false) {
-          destination = "/onboarding"
-        } else {
+        // Default to onboarding if onboardingCompleted is false, null, or undefined
+        // Only redirect to getting-started if explicitly true
+        if (onboardingCompleted === true) {
           destination = "/getting-started"
+        } else {
+          destination = "/onboarding"
         }
       }
       

@@ -473,7 +473,7 @@ export function CreateContactSheet({ open, onOpenChange }: CreateContactSheetPro
                 <Button
                   variant="outline"
                   onClick={() => onOpenChange(false)}
-                  disabled={isSubmitting}
+                  disabled={createContactMutation.isPending}
                 >
                   Cancel
                 </Button>

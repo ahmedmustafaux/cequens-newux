@@ -31,7 +31,14 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   // Check onboardingCompleted from user object first, then fall back to context
   // Only check if we have a valid user object
   if (user) {
-    const userNeedsOnboarding = user.onboardingCompleted === false || 
+    // Consider onboarding needed if:
+    // 1. onboardingCompleted is explicitly false
+    // 2. onboardingCompleted is undefined/null (default to needing onboarding)
+    // 3. userType is "newUser" and onboardingCompleted is not explicitly true
+    const userNeedsOnboarding = 
+      user.onboardingCompleted === false || 
+      user.onboardingCompleted === undefined ||
+      user.onboardingCompleted === null ||
       (user.userType === "newUser" && user.onboardingCompleted !== true)
     
     const needsOnboarding = 
