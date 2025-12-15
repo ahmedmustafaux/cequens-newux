@@ -1,6 +1,7 @@
 import * as React from "react"
-import { createContext, useContext, useEffect, useState } from "react"
+import { createContext, useContext, useEffect, useState, useRef } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
+import { queryClient } from "@/lib/query-client"
 
 export type UserType = "newUser" | "existingUser"
 
@@ -38,6 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const [isClient, setIsClient] = useState(false)
   const navigate = useNavigate()
+  const previousUserIdRef = useRef<string | undefined>(undefined)
 
   // Ensure we're on the client side
   useEffect(() => {
@@ -81,6 +83,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               // Use database user data for onboarding status
               const validUserType = dbUser.onboarding_completed ? "existingUser" : "newUser"
               
+              // Initialize previousUserIdRef on first load if not set
+              if (previousUserIdRef.current === undefined) {
+                previousUserIdRef.current = dbUser.id
+              }
+              
+              // Check if userId has changed (account switch)
+              const userIdChanged = previousUserIdRef.current !== dbUser.id
+              
+              // Clear cache only if userId changed (account switch) to prevent showing cached data from previous user
+              if (userIdChanged) {
+                queryClient.clear()
+                console.log('Cleared React Query cache due to account switch')
+              }
+              
+              // Update previous userId reference
+              previousUserIdRef.current = dbUser.id
+              
               setUser({
                 id: dbUser.id,
                 email: dbUser.email,
@@ -123,6 +142,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           } else {
             // No userId, but has email - might be old cached state
+            // Initialize previousUserIdRef on first load if not set
+            if (previousUserIdRef.current === undefined) {
+              previousUserIdRef.current = userId || undefined
+            }
+            
+            // Check if userId has changed (account switch)
+            const userIdChanged = previousUserIdRef.current !== (userId || undefined)
+            
+            // Clear cache only if userId changed (account switch)
+            if (userIdChanged) {
+              queryClient.clear()
+              console.log('Cleared React Query cache due to account switch')
+            }
+            
+            // Update previous userId reference
+            previousUserIdRef.current = userId || undefined
+            
             // Default to existingUser if not specified
             const validUserType = userType === "newUser" || userType === "existingUser" 
               ? userType 
@@ -144,6 +180,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.removeItem("userType")
           localStorage.removeItem("userId")
           localStorage.removeItem("onboardingCompleted")
+          
+          // Clear cache when user is not authenticated
+          queryClient.clear()
+          previousUserIdRef.current = undefined
           setUser(null)
         }
       } catch (error) {
@@ -158,6 +198,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === "isAuthenticated" && e.newValue === null) {
         // User logged out in another tab
+        queryClient.clear()
+        previousUserIdRef.current = undefined
         setUser(null)
         navigate("/login")
       } else if (e.key === "isAuthenticated" && e.newValue === "true") {
@@ -186,6 +228,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, name?: string, userType?: UserType, redirectTo?: string, userId?: string, onboardingCompleted?: boolean) => {
     try {
+      // Initialize previousUserIdRef on first login if not set
+      if (previousUserIdRef.current === undefined) {
+        previousUserIdRef.current = userId
+      }
+      
+      // Check if userId has changed (account switch)
+      const userIdChanged = previousUserIdRef.current !== userId
+      
+      // Clear cache only if userId changed (account switch) to prevent showing cached data from previous user
+      if (userIdChanged) {
+        queryClient.clear()
+        console.log('Cleared React Query cache due to account switch')
+      }
+      
+      // Update previous userId reference
+      previousUserIdRef.current = userId
+      
       // Determine user type if not provided
       const determinedUserType = userType || determineUserType(email)
 
@@ -242,6 +301,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const logout = () => {
+    // Clear React Query cache on logout to prevent showing cached data
+    queryClient.clear()
+    previousUserIdRef.current = undefined
+    
     localStorage.removeItem("isAuthenticated")
     localStorage.removeItem("userEmail")
     localStorage.removeItem("userName")
