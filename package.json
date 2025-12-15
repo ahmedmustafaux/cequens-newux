@@ -12,7 +12,9 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "guidelines": "echo '📋 Development Guidelines: See DEVELOPMENT_GUIDELINES.md'"
+    "guidelines": "echo '📋 Development Guidelines: See DEVELOPMENT_GUIDELINES.md'",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.9.1",
@@ -90,6 +92,17 @@
     "tailwindcss": "^4",
     "tw-animate-css": "^1.3.2",
     "typescript": "^5",
-    "vite": "^5.4.10"
+    "vite": "^5.4.10",
+    "storybook": "^10.1.9",
+    "@storybook/react-vite": "^10.1.9",
+    "@chromatic-com/storybook": "^4.1.3",
+    "@storybook/addon-vitest": "^10.1.9",
+    "@storybook/addon-a11y": "^10.1.9",
+    "@storybook/addon-docs": "^10.1.9",
+    "@storybook/addon-onboarding": "^10.1.9",
+    "vitest": "^4.0.15",
+    "playwright": "^1.57.0",
+    "@vitest/browser-playwright": "^4.0.15",
+    "@vitest/coverage-v8": "^4.0.15"
   }
 }
