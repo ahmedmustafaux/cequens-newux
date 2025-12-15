@@ -937,10 +937,11 @@ export default function CampaignsCreatePage() {
                   <div className="relative flex items-start gap-12">
                     {/* Progress line background - from center of first to center of last circle */}
                     <div 
-                      className="absolute top-4 h-0.5 bg-muted"
+                      className="absolute top-4 h-0.5 border-b border-muted-foreground/15"
                       style={{
                         left: '1rem', // Half of w-8 (2rem)
                         right: '1rem', // Half of w-8 (2rem)
+                        width: 'calc(80% - 1rem)'
                       }}
                     />
                     
