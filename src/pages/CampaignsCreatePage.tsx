@@ -1754,66 +1754,6 @@ export default function CampaignsCreatePage() {
                                 </div>
                               </>
                             )}
-
-                            {/* Template Preview */}
-                            {selectedTemplate && (
-                              <>
-                                <Separator />
-                                <div>
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <Eye className="h-4 w-4 text-muted-foreground" />
-                                    <FieldLabel>Template Preview</FieldLabel>
-                                  </div>
-                                  <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
-                                    {/* Header Preview */}
-                                    {selectedTemplate.components.find(c => c.type === "HEADER") && (
-                                      <div>
-                                        <p className="text-xs text-muted-foreground mb-1">Header:</p>
-                                        <div className="flex items-center gap-2">
-                                          {getComponentIcon(selectedTemplate.components.find(c => c.type === "HEADER")?.format)}
-                                          <span className="text-sm">
-                                            {selectedTemplate.components.find(c => c.type === "HEADER")?.format || "Header"} Media
-                                          </span>
-                                        </div>
-                                      </div>
-                                    )}
-                                    
-                                    {/* Body Preview */}
-                                    {previewMessage && (
-                                      <div>
-                                        <p className="text-xs text-muted-foreground mb-1">Message:</p>
-                                        <p className="text-sm whitespace-pre-wrap">{previewMessage}</p>
-                                      </div>
-                                    )}
-                                    
-                                    {/* Footer Preview */}
-                                    {selectedTemplate.components.find(c => c.type === "FOOTER")?.text && (
-                                      <div>
-                                        <p className="text-xs text-muted-foreground mb-1">Footer:</p>
-                                        <p className="text-sm">{selectedTemplate.components.find(c => c.type === "FOOTER")?.text}</p>
-                                      </div>
-                                    )}
-                                    
-                                    {/* Buttons Preview */}
-                                    {selectedTemplate.components.find(c => c.type === "BUTTONS")?.buttons && (
-                                      <div>
-                                        <p className="text-xs text-muted-foreground mb-2">Buttons:</p>
-                                        <div className="flex flex-wrap gap-2">
-                                          {selectedTemplate.components.find(c => c.type === "BUTTONS")?.buttons?.map((button, idx) => (
-                                            <Badge key={idx} variant="outline" className="flex items-center gap-1">
-                                              {button.type === "URL" && <Link2 className="h-3 w-3" />}
-                                              {button.type === "PHONE_NUMBER" && <PhoneIcon className="h-3 w-3" />}
-                                              {button.type === "QUICK_REPLY" && <MessageSquareIcon className="h-3 w-3" />}
-                                              <span className="text-xs">{button.text}</span>
-                                            </Badge>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </>
-                            )}
                           </div>
                         )}
 
@@ -2122,8 +2062,8 @@ export default function CampaignsCreatePage() {
                             >
                             <div className={`pt-6 w-full h-full relative ${
                               formData.type === "Whatsapp" 
-                                ? "bg-[#efeae2]" 
-                                : "bg-white dark:bg-gray-900"
+                                ? "bg-[#efeae9] dark:bg-background" 
+                                : "bg-[#efeae9] dark:bg-background"
                             }`}>
                               {/* WhatsApp Background Pattern */}
                               {formData.type === "Whatsapp" && (
@@ -2148,25 +2088,84 @@ export default function CampaignsCreatePage() {
                                       </div>
                                       <div>
                                         <div className="flex items-center gap-1.5">
-                                          <p className="text-sm font-semibold text-gray-900">
+                                          <p className="text-sm font-semibold text-gray-900 dark:text-white">
                                             {selectedSender?.label || formData.senderId || "Contact"}
                                           </p>
                                           {selectedSender?.status === "verified" && getVerificationIcon(selectedSender.status, selectedSender.id)}
                                         </div>
-                                        <p className="text-xs text-gray-600">online</p>
+                                        <p className="text-xs text-gray-600 dark:text-gray-400">online</p>
                                       </div>
                                     </div>
                                   </div>
                                 )}
 
-                                {/* Message Bubble - Moved to top */}
-                                <div className="mt-0">
-                                  <div className="flex justify-end mb-1">
-                                    <div className="relative max-w-[85%] flex items-end">
+                                {/* Template Message Content */}
+                                <div className="mt-0 flex flex-col">
+                                  <div className="flex justify-end">
+                                    <div className="relative max-w-[85%] flex flex-col items-end">
+                                      {/* Header Media (Image/Video/Document) */}
+                                      {formData.type === "Whatsapp" && selectedTemplate && (() => {
+                                        const headerComponent = selectedTemplate.components.find(c => c.type === "HEADER")
+                                        if (!headerComponent || !headerComponent.format) return null
+                                        
+                                        const mediaUrl = headerComponent.example?.header_handle?.[0]
+                                        const isValidUrl = mediaUrl && (mediaUrl.startsWith('http://') || mediaUrl.startsWith('https://')) && mediaUrl !== "image_url_here"
+                                        const placeholderUrl = "https://images.unsplash.com/photo-1557683316-973673baf926?w=320&h=200&fit=crop"
+                                        
+                                        return (
+                                          <div className="w-full mb-0 rounded-t-lg overflow-hidden">
+                                            {headerComponent.format === "IMAGE" && (
+                                              <div className="w-full bg-gray-200 relative" style={{ minHeight: '150px', maxHeight: '200px' }}>
+                                                {isValidUrl ? (
+                                                  <img 
+                                                    src={mediaUrl} 
+                                                    alt="Template header" 
+                                                    className="w-full h-full object-cover"
+                                                    style={{ minHeight: '150px', maxHeight: '200px' }}
+                                                    onError={(e) => {
+                                                      const target = e.target as HTMLImageElement
+                                                      target.src = placeholderUrl
+                                                    }}
+                                                  />
+                                                ) : (
+                                                  <img 
+                                                    src={placeholderUrl} 
+                                                    alt="Template header placeholder" 
+                                                    className="w-full h-full object-cover"
+                                                    style={{ minHeight: '150px', maxHeight: '200px' }}
+                                                  />
+                                                )}
+                                              </div>
+                                            )}
+                                            {headerComponent.format === "VIDEO" && (
+                                              <div className="relative w-full bg-gray-200 aspect-video flex items-center justify-center max-h-[200px]">
+                                                <Video className="w-12 h-12 text-gray-400" />
+                                                <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                                                  <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
+                                                    <svg className="w-5 h-5 text-gray-700 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                                                      <path d="M8 5v14l11-7z"/>
+                                                    </svg>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            )}
+                                            {headerComponent.format === "DOCUMENT" && (
+                                              <div className="w-full bg-gray-100 p-4 flex items-center gap-3 border border-gray-200">
+                                                <File className="w-8 h-8 text-gray-500 flex-shrink-0" />
+                                                <div className="flex-1 min-w-0">
+                                                  <p className="text-sm font-medium text-gray-900 truncate">Document.pdf</p>
+                                                  <p className="text-xs text-gray-500">Document attachment</p>
+                                                </div>
+                                              </div>
+                                            )}
+                                          </div>
+                                        )
+                                      })()}
+
                                       {/* WhatsApp message bubble with tail */}
                                       {formData.type === "Whatsapp" ? (
                                         <>
-                                          <div className="bg-[#dcf8c6] rounded-lg px-3 py-2 shadow-sm">
+                                          <div className={`bg-[#dcf8c6] rounded-lg px-3 py-2 shadow-sm ${selectedTemplate?.components.find(c => c.type === "HEADER" && c.format) ? 'rounded-t-none' : ''}`}>
                                             <p className="text-sm whitespace-pre-wrap text-gray-900 leading-relaxed">
                                               {previewMessage || "Your message will appear here..."}
                                             </p>
@@ -2193,6 +2192,39 @@ export default function CampaignsCreatePage() {
                                       )}
                                     </div>
                                   </div>
+                                  
+                                  {/* Template Buttons */}
+                                  {formData.type === "Whatsapp" && selectedTemplate && (() => {
+                                    const buttonsComponent = selectedTemplate.components.find(c => c.type === "BUTTONS")
+                                    if (!buttonsComponent || !buttonsComponent.buttons || buttonsComponent.buttons.length === 0) return null
+                                    
+                                    return (
+                                      <div className="flex justify-end">
+                                        <div className="flex flex-col gap-1 max-w-[85%] w-full">
+                                          {buttonsComponent.buttons.map((button, index) => (
+                                            <div key={index} className="w-full">
+                                              {button.type === "QUICK_REPLY" && (
+                                                <div className="bg-white border border-gray-300 rounded-lg px-4 py-2.5 shadow-sm w-full">
+                                                  <p className="text-sm font-medium text-gray-900 text-center">{button.text}</p>
+                                                </div>
+                                              )}
+                                              {button.type === "URL" && (
+                                                <div className="bg-white border border-gray-300 rounded-lg px-4 py-2.5 shadow-sm w-full">
+                                                  <p className="text-sm font-medium text-green-600 text-center">{button.text}</p>
+                                                </div>
+                                              )}
+                                              {button.type === "PHONE_NUMBER" && (
+                                                <div className="bg-white border border-gray-300 rounded-lg px-4 py-2.5 shadow-sm w-full">
+                                                  <p className="text-sm font-medium text-green-600 text-center">{button.text}</p>
+                                                </div>
+                                              )}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )
+                                  })()}
+                                  
                                   {formData.type === "Whatsapp" && (
                                     <div className="flex items-center justify-end gap-1 mt-0.5 pr-1">
                                       <span className="text-[10px] text-gray-600">9:41</span>
