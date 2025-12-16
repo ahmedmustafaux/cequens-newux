@@ -16,7 +16,6 @@ import SignupPage from '@/pages/SignupPage'
 import EmailConfirmationPage from '@/pages/EmailConfirmationPage'
 import PhoneVerificationPage from '@/pages/PhoneVerificationPage'
 import NewUserOnboardingPage from '@/pages/NewUserOnboardingPage'
-import GettingStartedPage from '@/pages/GettingStartedPage'
 import DashboardPage from '@/pages/DashboardPage'
 import AnalyticsPage from '@/pages/AnalyticsPage'
 import CampaignsPage from '@/pages/CampaignsPage'
@@ -112,15 +111,6 @@ function App() {
         } />
         
         {/* Protected routes */}
-        <Route path="/getting-started" element={
-          <ProtectedRoute>
-            <RootLayout>
-              <DashboardLayout>
-                <GettingStartedPage />
-              </DashboardLayout>
-            </RootLayout>
-          </ProtectedRoute>
-        } />
         <Route path="/" element={
           <ProtectedRoute>
             <RootLayout>

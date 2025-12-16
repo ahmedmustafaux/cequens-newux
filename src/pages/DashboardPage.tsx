@@ -9,9 +9,12 @@ import { PageWrapper } from "@/components/page-wrapper"
 import { TimeFilter } from "@/components/time-filter"
 import { useTimeRangeTitle } from "@/hooks/use-dynamic-title"
 import { useAuth } from "@/hooks/use-auth"
+import { GettingStartedGuideFloating, Persona } from "@/components/getting-started-guide-floating"
+import { useOnboarding } from "@/contexts/onboarding-context"
 
 export default function DashboardPage() {
   const { user } = useAuth()
+  const { onboardingData } = useOnboarding()
   const [dateRange, setDateRange] = React.useState<DateRange | undefined>(() => {
     const today = new Date();
     return {
@@ -23,6 +26,40 @@ export default function DashboardPage() {
   
   // Check if user is a new user (just signed up)
   const isNewUser = user?.userType === "newUser"
+
+  // Persona state with localStorage persistence (same as GettingStartedPage)
+  const STORAGE_KEY_PERSONA = 'cequens-setup-guide-persona'
+  const [persona, setPersona] = React.useState<Persona>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_PERSONA)
+      return (saved === "business" || saved === "api") ? saved : "business"
+    } catch {
+      return "business"
+    }
+  })
+
+  // Sync persona from localStorage changes
+  React.useEffect(() => {
+    const handleStorageChange = () => {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY_PERSONA)
+        if (saved === "business" || saved === "api") {
+          setPersona(saved)
+        }
+      } catch {
+        // Ignore errors
+      }
+    }
+    
+    window.addEventListener('storage', handleStorageChange)
+    // Also check on interval to catch local changes
+    const interval = setInterval(handleStorageChange, 500)
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      clearInterval(interval)
+    }
+  }, [])
 
   // Convert DateRange to timeRange string for components
   const getTimeRangeFromDateRange = (range: DateRange | undefined): string => {
@@ -65,36 +102,46 @@ export default function DashboardPage() {
 
 
   return (
-    <PageWrapper isLoading={isDataLoading}>
-      <PageHeader
-        title="Home"
-        description="Monitor your communication platform performance"
-        showBreadcrumbs={false}
-        showFilters={true}
-        filters={<TimeFilter value={dateRange} onValueChange={(value) => {
-          if (value && typeof value === 'object') {
-            setDateRange(value as DateRange)
-          }
-        }} isLoading={isDataLoading} mode="advanced" />}
-        isLoading={isDataLoading}
-      />
+    <>
+      <PageWrapper isLoading={isDataLoading}>
+        <PageHeader
+          title="Home"
+          description="Monitor your communication platform performance"
+          showBreadcrumbs={false}
+          showFilters={true}
+          filters={<TimeFilter value={dateRange} onValueChange={(value) => {
+            if (value && typeof value === 'object') {
+              setDateRange(value as DateRange)
+            }
+          }} isLoading={isDataLoading} mode="advanced" />}
+          isLoading={isDataLoading}
+        />
 
-      <div className="flex flex-col gap-4">
-        {isDataLoading ? (
-          <>
-            <TableSkeleton rows={4} columns={4} />
-            <TableSkeleton rows={1} columns={1} className="h-[400px]" />
-          </>
-        ) : (
-          <>
-            <SectionCards timeRange={timeRange} isLoading={isDataLoading} isEmpty={isNewUser} />
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-              <DashboardChart timeRange={timeRange} isLoading={isDataLoading} isEmpty={isNewUser} className="xl:col-span-2" />
-              <DashboardPieChart timeRange={timeRange} isLoading={isDataLoading} isEmpty={isNewUser} />
-            </div>
-          </>
-        )}
-      </div>
-    </PageWrapper>
+        <div className="flex flex-col gap-4">
+          {isDataLoading ? (
+            <>
+              <TableSkeleton rows={4} columns={4} />
+              <TableSkeleton rows={1} columns={1} className="h-[400px]" />
+            </>
+          ) : (
+            <>
+              <SectionCards timeRange={timeRange} isLoading={isDataLoading} isEmpty={isNewUser} />
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                <DashboardChart timeRange={timeRange} isLoading={isDataLoading} isEmpty={isNewUser} className="xl:col-span-2" />
+                <DashboardPieChart timeRange={timeRange} isLoading={isDataLoading} isEmpty={isNewUser} />
+              </div>
+            </>
+          )}
+        </div>
+      </PageWrapper>
+
+      {/* Floating Guide Steps Card - Outside PageWrapper to avoid parent animations */}
+      <GettingStartedGuideFloating
+        industry={onboardingData?.industry || "ecommerce"}
+        channels={onboardingData?.channels || []}
+        goals={onboardingData?.goals || []}
+        persona={persona}
+      />
+    </>
   )
 }

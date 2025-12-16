@@ -19,7 +19,6 @@ import {
   Brain,
   Code,
   CreditCard,
-  Sparkles,
 } from "lucide-react"
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
@@ -35,11 +34,6 @@ import {
 } from "@/components/ui/sidebar"
 const data = {
   navMain: [
-    {
-      title: "Guide",
-      url: "/getting-started",
-      icon: Sparkles,
-    },
     {
       title: "Home",
       url: "/",
