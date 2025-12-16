@@ -3,9 +3,7 @@ import { TrendingDown, TrendingUp } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
-  CardAction,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -70,74 +68,58 @@ export function SectionCards({ timeRange, isLoading = false, isEmpty = false }: 
       <Card className={cardClassName}>
         <CardHeader>
           <CardDescription>Messages Sent</CardDescription>
-          <CardTitle className="text-xl font-semibold tabular-nums @[250px]/card:text-2xl">
-            {displayMetrics.messagesSent.value}
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
+          <div className="flex items-baseline justify-between gap-2">
+            <CardTitle className="text-xl font-semibold tabular-nums @[250px]/card:text-2xl">
+              {displayMetrics.messagesSent.value}
+            </CardTitle>
+            <Badge variant="outline" className="ml-auto">
               {displayMetrics.messagesSent.trend === "up" ? <TrendingUp /> : <TrendingDown />}
               {displayMetrics.messagesSent.change}
             </Badge>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="text-muted-foreground">
-            Across all channels ({timePeriodText})
           </div>
-        </CardFooter>
+        </CardHeader>
       </Card>
       <Card className={cardClassName}>
         <CardHeader>
           <CardDescription>Delivery Rate</CardDescription>
-          <CardTitle className="text-xl font-semibold tabular-nums @[250px]/card:text-2xl">
-            {displayMetrics.deliveryRate.value}
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
+          <div className="flex items-baseline justify-between gap-2">
+            <CardTitle className="text-xl font-semibold tabular-nums @[250px]/card:text-2xl">
+              {displayMetrics.deliveryRate.value}
+            </CardTitle>
+            <Badge variant="outline" className="ml-auto">
               {displayMetrics.deliveryRate.trend === "up" ? <TrendingUp /> : <TrendingDown />}
               {displayMetrics.deliveryRate.change}
             </Badge>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="text-muted-foreground">
-            Monitor carrier/ESP performance
           </div>
-        </CardFooter>
+        </CardHeader>
       </Card>
       <Card className={cardClassName}>
         <CardHeader>
           <CardDescription>Active Senders</CardDescription>
-          <CardTitle className="text-xl font-semibold tabular-nums @[250px]/card:text-2xl">
-            {displayMetrics.activeSenders.value}
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
+          <div className="flex items-baseline justify-between gap-2">
+            <CardTitle className="text-xl font-semibold tabular-nums @[250px]/card:text-2xl">
+              {displayMetrics.activeSenders.value}
+            </CardTitle>
+            <Badge variant="outline" className="ml-auto">
               {displayMetrics.activeSenders.trend === "up" ? <TrendingUp /> : <TrendingDown />}
               {displayMetrics.activeSenders.change}
             </Badge>
-          </CardAction>
+          </div>
         </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="text-muted-foreground">Engagement exceed targets</div>
-        </CardFooter>
       </Card>
       <Card className={cardClassName}>
         <CardHeader>
           <CardDescription>Response Rate</CardDescription>
-          <CardTitle className="text-xl font-semibold tabular-nums @[250px]/card:text-2xl">
-            {displayMetrics.responseRate.value}
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
+          <div className="flex items-baseline justify-between gap-2">
+            <CardTitle className="text-xl font-semibold tabular-nums @[250px]/card:text-2xl">
+              {displayMetrics.responseRate.value}
+            </CardTitle>
+            <Badge variant="outline" className="ml-auto">
               {displayMetrics.responseRate.trend === "up" ? <TrendingUp /> : <TrendingDown />}
               {displayMetrics.responseRate.change}
             </Badge>
-          </CardAction>
+          </div>
         </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="text-muted-foreground">Meets growth projections</div>
-        </CardFooter>
       </Card>
     </div>
   )
