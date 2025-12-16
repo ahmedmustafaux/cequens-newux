@@ -1,18 +1,18 @@
 import * as React from "react"
 import { type DateRange } from "react-day-picker"
-import { SectionCards } from "@/components/section-cards"
+import { SectionCards } from "@/components/SectionCards"
 import { DashboardChart } from "@/components/dashboard-chart"
 import { DashboardPieChart } from "@/components/dashboard-pie-chart"
-import { TableSkeleton } from "@/components/ui/table"
 import { PageHeader } from "@/components/page-header"
 import { PageWrapper } from "@/components/page-wrapper"
 import { TimeFilter } from "@/components/time-filter"
 import { useTimeRangeTitle } from "@/hooks/use-dynamic-title"
 import { useAuth } from "@/hooks/use-auth"
+import { useDashboardMetrics } from "@/hooks/use-dashboard-metrics"
 import { GettingStartedGuideFloating, Persona } from "@/components/getting-started-guide-floating"
 import { useOnboarding } from "@/contexts/onboarding-context"
-import { FeaturedContentCard } from "@/components/featured-content-card"
-import { RecommendedTemplates } from "@/components/recommended-templates"
+import { FeaturedContentCard } from "@/components/FeaturedContentCard"
+import { RecommendedTemplates } from "@/components/RecommendedTemplates"
 
 export default function DashboardPage() {
   const { user } = useAuth()
@@ -24,8 +24,6 @@ export default function DashboardPage() {
       to: new Date(today.getFullYear(), today.getMonth(), today.getDate()),
     };
   })
-  const [isDataLoading, setIsDataLoading] = React.useState(true)
-  
   // Check if user is a new user (just signed up)
   const isNewUser = user?.userType === "newUser"
 
@@ -80,32 +78,13 @@ export default function DashboardPage() {
   // Dynamic title based on date range
   useTimeRangeTitle(timeRange)
 
-  // Simulate initial data loading from server
-  React.useEffect(() => {
-    setIsDataLoading(true)
-    const timer = setTimeout(() => {
-      setIsDataLoading(false)
-    }, 400) // Simulate 400ms loading time for server data
-
-    return () => clearTimeout(timer)
-  }, [])
-
-  // Simulate data loading when date range changes
-  React.useEffect(() => {
-    if (dateRange) {
-      setIsDataLoading(true)
-      const timer = setTimeout(() => {
-        setIsDataLoading(false)
-      }, 250) // Simulate 250ms loading time for date range change
-
-      return () => clearTimeout(timer)
-    }
-  }, [dateRange])
+  // Fetch metrics from database
+  const { data: metrics, isLoading: isMetricsLoading, error: metricsError } = useDashboardMetrics(timeRange)
 
 
   return (
     <>
-      <PageWrapper isLoading={isDataLoading}>
+      <PageWrapper isLoading={isMetricsLoading}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Left 2/3: Header, Statistics Cards and Recommended Templates */}
           <div className="lg:col-span-2 flex flex-col gap-4">
@@ -118,24 +97,26 @@ export default function DashboardPage() {
                 if (value && typeof value === 'object') {
                   setDateRange(value as DateRange)
                 }
-              }} isLoading={isDataLoading} mode="advanced" />}
-              isLoading={isDataLoading}
+              }} isLoading={isMetricsLoading} mode="advanced" />}
+              isLoading={isMetricsLoading}
             />
 
             {/* Statistics Cards */}
-            {isDataLoading ? (
-              <TableSkeleton rows={4} columns={4} />
-            ) : (
-              <SectionCards timeRange={timeRange} isLoading={isDataLoading} isEmpty={isNewUser} />
-            )}
+            <SectionCards 
+              timeRange={timeRange} 
+              metrics={metrics} 
+              isLoading={isMetricsLoading} 
+              isEmpty={isNewUser}
+              error={metricsError}
+            />
 
-            {/* Recommended Templates */}
-            <RecommendedTemplates />
+            {/* Recommended Templates - Show skeleton until metrics load */}
+            <RecommendedTemplates isLoading={isMetricsLoading} />
           </div>
 
-          {/* Right 1/3: Case Studies (Featured Content) */}
+          {/* Right 1/3: Case Studies (Featured Content) - Show skeleton until metrics load */}
           <div className="lg:col-span-1">
-            <FeaturedContentCard showDismiss={false} />
+            <FeaturedContentCard showDismiss={false} isLoading={isMetricsLoading} />
           </div>
         </div>
       </PageWrapper>

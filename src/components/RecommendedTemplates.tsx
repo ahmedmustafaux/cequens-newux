@@ -222,12 +222,6 @@ export function RecommendedTemplates({ className, isLoading = false }: Recommend
                     <Skeleton className="h-5 w-full mb-1" />
                     <Skeleton className="h-4 w-3/4" />
                   </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="flex flex-wrap gap-1.5">
-                      <Skeleton className="h-5 w-16" />
-                      <Skeleton className="h-5 w-20" />
-                    </div>
-                  </CardContent>
                 </Card>
               ))}
             </div>

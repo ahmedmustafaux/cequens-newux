@@ -16,6 +16,7 @@ export interface WorkflowTemplate {
   apps: AppIcon[]
   isAIPowered: boolean
   categories: string[] // "ai-workflow", "most-popular"
+  tags?: string[] // "Campaigns", "API", "AI Powered", "Inbox", etc.
   industries?: string[] // industry IDs that this template is relevant for
   goals?: string[] // goal IDs that match user goals
   channels?: string[] // channel IDs used in this template
@@ -96,6 +97,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
     apps: [getAppIcon("facebook"), getAppIcon("google-sheets")],
     isAIPowered: true,
     categories: ["ai-workflow", "most-popular"],
+    tags: ["AI Powered", "API"],
     industries: ["ecommerce", "retail"],
     goals: ["goal-4"], // Lead generation
     channels: ["channel-5"] // Messenger
@@ -107,6 +109,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
     apps: [getAppIcon("google-sheets"), getAppIcon("chatgpt")],
     isAIPowered: true,
     categories: ["ai-workflow"],
+    tags: ["AI Powered", "API"],
     industries: ["ecommerce", "technology", "finance"],
     goals: ["goal-8"], // Analytics & reporting
     channels: ["channel-3"] // Email
@@ -118,6 +121,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
     apps: [getAppIcon("gmail"), getAppIcon("google-ai-studio")],
     isAIPowered: true,
     categories: ["ai-workflow"],
+    tags: ["AI Powered"],
     industries: ["technology", "ecommerce"],
     goals: ["goal-3"], // Support automation
     channels: ["channel-3"] // Email
@@ -129,6 +133,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
     apps: [getAppIcon("whatsapp")],
     isAIPowered: false,
     categories: ["most-popular"],
+    tags: ["API"],
     industries: ["ecommerce", "retail"],
     goals: ["goal-1", "goal-2"], // Customer engagement, Marketing campaigns
     channels: ["channel-2"] // WhatsApp
@@ -140,6 +145,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
     apps: [getAppIcon("sms")],
     isAIPowered: false,
     categories: ["most-popular"],
+    tags: ["API"],
     industries: ["healthcare", "education"],
     goals: ["goal-1"], // Customer engagement
     channels: ["channel-1"] // SMS
@@ -151,6 +157,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
     apps: [getAppIcon("whatsapp"), getAppIcon("sms"), getAppIcon("email")],
     isAIPowered: false,
     categories: ["most-popular"],
+    tags: ["Campaigns", "API"],
     industries: ["ecommerce", "retail", "finance"],
     goals: ["goal-2", "goal-9"], // Marketing campaigns, Multi-channel messaging
     channels: ["channel-2", "channel-1", "channel-3"]
@@ -162,6 +169,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
     apps: [getAppIcon("chatgpt"), getAppIcon("whatsapp")],
     isAIPowered: true,
     categories: ["ai-workflow"],
+    tags: ["AI Powered"],
     industries: ["ecommerce", "technology", "retail"],
     goals: ["goal-3"], // Support automation
     channels: ["channel-2", "channel-5"] // WhatsApp, Messenger
@@ -173,9 +181,202 @@ export const workflowTemplates: WorkflowTemplate[] = [
     apps: [getAppIcon("whatsapp")],
     isAIPowered: false,
     categories: ["most-popular"],
+    tags: ["Campaigns", "API"],
     industries: ["ecommerce"],
     goals: ["goal-2", "goal-4"], // Marketing campaigns, Lead generation
     channels: ["channel-2"] // WhatsApp
+  },
+  {
+    id: "whatsapp-shipping-updates",
+    title: "Real-time Shipping Updates via WhatsApp",
+    description: "Keep customers informed with automated shipping notifications and delivery tracking through WhatsApp.",
+    apps: [getAppIcon("whatsapp")],
+    isAIPowered: false,
+    categories: ["most-popular"],
+    tags: ["API"],
+    industries: ["ecommerce", "retail"],
+    goals: ["goal-1"], // Customer engagement
+    channels: ["channel-2"] // WhatsApp
+  },
+  {
+    id: "whatsapp-customer-support",
+    title: "WhatsApp Customer Support Hub",
+    description: "Manage customer inquiries, support tickets, and conversations all in one WhatsApp-powered inbox.",
+    apps: [getAppIcon("whatsapp")],
+    isAIPowered: false,
+    categories: ["most-popular"],
+    tags: ["API"],
+    industries: ["ecommerce", "retail", "technology"],
+    goals: ["goal-3"], // Support automation
+    channels: ["channel-2"] // WhatsApp
+  },
+  {
+    id: "whatsapp-marketing-broadcast",
+    title: "WhatsApp Marketing Broadcast Campaigns",
+    description: "Send targeted marketing messages, promotions, and announcements to your customer base via WhatsApp.",
+    apps: [getAppIcon("whatsapp")],
+    isAIPowered: false,
+    categories: ["most-popular"],
+    tags: ["Campaigns", "API"],
+    industries: ["ecommerce", "retail", "finance"],
+    goals: ["goal-2"], // Marketing campaigns
+    channels: ["channel-2"] // WhatsApp
+  },
+  {
+    id: "whatsapp-payment-reminders",
+    title: "Automated Payment Reminders via WhatsApp",
+    description: "Send friendly payment reminders and invoice notifications to improve collection rates.",
+    apps: [getAppIcon("whatsapp")],
+    isAIPowered: false,
+    categories: ["most-popular"],
+    tags: ["Campaigns", "API"],
+    industries: ["finance", "ecommerce", "retail"],
+    goals: ["goal-1", "goal-4"], // Customer engagement, Lead generation
+    channels: ["channel-2"] // WhatsApp
+  },
+  {
+    id: "ai-sentiment-analysis",
+    title: "AI-Powered Sentiment Analysis for Messages",
+    description: "Automatically analyze customer message sentiment and prioritize urgent or negative conversations.",
+    apps: [getAppIcon("chatgpt"), getAppIcon("whatsapp")],
+    isAIPowered: true,
+    categories: ["ai-workflow"],
+    tags: ["AI Powered", "API"],
+    industries: ["ecommerce", "technology", "retail"],
+    goals: ["goal-3", "goal-8"], // Support automation, Analytics
+    channels: ["channel-2", "channel-1", "channel-3"]
+  },
+  {
+    id: "ai-message-translation",
+    title: "AI Message Translation & Localization",
+    description: "Automatically translate customer messages and responses to support global customers in their language.",
+    apps: [getAppIcon("google-ai-studio"), getAppIcon("whatsapp")],
+    isAIPowered: true,
+    categories: ["ai-workflow"],
+    tags: ["AI Powered", "API"],
+    industries: ["ecommerce", "technology", "retail"],
+    goals: ["goal-3"], // Support automation
+    channels: ["channel-2", "channel-1", "channel-3"]
+  },
+  {
+    id: "ai-personalized-recommendations",
+    title: "AI-Powered Personalized Product Recommendations",
+    description: "Send personalized product recommendations to customers based on their purchase history and preferences.",
+    apps: [getAppIcon("chatgpt"), getAppIcon("whatsapp")],
+    isAIPowered: true,
+    categories: ["ai-workflow"],
+    tags: ["AI Powered", "Campaigns"],
+    industries: ["ecommerce", "retail"],
+    goals: ["goal-2", "goal-4"], // Marketing campaigns, Lead generation
+    channels: ["channel-2", "channel-3"]
+  },
+  {
+    id: "ai-conversation-summaries",
+    title: "AI-Generated Conversation Summaries",
+    description: "Automatically generate summaries of customer conversations for better team collaboration and insights.",
+    apps: [getAppIcon("chatgpt"), getAppIcon("google-sheets")],
+    isAIPowered: true,
+    categories: ["ai-workflow"],
+    tags: ["AI Powered", "API"],
+    industries: ["ecommerce", "technology", "finance"],
+    goals: ["goal-8"], // Analytics & reporting
+    channels: ["channel-2", "channel-1", "channel-3"]
+  },
+  {
+    id: "healthcare-appointment-whatsapp",
+    title: "Healthcare Appointment Reminders via WhatsApp",
+    description: "Send appointment confirmations, reminders, and health tips to patients through WhatsApp.",
+    apps: [getAppIcon("whatsapp")],
+    isAIPowered: false,
+    categories: ["most-popular"],
+    tags: ["API"],
+    industries: ["healthcare"],
+    goals: ["goal-1", "goal-5"], // Customer engagement, Compliance
+    channels: ["channel-2"] // WhatsApp
+  },
+  {
+    id: "finance-transaction-alerts",
+    title: "Financial Transaction Alerts via WhatsApp",
+    description: "Send secure transaction notifications, account updates, and security alerts to banking customers.",
+    apps: [getAppIcon("whatsapp")],
+    isAIPowered: false,
+    categories: ["most-popular"],
+    tags: ["API"],
+    industries: ["finance"],
+    goals: ["goal-1", "goal-5"], // Customer engagement, Compliance
+    channels: ["channel-2"] // WhatsApp
+  },
+  {
+    id: "customer-surveys-inbox",
+    title: "Customer Feedback Surveys & Collection",
+    description: "Create and manage customer satisfaction surveys, collect feedback, and analyze responses in your inbox.",
+    apps: [getAppIcon("whatsapp"), getAppIcon("email")],
+    isAIPowered: false,
+    categories: ["most-popular"],
+    tags: ["Inbox"],
+    industries: ["ecommerce", "retail", "technology"],
+    goals: ["goal-1", "goal-8"], // Customer engagement, Analytics
+    channels: ["channel-2", "channel-3", "channel-1"]
+  },
+  {
+    id: "team-groups-management",
+    title: "Team Groups & Collaboration Hub",
+    description: "Organize team conversations, manage group chats, and coordinate customer support across multiple channels.",
+    apps: [getAppIcon("whatsapp"), getAppIcon("sms")],
+    isAIPowered: false,
+    categories: ["most-popular"],
+    tags: ["Inbox"],
+    industries: ["ecommerce", "technology", "retail"],
+    goals: ["goal-3"], // Support automation
+    channels: ["channel-2", "channel-1", "channel-3"]
+  },
+  {
+    id: "ai-chatbot-inbox",
+    title: "AI Chatbot for Inbox Automation",
+    description: "Deploy intelligent chatbots to handle customer inquiries, route conversations, and escalate to human agents when needed.",
+    apps: [getAppIcon("chatgpt"), getAppIcon("whatsapp")],
+    isAIPowered: true,
+    categories: ["ai-workflow"],
+    tags: ["Inbox", "AI Powered"],
+    industries: ["ecommerce", "technology", "retail"],
+    goals: ["goal-3"], // Support automation
+    channels: ["channel-2", "channel-1", "channel-5"]
+  },
+  {
+    id: "unified-inbox-management",
+    title: "Unified Inbox for Multi-Channel Support",
+    description: "Centralize all customer conversations from WhatsApp, SMS, Email, and more in one unified inbox interface.",
+    apps: [getAppIcon("whatsapp"), getAppIcon("sms"), getAppIcon("email")],
+    isAIPowered: false,
+    categories: ["most-popular"],
+    tags: ["Inbox"],
+    industries: ["ecommerce", "retail", "technology", "finance"],
+    goals: ["goal-3", "goal-9"], // Support automation, Multi-channel messaging
+    channels: ["channel-2", "channel-1", "channel-3"]
+  },
+  {
+    id: "inbox-assignment-routing",
+    title: "Smart Inbox Assignment & Routing",
+    description: "Automatically assign conversations to the right team members based on skills, workload, and conversation context.",
+    apps: [getAppIcon("whatsapp")],
+    isAIPowered: false,
+    categories: ["most-popular"],
+    tags: ["Inbox"],
+    industries: ["ecommerce", "technology", "retail"],
+    goals: ["goal-3"], // Support automation
+    channels: ["channel-2", "channel-1", "channel-3"]
+  },
+  {
+    id: "ai-inbox-sentiment-routing",
+    title: "AI-Powered Sentiment-Based Inbox Routing",
+    description: "Use AI to analyze message sentiment and automatically prioritize urgent or negative conversations in your inbox.",
+    apps: [getAppIcon("chatgpt"), getAppIcon("whatsapp")],
+    isAIPowered: true,
+    categories: ["ai-workflow"],
+    tags: ["Inbox", "AI Powered"],
+    industries: ["ecommerce", "technology", "retail"],
+    goals: ["goal-3", "goal-8"], // Support automation, Analytics
+    channels: ["channel-2", "channel-1", "channel-3"]
   }
 ]
 

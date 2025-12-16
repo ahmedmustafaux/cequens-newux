@@ -3,12 +3,14 @@ import { X, ChevronLeft, ChevronRight, Users, Shield, Lock, Sparkles, Zap, BarCh
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
 interface FeaturedContentCardProps {
   onDismiss?: () => void
   className?: string
   showDismiss?: boolean
+  isLoading?: boolean
 }
 
 interface Feature {
@@ -28,7 +30,7 @@ const features: Feature[] = [
   {
     id: "roles-permissions",
     title: "Create roles and permissions",
-    description: "Control access to your platform with granular role-based permissions. Assign team members specific roles and customize what they can see and do.",
+    description: "Control access to your team. Assign team members specific roles and customize what they can see and do.",
     readTime: "2 min",
     badge: "New",
     visual: (
@@ -110,7 +112,7 @@ const features: Feature[] = [
   }
 ]
 
-export function FeaturedContentCard({ onDismiss, className, showDismiss = true }: FeaturedContentCardProps) {
+export function FeaturedContentCard({ onDismiss, className, showDismiss = true, isLoading = false }: FeaturedContentCardProps) {
   const [currentIndex, setCurrentIndex] = React.useState(0)
   const [isDismissed, setIsDismissed] = React.useState(false)
   const storageKey = "featured-content-dismissed"
@@ -177,62 +179,96 @@ export function FeaturedContentCard({ onDismiss, className, showDismiss = true }
       <CardContent>
         {/* Visual element */}
         <div className={cn("relative w-full h-32 rounded-t-lg flex items-center justify-center p-4 mb-4", getBackgroundColor(currentFeature.id))}>
-          {currentFeature.visual}
+          {isLoading ? (
+            <Skeleton className="h-20 w-full rounded-none" />
+          ) : (
+            currentFeature.visual
+          )}
         </div>
 
         <div className="pt-2 pb-4">
           {/* Badge replacing metadata */}
           <div className="mb-3 flex items-center gap-2">
-            {currentFeature.badge === "New" ? (
-              <Badge className="text-xs bg-primary text-primary-foreground border-primary">
-                {currentFeature.badge}
-              </Badge>
+            {isLoading ? (
+              <>
+                <Skeleton className="h-5 w-12 rounded-none" />
+                <Skeleton className="h-4 w-16 rounded-none" />
+              </>
             ) : (
-              <Badge className="text-xs bg-green-600 dark:bg-green-500 text-white border-green-600 dark:border-green-500">
-                {currentFeature.badge}
-              </Badge>
+              <>
+                {currentFeature.badge === "New" ? (
+                  <Badge className="text-xs bg-primary text-primary-foreground border-primary">
+                    {currentFeature.badge}
+                  </Badge>
+                ) : (
+                  <Badge className="text-xs bg-green-600 dark:bg-green-500 text-white border-green-600 dark:border-green-500">
+                    {currentFeature.badge}
+                  </Badge>
+                )}
+                <span className="text-sm text-muted-foreground">• {currentFeature.readTime}</span>
+              </>
             )}
-            <span className="text-sm text-muted-foreground">• {currentFeature.readTime}</span>
           </div>
 
           {/* Title */}
-          <h3 className="text-lg font-semibold mb-2 leading-tight">
-            {currentFeature.title}
-          </h3>
+          {isLoading ? (
+            <Skeleton className="h-6 w-3/4 mb-2 rounded-none" />
+          ) : (
+            <h3 className="text-lg font-semibold mb-2 leading-tight">
+              {currentFeature.title}
+            </h3>
+          )}
 
           {/* Description */}
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {currentFeature.description}
-          </p>
+          {isLoading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-full rounded-none" />
+              <Skeleton className="h-4 w-5/6 rounded-none" />
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {currentFeature.description}
+            </p>
+          )}
         </div>
       </CardContent>
 
       <CardFooter className="flex items-center justify-between pt-0">
-        <Button variant="outline" size="sm" asChild>
-          <a href={currentFeature.cta.href || "#"}>
-            {currentFeature.cta.label}
-          </a>
-        </Button>
+        {isLoading ? (
+          <Skeleton className="h-9 w-24 rounded-none" />
+        ) : (
+          <Button variant="outline" size="sm" asChild>
+            <a href={currentFeature.cta.href || "#"}>
+              {currentFeature.cta.label}
+            </a>
+          </Button>
+        )}
 
         {/* Pagination */}
         <div className="flex items-center gap-2">
-          <button
-            onClick={handlePrevious}
-            className="p-1 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Previous"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <span className="text-sm text-muted-foreground min-w-[3rem] text-center">
-            {currentIndex + 1} of {features.length}
-          </span>
-          <button
-            onClick={handleNext}
-            className="p-1 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Next"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
+          {isLoading ? (
+            <Skeleton className="h-6 w-20 rounded-none" />
+          ) : (
+            <>
+              <button
+                onClick={handlePrevious}
+                className="p-1 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                aria-label="Previous"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="text-sm text-muted-foreground min-w-[3rem] text-center">
+                {currentIndex + 1} of {features.length}
+              </span>
+              <button
+                onClick={handleNext}
+                className="p-1 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                aria-label="Next"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </>
+          )}
         </div>
       </CardFooter>
     </Card>

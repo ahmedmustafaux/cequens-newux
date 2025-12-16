@@ -8,15 +8,17 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useDashboardMetrics } from "@/hooks/use-dashboard-metrics"
+import type { DashboardMetricsData } from "@/lib/supabase/dashboard"
 
 interface SectionCardsProps {
   timeRange: string
+  metrics?: DashboardMetricsData | null
   isLoading?: boolean
   isEmpty?: boolean
+  error?: Error | null
 }
 
-export function SectionCards({ timeRange, isLoading = false, isEmpty = false }: SectionCardsProps) {
+export function SectionCards({ timeRange, metrics, isLoading = false, isEmpty = false, error }: SectionCardsProps) {
   const getTimePeriodText = (range: string) => {
     switch (range) {
       case "7d":
@@ -30,16 +32,10 @@ export function SectionCards({ timeRange, isLoading = false, isEmpty = false }: 
     }
   }
 
-  // Fetch real metrics from database
-  const { data: metrics, isLoading: isMetricsLoading, error } = useDashboardMetrics(timeRange)
-
   const timePeriodText = getTimePeriodText(timeRange)
 
-  // Show loading state if metrics are loading or if parent is loading
-  const isDataLoading = isLoading || isMetricsLoading
-
   // Empty state values for new users or when no data
-  const emptyMetrics = {
+  const emptyMetrics: DashboardMetricsData = {
     messagesSent: { value: "0", change: "0%", trend: "up" as const },
     deliveryRate: { value: "0%", change: "0%", trend: "up" as const },
     activeSenders: { value: "0", change: "0%", trend: "up" as const },
@@ -83,7 +79,7 @@ export function SectionCards({ timeRange, isLoading = false, isEmpty = false }: 
       {cardsData.map((card, index) => (
         <Card key={index} className={cardClassName}>
           <CardHeader>
-            {isDataLoading ? (
+            {isLoading ? (
               <>
                 <Skeleton className="h-4 w-24 mb-2" />
                 <div className="flex items-baseline justify-between gap-2">
