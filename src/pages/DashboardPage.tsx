@@ -11,6 +11,8 @@ import { useTimeRangeTitle } from "@/hooks/use-dynamic-title"
 import { useAuth } from "@/hooks/use-auth"
 import { GettingStartedGuideFloating, Persona } from "@/components/getting-started-guide-floating"
 import { useOnboarding } from "@/contexts/onboarding-context"
+import { FeaturedContentCard } from "@/components/featured-content-card"
+import { RecommendedTemplates } from "@/components/recommended-templates"
 
 export default function DashboardPage() {
   const { user } = useAuth()
@@ -104,34 +106,37 @@ export default function DashboardPage() {
   return (
     <>
       <PageWrapper isLoading={isDataLoading}>
-        <PageHeader
-          title="Home"
-          description="Monitor your communication platform performance"
-          showBreadcrumbs={false}
-          showFilters={true}
-          filters={<TimeFilter value={dateRange} onValueChange={(value) => {
-            if (value && typeof value === 'object') {
-              setDateRange(value as DateRange)
-            }
-          }} isLoading={isDataLoading} mode="advanced" />}
-          isLoading={isDataLoading}
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Left 2/3: Header, Statistics Cards and Recommended Templates */}
+          <div className="lg:col-span-2 flex flex-col gap-4">
+            <PageHeader
+              title="Home"
+              description="Monitor your communication platform performance"
+              showBreadcrumbs={false}
+              showFilters={true}
+              filters={<TimeFilter value={dateRange} onValueChange={(value) => {
+                if (value && typeof value === 'object') {
+                  setDateRange(value as DateRange)
+                }
+              }} isLoading={isDataLoading} mode="advanced" />}
+              isLoading={isDataLoading}
+            />
 
-        <div className="flex flex-col gap-4">
-          {isDataLoading ? (
-            <>
+            {/* Statistics Cards */}
+            {isDataLoading ? (
               <TableSkeleton rows={4} columns={4} />
-              <TableSkeleton rows={1} columns={1} className="h-[400px]" />
-            </>
-          ) : (
-            <>
+            ) : (
               <SectionCards timeRange={timeRange} isLoading={isDataLoading} isEmpty={isNewUser} />
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-                <DashboardChart timeRange={timeRange} isLoading={isDataLoading} isEmpty={isNewUser} className="xl:col-span-2" />
-                <DashboardPieChart timeRange={timeRange} isLoading={isDataLoading} isEmpty={isNewUser} />
-              </div>
-            </>
-          )}
+            )}
+
+            {/* Recommended Templates */}
+            <RecommendedTemplates />
+          </div>
+
+          {/* Right 1/3: Case Studies (Featured Content) */}
+          <div className="lg:col-span-1">
+            <FeaturedContentCard showDismiss={false} />
+          </div>
         </div>
       </PageWrapper>
 
