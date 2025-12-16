@@ -107,22 +107,39 @@ export function RecommendedTemplates({ className, isLoading = false }: Recommend
 
   // Check scroll position on mount and when templates change
   React.useEffect(() => {
-    checkScrollPosition()
+    // Use requestAnimationFrame to ensure layout is complete
+    const checkAfterLayout = () => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          checkScrollPosition()
+        })
+      })
+    }
+    
+    checkAfterLayout()
     // Also check after a short delay to ensure layout is complete
-    const timer = setTimeout(checkScrollPosition, 100)
+    const timer = setTimeout(checkScrollPosition, 200)
     return () => clearTimeout(timer)
-  }, [filteredTemplates, checkScrollPosition])
+  }, [filteredTemplates, activeTab, checkScrollPosition])
 
-  // Add scroll event listener
+  // Add scroll event listener and ResizeObserver
   React.useEffect(() => {
     const container = scrollContainerRef.current
     if (container) {
       container.addEventListener("scroll", checkScrollPosition)
       // Also listen for resize events
       window.addEventListener("resize", checkScrollPosition)
+      
+      // Use ResizeObserver to detect when container size changes
+      const resizeObserver = new ResizeObserver(() => {
+        checkScrollPosition()
+      })
+      resizeObserver.observe(container)
+      
       return () => {
         container.removeEventListener("scroll", checkScrollPosition)
         window.removeEventListener("resize", checkScrollPosition)
+        resizeObserver.disconnect()
       }
     }
   }, [checkScrollPosition])

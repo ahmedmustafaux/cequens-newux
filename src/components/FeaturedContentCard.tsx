@@ -178,9 +178,9 @@ export function FeaturedContentCard({ onDismiss, className, showDismiss = true, 
 
       <CardContent>
         {/* Visual element */}
-        <div className={cn("relative w-full h-32 rounded-t-lg flex items-center justify-center p-4 mb-4", getBackgroundColor(currentFeature.id))}>
+        <div className={cn("relative w-full h-32 rounded-t-lg flex items-center justify-center p-4 mb-4", !isLoading && getBackgroundColor(currentFeature.id))}>
           {isLoading ? (
-            <Skeleton className="h-20 w-full rounded-none" />
+            <Skeleton className="h-16 w-full rounded-md" />
           ) : (
             currentFeature.visual
           )}
@@ -188,31 +188,24 @@ export function FeaturedContentCard({ onDismiss, className, showDismiss = true, 
 
         <div className="pt-2 pb-4">
           {/* Badge replacing metadata */}
-          <div className="mb-3 flex items-center gap-2">
-            {isLoading ? (
-              <>
-                <Skeleton className="h-5 w-12 rounded-none" />
-                <Skeleton className="h-4 w-16 rounded-none" />
-              </>
-            ) : (
-              <>
-                {currentFeature.badge === "New" ? (
-                  <Badge className="text-xs bg-primary text-primary-foreground border-primary">
-                    {currentFeature.badge}
-                  </Badge>
-                ) : (
-                  <Badge className="text-xs bg-green-600 dark:bg-green-500 text-white border-green-600 dark:border-green-500">
-                    {currentFeature.badge}
-                  </Badge>
-                )}
-                <span className="text-sm text-muted-foreground">• {currentFeature.readTime}</span>
-              </>
-            )}
-          </div>
+          {!isLoading && (
+            <div className="mb-3 flex items-center gap-2">
+              {currentFeature.badge === "New" ? (
+                <Badge className="text-xs bg-primary text-primary-foreground border-primary">
+                  {currentFeature.badge}
+                </Badge>
+              ) : (
+                <Badge className="text-xs bg-green-600 dark:bg-green-500 text-white border-green-600 dark:border-green-500">
+                  {currentFeature.badge}
+                </Badge>
+              )}
+              <span className="text-sm text-muted-foreground">• {currentFeature.readTime}</span>
+            </div>
+          )}
 
           {/* Title */}
           {isLoading ? (
-            <Skeleton className="h-6 w-3/4 mb-2 rounded-none" />
+            <Skeleton className="h-6 w-3/4 mb-2 rounded-md" />
           ) : (
             <h3 className="text-lg font-semibold mb-2 leading-tight">
               {currentFeature.title}
@@ -222,8 +215,8 @@ export function FeaturedContentCard({ onDismiss, className, showDismiss = true, 
           {/* Description */}
           {isLoading ? (
             <div className="space-y-2">
-              <Skeleton className="h-4 w-full rounded-none" />
-              <Skeleton className="h-4 w-5/6 rounded-none" />
+              <Skeleton className="h-4 w-full rounded-md" />
+              <Skeleton className="h-4 w-5/6 rounded-md" />
             </div>
           ) : (
             <p className="text-sm text-muted-foreground leading-relaxed">
@@ -235,7 +228,7 @@ export function FeaturedContentCard({ onDismiss, className, showDismiss = true, 
 
       <CardFooter className="flex items-center justify-between pt-0">
         {isLoading ? (
-          <Skeleton className="h-9 w-24 rounded-none" />
+          <Skeleton className="h-9 w-24 rounded-md" />
         ) : (
           <Button variant="outline" size="sm" asChild>
             <a href={currentFeature.cta.href || "#"}>
@@ -247,7 +240,7 @@ export function FeaturedContentCard({ onDismiss, className, showDismiss = true, 
         {/* Pagination */}
         <div className="flex items-center gap-2">
           {isLoading ? (
-            <Skeleton className="h-6 w-20 rounded-none" />
+            <Skeleton className="h-6 w-20 rounded-md" />
           ) : (
             <>
               <button
