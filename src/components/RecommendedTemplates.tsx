@@ -188,8 +188,7 @@ export function RecommendedTemplates({ className, isLoading = false }: Recommend
     }
   }, [checkScrollPosition, checkTabsScrollPosition])
 
-  // Card width (320px) + gap (16px = gap-4) = 336px per card
-  const SCROLL_STEP = 336
+  const SCROLL_STEP = 256
   const TABS_SCROLL_STEP = 200
 
   const createScrollHandler = (container: React.RefObject<HTMLDivElement | null>, step: number, checkFn: () => void) => {
