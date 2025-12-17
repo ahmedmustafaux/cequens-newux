@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { cn } from "@/lib/utils"
 import type { DashboardMetricsData } from "@/lib/supabase/dashboard"
 
 interface SectionCardsProps {
@@ -75,26 +76,26 @@ export function SectionCards({ timeRange, metrics, isLoading = false, isEmpty = 
   ]
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {cardsData.map((card, index) => (
-        <Card key={index} className={cardClassName}>
+        <Card key={index} className={cn(cardClassName, "max-w-full")}>
           <CardHeader>
             {isLoading ? (
               <>
                 <Skeleton className="h-4 w-24 mb-2" />
-                <div className="flex items-baseline justify-between gap-2">
-                  <Skeleton className="h-7 w-20" />
-                  <Skeleton className="h-5 w-14" />
+                <div className="flex items-baseline justify-between gap-3">
+                  <Skeleton className="h-7 w-20 flex-shrink-0" />
+                  <Skeleton className="h-5 w-14 flex-shrink-0" />
                 </div>
               </>
             ) : (
               <>
-                <CardDescription>{card.description}</CardDescription>
-                <div className="flex items-baseline justify-between gap-2">
-                  <CardTitle className="text-xl font-semibold tabular-nums @[250px]/card:text-2xl">
+                <CardDescription className="truncate">{card.description}</CardDescription>
+                <div className="flex items-baseline justify-between gap-3">
+                  <CardTitle className="text-xl font-semibold tabular-nums @[250px]/card:text-2xl whitespace-nowrap">
                     {card.value}
                   </CardTitle>
-                  <Badge variant="secondary" className="ml-auto">
+                  <Badge variant="secondary" className="ml-auto flex-shrink-0 whitespace-nowrap">
                     {card.trend === "up" ? <TrendingUp /> : <TrendingDown />}
                     {card.change}
                   </Badge>

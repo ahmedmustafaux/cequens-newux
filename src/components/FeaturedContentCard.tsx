@@ -1,5 +1,5 @@
 import * as React from "react"
-import { X, ChevronLeft, ChevronRight, Users, Shield, Lock, Sparkles, Zap, BarChart3 } from "lucide-react"
+import { X, ChevronLeft, ChevronRight, Users, Lock, Sparkles, Zap, BarChart3 } from "lucide-react"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -40,19 +40,11 @@ const features: Feature[] = [
         </div>
         <div className="flex items-center">
           <div className="w-8 h-px bg-border" />
-          <Shield className="w-4 h-4 text-muted-foreground mx-1" />
+          <Lock className="w-3 h-3 text-muted-foreground mx-1" />
           <div className="w-8 h-px bg-border" />
         </div>
         <div className="w-12 h-12 rounded-lg border border-border bg-background flex items-center justify-center">
-          <Shield className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-        </div>
-        <div className="flex items-center">
-          <div className="w-6 h-px bg-border" />
-          <Lock className="w-3 h-3 text-muted-foreground mx-1" />
-          <div className="w-6 h-px bg-border" />
-        </div>
-        <div className="w-10 h-10 rounded-lg border border-border bg-background flex items-center justify-center">
-          <Lock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          <Lock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
         </div>
       </div>
     ),
