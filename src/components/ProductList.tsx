@@ -40,27 +40,26 @@ const products: Product[] = [
 export function ProductList({ className }: { className?: string }) {
   return (
     <div className={cn("w-full", className)}>
-      <h2 className="text-xl font-semibold mb-4">Start from scratch</h2>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {products.map((product) => {
           const IconComponent = product.icon
           return (
             <Card
               key={product.id}
-              className="cursor-pointer hover:shadow-md transition-shadow"
+              className={cn("cursor-pointer hover:shadow-md transition-shadow max-w-full")}
             >
-              <CardContent className="p-4 flex items-center gap-3">
+              <CardContent className="flex items-center gap-2.5">
                 {/* Icon Container */}
-                <div className="w-12 h-12 rounded-md bg-orange-500 border border-orange-600 flex items-center justify-center flex-shrink-0">
-                  <IconComponent className="w-6 h-6 text-white" strokeWidth={2.5} fill="currentColor" />
+                <div className="w-10 h-10 rounded-md bg-orange-500 border border-orange-600 flex items-center justify-center flex-shrink-0">
+                  <IconComponent className="w-5 h-5 text-white" strokeWidth={2.5} fill="currentColor" />
                 </div>
                 
                 {/* Text Content */}
                 <div className="flex flex-col min-w-0">
-                  <h3 className="text-base font-bold font-serif text-foreground leading-tight mb-0.5">
+                  <h3 className="text-sm font-semibold font-sans tracking-wide text-foreground leading-tight mb-0.5">
                     {product.name}
                   </h3>
-                  <p className="text-sm text-muted-foreground leading-tight">
+                  <p className="text-xs text-muted-foreground leading-tight">
                     {product.description}
                   </p>
                 </div>
