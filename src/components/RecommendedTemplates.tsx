@@ -116,7 +116,7 @@ export function RecommendedTemplates({ className, isLoading = false }: Recommend
   const checkScroll = useCallback((container: HTMLElement | null, setLeft: (v: boolean) => void, setRight: (v: boolean) => void) => {
     if (!container) return
     const { scrollLeft, scrollWidth, clientWidth } = container
-    setLeft(scrollLeft > 0.5)
+    setLeft(scrollLeft > 0)
     setRight(scrollLeft < scrollWidth - clientWidth - 0.5)
   }, [])
 
@@ -156,6 +156,9 @@ export function RecommendedTemplates({ className, isLoading = false }: Recommend
       
       let rafId: number | null = null
       const handleScroll = () => {
+        // Check immediately for better responsiveness
+        checkFn()
+        // Also schedule a check in the next frame to catch any edge cases
         if (rafId === null) {
           rafId = requestAnimationFrame(() => {
             checkFn()

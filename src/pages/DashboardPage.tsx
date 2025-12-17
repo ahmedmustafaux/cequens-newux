@@ -13,6 +13,7 @@ import { GettingStartedGuideFloating, Persona } from "@/components/getting-start
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { FeaturedContentCard } from "@/components/FeaturedContentCard"
 import { RecommendedTemplates } from "@/components/RecommendedTemplates"
+import { ProductList } from "@/components/ProductList"
 
 export default function DashboardPage() {
   const { user } = useAuth()
@@ -112,10 +113,13 @@ export default function DashboardPage() {
 
             {/* Recommended Templates - Show skeleton until metrics load */}
             <RecommendedTemplates isLoading={isMetricsLoading} />
+
+            {/* Product List - Below Recommended Templates */}
+            <ProductList />
           </div>
 
           {/* Right 1/3: Case Studies (Featured Content) - Show skeleton until metrics load */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 flex flex-col gap-4">
             <FeaturedContentCard showDismiss={false} isLoading={isMetricsLoading} />
           </div>
         </div>
