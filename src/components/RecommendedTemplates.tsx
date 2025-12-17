@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, useCallback } from "react"
 import { Sparkles, User, Megaphone, Code, Inbox, ChevronRight, ChevronLeft } from "lucide-react"
 import { ChatText, EnvelopeSimple } from "phosphor-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -15,6 +15,71 @@ interface RecommendedTemplatesProps {
   isLoading?: boolean
 }
 
+// Badge configuration
+const BADGE_CONFIG: Record<string, { styles: string; icon: React.ReactNode }> = {
+  "AI Powered": {
+    styles: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-400",
+    icon: <Sparkles className="w-3 h-3 mr-1" />
+  },
+  "Campaigns": {
+    styles: "border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-900 dark:bg-indigo-950/30 dark:text-indigo-400",
+    icon: <Megaphone className="w-3 h-3 mr-1" />
+  },
+  "API": {
+    styles: "border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-900 dark:bg-purple-950/30 dark:text-purple-400",
+    icon: <Code className="w-3 h-3 mr-1" />
+  },
+  "Inbox": {
+    styles: "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-400",
+    icon: <Inbox className="w-3 h-3 mr-1" />
+  }
+}
+
+// App icon component mapping
+const APP_ICON_COMPONENTS: Record<string, React.ComponentType<any>> = {
+  ChatText,
+  EnvelopeSimple
+}
+
+// Helper functions for template filtering
+const matchesOnboarding = (template: WorkflowTemplate, onboardingData: any) => {
+  const matchesIndustry = !template.industries || !onboardingData.industry || 
+    template.industries.includes(onboardingData.industry)
+  const matchesGoals = !template.goals || !onboardingData.goals?.length || 
+    template.goals.some(goal => onboardingData.goals.includes(goal))
+  const matchesChannels = !template.channels || !onboardingData.channels?.length || 
+    template.channels.some(channel => onboardingData.channels.includes(channel))
+  return matchesIndustry && matchesGoals && matchesChannels
+}
+
+const getTemplatesByCategory = (templates: WorkflowTemplate[], count: number = 3) => ({
+  ai: templates.filter(t => t.isAIPowered).slice(0, count),
+  campaigns: templates.filter(t => t.tags?.includes("Campaigns")).slice(0, count),
+  api: templates.filter(t => 
+    t.tags?.includes("API") && !t.isAIPowered && 
+    !t.tags?.includes("Campaigns") && !t.tags?.includes("Inbox")
+  ).slice(0, count),
+  inbox: templates.filter(t => t.tags?.includes("Inbox")).slice(0, count)
+})
+
+const filterTemplatesByTab = (tab: string, templates: WorkflowTemplate[]) => {
+  switch (tab) {
+    case "broadcasting":
+      return templates.filter(t => t.tags?.includes("Campaigns") && !t.isAIPowered)
+    case "ai-powered":
+      return templates.filter(t => t.isAIPowered && !t.tags?.includes("Inbox"))
+    case "apis":
+      return templates.filter(t => 
+        t.tags?.includes("API") && !t.tags?.includes("Campaigns") && 
+        !t.tags?.includes("Inbox") && !t.isAIPowered
+      )
+    case "inbox":
+      return templates.filter(t => t.tags?.includes("Inbox"))
+    default:
+      return templates
+  }
+}
+
 export function RecommendedTemplates({ className, isLoading = false }: RecommendedTemplatesProps) {
   const { onboardingData } = useOnboarding()
   const [activeTab, setActiveTab] = React.useState("for-you")
@@ -27,158 +92,46 @@ export function RecommendedTemplates({ className, isLoading = false }: Recommend
 
   // Filter templates based on active tab
   const filteredTemplates = useMemo(() => {
-    let templates = workflowTemplates
-
     if (activeTab === "for-you") {
-      // Show a mix from every category, personalized to user
-      // Prioritize templates that match user's industry, goals, and channels
       if (onboardingData) {
-        const personalizedTemplates = templates.filter((template) => {
-          const matchesIndustry = !template.industries || 
-            !onboardingData.industry ||
-            template.industries.includes(onboardingData.industry)
-          
-          const matchesGoals = !template.goals || 
-            !onboardingData.goals ||
-            onboardingData.goals.length === 0 ||
-            template.goals.some(goal => onboardingData.goals?.includes(goal))
-          
-          const matchesChannels = !template.channels ||
-            !onboardingData.channels ||
-            onboardingData.channels.length === 0 ||
-            template.channels.some(channel => onboardingData.channels?.includes(channel))
-          
-          return matchesIndustry && matchesGoals && matchesChannels
-        })
-        
-        // If we have personalized matches, show those first, then a mix of others
-        if (personalizedTemplates.length > 0) {
-          const otherTemplates = templates.filter(t => !personalizedTemplates.includes(t))
-          // Mix in some from each category
-          const aiTemplates = otherTemplates.filter(t => t.isAIPowered).slice(0, 2)
-          const broadcastTemplates = otherTemplates.filter(t => 
-            t.tags?.includes("Campaigns")
-          ).slice(0, 2)
-          const apiTemplates = otherTemplates.filter(t => 
-            t.tags?.includes("API") && !t.isAIPowered && !t.tags?.includes("Campaigns") && !t.tags?.includes("Inbox")
-          ).slice(0, 2)
-          const inboxTemplates = otherTemplates.filter(t => 
-            t.tags?.includes("Inbox")
-          ).slice(0, 2)
-          
-          templates = [
-            ...personalizedTemplates,
-            ...aiTemplates,
-            ...broadcastTemplates,
-            ...apiTemplates,
-            ...inboxTemplates
-          ]
+        const personalized = workflowTemplates.filter(t => matchesOnboarding(t, onboardingData))
+        if (personalized.length > 0) {
+          const others = workflowTemplates.filter(t => !personalized.includes(t))
+          const categories = getTemplatesByCategory(others, 2)
+          return [...personalized, ...categories.ai, ...categories.campaigns, ...categories.api, ...categories.inbox]
         }
-      } else {
-        // If no onboarding data, show a diverse mix from all categories
-        const aiTemplates = templates.filter(t => t.isAIPowered).slice(0, 3)
-        const broadcastTemplates = templates.filter(t => 
-          t.tags?.includes("Campaigns")
-        ).slice(0, 3)
-        const apiTemplates = templates.filter(t => 
-          t.tags?.includes("API") && !t.isAIPowered && !t.tags?.includes("Campaigns") && !t.tags?.includes("Inbox")
-        ).slice(0, 3)
-        const inboxTemplates = templates.filter(t => 
-          t.tags?.includes("Inbox")
-        ).slice(0, 3)
-        
-        templates = [
-          ...aiTemplates,
-          ...broadcastTemplates,
-          ...apiTemplates,
-          ...inboxTemplates
-        ]
       }
-    } else if (activeTab === "broadcasting") {
-      // Show only campaigns templates (exclude AI-powered campaigns from other tabs)
-      templates = templates.filter(t => 
-        t.tags?.includes("Campaigns") && !t.isAIPowered
-      )
-    } else if (activeTab === "ai-powered") {
-      // Show only AI-powered templates (exclude inbox AI from this tab)
-      templates = templates.filter(t => 
-        t.isAIPowered && !t.tags?.includes("Inbox")
-      )
-    } else if (activeTab === "apis") {
-      // Show API-related templates (exclude campaigns and inbox)
-      templates = templates.filter(t => 
-        t.tags?.includes("API") && 
-        !t.tags?.includes("Campaigns") && 
-        !t.tags?.includes("Inbox") &&
-        !t.isAIPowered
-      )
-    } else if (activeTab === "inbox") {
-      // Show inbox-related templates only
-      templates = templates.filter(t => 
-        t.tags?.includes("Inbox")
-      )
+      const categories = getTemplatesByCategory(workflowTemplates, 3)
+      return [...categories.ai, ...categories.campaigns, ...categories.api, ...categories.inbox]
     }
-
-    return templates
+    return filterTemplatesByTab(activeTab, workflowTemplates)
   }, [activeTab, onboardingData])
 
-  // Get badge styling based on product/tag
-  const getBadgeStyles = (tag: string) => {
-    switch (tag) {
-      case "AI Powered":
-        return "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-400"
-      case "Campaigns":
-        return "border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-900 dark:bg-indigo-950/30 dark:text-indigo-400"
-      case "API":
-        return "border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-900 dark:bg-purple-950/30 dark:text-purple-400"
-      case "Inbox":
-        return "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-400"
-      default:
-        return "border-border bg-muted text-muted-foreground"
-    }
+  // Get badge config for a tag
+  const getBadgeConfig = (tag: string) => {
+    return BADGE_CONFIG[tag] || { styles: "border-border bg-muted text-muted-foreground", icon: null }
   }
 
-  // Get badge icon based on tag
-  const getBadgeIcon = (tag: string) => {
-    switch (tag) {
-      case "AI Powered":
-        return <Sparkles className="w-3 h-3 mr-1" />
-      case "Campaigns":
-        return <Megaphone className="w-3 h-3 mr-1" />
-      case "API":
-        return <Code className="w-3 h-3 mr-1" />
-      case "Inbox":
-        return <Inbox className="w-3 h-3 mr-1" />
-      default:
-        return null
-    }
-  }
-
-  // Check scroll position and update button visibility
-  const checkScrollPosition = React.useCallback(() => {
-    if (scrollContainerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current
-      // Use a small threshold (0.5) to account for sub-pixel scrolling
-      setCanScrollLeft(scrollLeft > 0.5)
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 0.5)
-    }
+  // Generic scroll position checker
+  const checkScroll = useCallback((container: HTMLElement | null, setLeft: (v: boolean) => void, setRight: (v: boolean) => void) => {
+    if (!container) return
+    const { scrollLeft, scrollWidth, clientWidth } = container
+    setLeft(scrollLeft > 0.5)
+    setRight(scrollLeft < scrollWidth - clientWidth - 0.5)
   }, [])
 
-  // Check tabs scroll position and update button visibility
-  const checkTabsScrollPosition = React.useCallback(() => {
-    if (tabsScrollContainerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = tabsScrollContainerRef.current
-      // Use a small threshold (0.5) to account for sub-pixel scrolling
-      setCanScrollLeftTabs(scrollLeft > 0.5)
-      setCanScrollRightTabs(scrollLeft < scrollWidth - clientWidth - 0.5)
-    }
-  }, [])
+  const checkScrollPosition = useCallback(() => {
+    checkScroll(scrollContainerRef.current, setCanScrollLeft, setCanScrollRight)
+  }, [checkScroll])
 
-  // Check scroll position when loading finishes
+  const checkTabsScrollPosition = useCallback(() => {
+    checkScroll(tabsScrollContainerRef.current, setCanScrollLeftTabs, setCanScrollRightTabs)
+  }, [checkScroll])
+
+  // Check scroll position when content changes or loads
   React.useEffect(() => {
     if (isLoading) return
     
-    // Use requestAnimationFrame to ensure layout is complete after loading
     const checkAfterLayout = () => {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
@@ -189,31 +142,6 @@ export function RecommendedTemplates({ className, isLoading = false }: Recommend
     }
     
     checkAfterLayout()
-    // Also check after a short delay to ensure layout is complete
-    const timer = setTimeout(() => {
-      checkScrollPosition()
-      checkTabsScrollPosition()
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [isLoading, checkScrollPosition, checkTabsScrollPosition])
-
-  // Check scroll position on mount and when templates change
-  React.useEffect(() => {
-    // Don't check if loading, wait until content is rendered
-    if (isLoading) return
-    
-    // Use requestAnimationFrame to ensure layout is complete
-    const checkAfterLayout = () => {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          checkScrollPosition()
-          checkTabsScrollPosition()
-        })
-      })
-    }
-    
-    checkAfterLayout()
-    // Also check after a short delay to ensure layout is complete
     const timer = setTimeout(() => {
       checkScrollPosition()
       checkTabsScrollPosition()
@@ -221,147 +149,95 @@ export function RecommendedTemplates({ className, isLoading = false }: Recommend
     return () => clearTimeout(timer)
   }, [filteredTemplates, activeTab, isLoading, checkScrollPosition, checkTabsScrollPosition])
 
-  // Add scroll event listener and ResizeObserver
+  // Setup scroll and resize listeners
   React.useEffect(() => {
-    const container = scrollContainerRef.current
-    const tabsContainer = tabsScrollContainerRef.current
-    
-    const cleanupFunctions: (() => void)[] = []
-    
-    if (container) {
-      // Use requestAnimationFrame for smoother scroll detection
+    const setupListeners = (container: HTMLElement | null, checkFn: () => void) => {
+      if (!container) return () => {}
+      
       let rafId: number | null = null
       const handleScroll = () => {
         if (rafId === null) {
           rafId = requestAnimationFrame(() => {
-            checkScrollPosition()
+            checkFn()
             rafId = null
           })
         }
       }
-      container.addEventListener("scroll", handleScroll, { passive: true })
-      const handleResize = () => checkScrollPosition()
-      window.addEventListener("resize", handleResize)
       
-      const resizeObserver = new ResizeObserver(() => {
-        checkScrollPosition()
-      })
+      const handleResize = () => checkFn()
+      const resizeObserver = new ResizeObserver(checkFn)
+      
+      container.addEventListener("scroll", handleScroll, { passive: true })
+      window.addEventListener("resize", handleResize)
       resizeObserver.observe(container)
       
-      cleanupFunctions.push(() => {
+      return () => {
         container.removeEventListener("scroll", handleScroll)
         window.removeEventListener("resize", handleResize)
         resizeObserver.disconnect()
-        if (rafId !== null) {
-          cancelAnimationFrame(rafId)
-        }
-      })
+        if (rafId !== null) cancelAnimationFrame(rafId)
+      }
     }
     
-    if (tabsContainer) {
-      tabsContainer.addEventListener("scroll", checkTabsScrollPosition)
-      const handleTabsResize = () => checkTabsScrollPosition()
-      window.addEventListener("resize", handleTabsResize)
-      
-      const tabsResizeObserver = new ResizeObserver(() => {
-        checkTabsScrollPosition()
-      })
-      tabsResizeObserver.observe(tabsContainer)
-      
-      cleanupFunctions.push(() => {
-        tabsContainer.removeEventListener("scroll", checkTabsScrollPosition)
-        window.removeEventListener("resize", handleTabsResize)
-        tabsResizeObserver.disconnect()
-      })
-    }
+    const cleanup1 = setupListeners(scrollContainerRef.current, checkScrollPosition)
+    const cleanup2 = setupListeners(tabsScrollContainerRef.current, checkTabsScrollPosition)
     
     return () => {
-      cleanupFunctions.forEach(cleanup => cleanup())
+      cleanup1()
+      cleanup2()
     }
   }, [checkScrollPosition, checkTabsScrollPosition])
 
-  const SCROLL_STEP = 240 + 16
+  const SCROLL_STEP = 256
+  const TABS_SCROLL_STEP = 200
 
-  const handleScrollLeft = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: -SCROLL_STEP, behavior: "smooth" })
-      // Check immediately and after animation
-      checkScrollPosition()
-      setTimeout(() => {
-        checkScrollPosition()
-      }, 300)
+  const createScrollHandler = (container: React.RefObject<HTMLDivElement | null>, step: number, checkFn: () => void) => {
+    return (direction: "left" | "right") => {
+      if (!container.current) return
+      container.current.scrollBy({ 
+        left: direction === "left" ? -step : step, 
+        behavior: "smooth" 
+      })
+      setTimeout(checkFn, 300)
     }
   }
 
-  const handleScrollRight = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: SCROLL_STEP, behavior: "smooth" })
-      // Check immediately and after animation completes
-      checkScrollPosition()
-      setTimeout(() => {
-        checkScrollPosition()
-      }, 300)
+  const handleScroll = createScrollHandler(scrollContainerRef, SCROLL_STEP, checkScrollPosition)
+  const handleTabsScroll = createScrollHandler(tabsScrollContainerRef, TABS_SCROLL_STEP, checkTabsScrollPosition)
+
+  const renderAppIcon = (app: AppIcon) => {
+    if (app.iconType === "svg") {
+      return <img src={app.icon} alt={app.name} className="w-5 h-5" />
     }
+    if (app.iconType === "component") {
+      const IconComponent = APP_ICON_COMPONENTS[app.icon]
+      return IconComponent ? (
+        <IconComponent weight="fill" className="w-5 h-5 text-primary" />
+      ) : null
+    }
+    if (app.iconType === "emoji") {
+      return <span className={app.color}>{app.icon}</span>
+    }
+    return <span className={cn("text-sm font-bold", app.color)}>{app.icon}</span>
   }
 
-  const handleTabsScrollLeft = () => {
-    if (tabsScrollContainerRef.current) {
-      tabsScrollContainerRef.current.scrollBy({ left: -200, behavior: "smooth" })
-      // Check immediately and after animation
-      checkTabsScrollPosition()
-      setTimeout(() => {
-        checkTabsScrollPosition()
-      }, 300)
-    }
-  }
-
-  const handleTabsScrollRight = () => {
-    if (tabsScrollContainerRef.current) {
-      tabsScrollContainerRef.current.scrollBy({ left: 200, behavior: "smooth" })
-      // Check immediately and after animation completes
-      checkTabsScrollPosition()
-      setTimeout(() => {
-        checkTabsScrollPosition()
-      }, 300)
-    }
-  }
-
-  const renderAppIcons = (apps: AppIcon[]) => {
-    const renderAppIcon = (app: AppIcon) => {
-      if (app.iconType === "svg") {
-        return <img src={app.icon} alt={app.name} className="w-5 h-5" />
-      } else if (app.iconType === "component") {
-        if (app.icon === "ChatText") {
-          return <ChatText weight="fill" className="w-5 h-5 text-primary" />
-        } else if (app.icon === "EnvelopeSimple") {
-          return <EnvelopeSimple weight="fill" className="w-5 h-5 text-primary" />
-        }
-      } else if (app.iconType === "emoji") {
-        return <span className={app.color}>{app.icon}</span>
-      } else {
-        return <span className={cn("text-sm font-bold", app.color)}>{app.icon}</span>
-      }
-      return <span className="text-sm">{app.icon}</span>
-    }
-
-    return (
-      <div className="flex items-center gap-2 flex-wrap">
-        {apps.map((app, index) => (
-          <React.Fragment key={app.name}>
-            <div className={cn(
-              "w-8 h-8 rounded-lg border flex items-center justify-center",
-              app.bgColor || "bg-background"
-            )}>
-              {renderAppIcon(app)}
-            </div>
-            {index < apps.length - 1 && apps.length > 1 && (
-              <span className="text-muted-foreground text-xs">+</span>
-            )}
-          </React.Fragment>
-        ))}
-      </div>
-    )
-  }
+  const renderAppIcons = (apps: AppIcon[]) => (
+    <div className="flex items-center gap-2 flex-wrap">
+      {apps.map((app, index) => (
+        <React.Fragment key={app.name}>
+          <div className={cn(
+            "w-8 h-8 rounded-lg border flex items-center justify-center",
+            app.bgColor || "bg-background"
+          )}>
+            {renderAppIcon(app)}
+          </div>
+          {index < apps.length - 1 && apps.length > 1 && (
+            <span className="text-muted-foreground text-xs">+</span>
+          )}
+        </React.Fragment>
+      ))}
+    </div>
+  )
 
   return (
     <Card className={cn("flex flex-col", className)}>
@@ -425,21 +301,19 @@ export function RecommendedTemplates({ className, isLoading = false }: Recommend
                   <div className="absolute right-0 top-0 h-9 w-16 bg-gradient-to-l from-card via-card/80 to-transparent pointer-events-none z-10" />
                 )}
 
-                {/* Scroll left button for tabs */}
+                {/* Scroll buttons for tabs */}
                 {canScrollLeftTabs && (
                   <button
-                    onClick={handleTabsScrollLeft}
+                    onClick={() => handleTabsScroll("left")}
                     className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background border shadow-md flex items-center justify-center hover:bg-accent transition-colors z-20 cursor-pointer"
                     aria-label="Scroll tabs left"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                 )}
-
-                {/* Scroll right button for tabs */}
                 {canScrollRightTabs && (
                   <button
-                    onClick={handleTabsScrollRight}
+                    onClick={() => handleTabsScroll("right")}
                     className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background border shadow-md flex items-center justify-center hover:bg-accent transition-colors z-20 cursor-pointer"
                     aria-label="Scroll tabs right"
                   >
@@ -508,19 +382,19 @@ export function RecommendedTemplates({ className, isLoading = false }: Recommend
                     {/* Tags badges */}
                     {template.tags && template.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1.5">
-                        {template.tags.map((tag) => (
-                          <Badge
-                            key={tag}
-                            variant="outline"
-                            className={cn(
-                              "text-xs font-medium",
-                              getBadgeStyles(tag)
-                            )}
-                          >
-                            {getBadgeIcon(tag)}
-                            {tag}
-                          </Badge>
-                        ))}
+                        {template.tags.map((tag) => {
+                          const config = getBadgeConfig(tag)
+                          return (
+                            <Badge
+                              key={tag}
+                              variant="outline"
+                              className={cn("text-xs font-medium", config.styles)}
+                            >
+                              {config.icon}
+                              {tag}
+                            </Badge>
+                          )
+                        })}
                       </div>
                     )}
                   </CardContent>
@@ -528,9 +402,9 @@ export function RecommendedTemplates({ className, isLoading = false }: Recommend
               ))}
             </div>
 
-            {/* Scroll left button */}
+            {/* Scroll buttons */}
             <button
-              onClick={handleScrollLeft}
+              onClick={() => handleScroll("left")}
               className={cn(
                 "absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background border shadow-md flex items-center justify-center hover:bg-accent transition-all z-20 cursor-pointer",
                 canScrollLeft 
@@ -541,11 +415,9 @@ export function RecommendedTemplates({ className, isLoading = false }: Recommend
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-
-            {/* Scroll right button */}
             {canScrollRight && (
               <button
-                onClick={handleScrollRight}
+                onClick={() => handleScroll("right")}
                 className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background border shadow-md flex items-center justify-center hover:bg-accent transition-colors z-20 cursor-pointer"
                 aria-label="Scroll right"
               >
